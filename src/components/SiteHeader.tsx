@@ -30,8 +30,23 @@ export function SiteHeader() {
           {user ? (
             <>
               <Link
+                to="/study"
+                className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+              >
+                Study
+              </Link>
+              <Link
+                to="/analytics"
+                className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+              >
+                Analytics
+              </Link>
+              <Link
                 to="/dashboard"
                 className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
               >
                 Dashboard
               </Link>

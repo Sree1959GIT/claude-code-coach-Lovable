@@ -13,7 +13,10 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedStudyRouteImport } from './routes/_authenticated/study'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
+import { Route as AuthenticatedStudySlugRouteImport } from './routes/_authenticated/study.$slug'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -34,23 +37,44 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedStudyRoute = AuthenticatedStudyRouteImport.update({
+  id: '/study',
+  path: '/study',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStudySlugRoute = AuthenticatedStudySlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => AuthenticatedStudyRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/study': typeof AuthenticatedStudyRouteWithChildren
+  '/study/$slug': typeof AuthenticatedStudySlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/study': typeof AuthenticatedStudyRouteWithChildren
+  '/study/$slug': typeof AuthenticatedStudySlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -58,20 +82,40 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/study': typeof AuthenticatedStudyRouteWithChildren
+  '/_authenticated/study/$slug': typeof AuthenticatedStudySlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/reset-password' | '/dashboard'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/analytics'
+    | '/dashboard'
+    | '/study'
+    | '/study/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/reset-password' | '/dashboard'
+  to:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/analytics'
+    | '/dashboard'
+    | '/study'
+    | '/study/$slug'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/_authenticated/analytics'
     | '/_authenticated/dashboard'
+    | '/_authenticated/study'
+    | '/_authenticated/study/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -111,6 +155,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/study': {
+      id: '/_authenticated/study'
+      path: '/study'
+      fullPath: '/study'
+      preLoaderRoute: typeof AuthenticatedStudyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -118,15 +169,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/analytics': {
+      id: '/_authenticated/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/study/$slug': {
+      id: '/_authenticated/study/$slug'
+      path: '/$slug'
+      fullPath: '/study/$slug'
+      preLoaderRoute: typeof AuthenticatedStudySlugRouteImport
+      parentRoute: typeof AuthenticatedStudyRoute
+    }
   }
 }
 
+interface AuthenticatedStudyRouteChildren {
+  AuthenticatedStudySlugRoute: typeof AuthenticatedStudySlugRoute
+}
+
+const AuthenticatedStudyRouteChildren: AuthenticatedStudyRouteChildren = {
+  AuthenticatedStudySlugRoute: AuthenticatedStudySlugRoute,
+}
+
+const AuthenticatedStudyRouteWithChildren =
+  AuthenticatedStudyRoute._addFileChildren(AuthenticatedStudyRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedStudyRoute: typeof AuthenticatedStudyRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedStudyRoute: AuthenticatedStudyRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -141,13 +221,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
