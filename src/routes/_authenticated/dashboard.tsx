@@ -40,30 +40,45 @@ function Dashboard() {
           </h1>
         </div>
 
-        <div className="border border-border bg-card p-8">
-          <h2 className="mb-3 font-mono text-sm font-bold uppercase tracking-widest text-primary">
-            Stage_2_Pending
-          </h2>
-          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Authentication and analytics capture are live. The full Study Hub, exam engine,
-            SME voice mentor, and adaptive learning modules are queued for the next build
-            stage. Your session data is already being tracked for personalization.
-          </p>
-
-          <div className="mt-8 grid gap-px bg-border sm:grid-cols-3">
-            {[
-              { k: "Status", v: "Authenticated" },
-              { k: "Domains_Unlocked", v: "0 / 5" },
-              { k: "Next_Stage", v: "Study_Hub" },
-            ].map((row) => (
-              <div key={row.k} className="bg-card p-4">
-                <div className="mb-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-                  {row.k}
-                </div>
-                <div className="font-mono text-sm">{row.v}</div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <a
+            href="/study"
+            className="group flex flex-col justify-between border border-border bg-card p-8 transition-colors hover:border-primary"
+          >
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-primary">
+                {"> Study_Hub"}
               </div>
-            ))}
-          </div>
+              <h2 className="mb-3 font-mono text-xl font-bold uppercase tracking-tight">
+                Practice_By_Domain
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Five exam domains, question-anatomy layout, live scoring.
+              </p>
+            </div>
+            <div className="mt-6 font-mono text-[10px] uppercase tracking-widest text-primary group-hover:underline">
+              Open →
+            </div>
+          </a>
+          <a
+            href="/analytics"
+            className="group flex flex-col justify-between border border-border bg-card p-8 transition-colors hover:border-primary"
+          >
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-primary">
+                {"> Analytics"}
+              </div>
+              <h2 className="mb-3 font-mono text-xl font-bold uppercase tracking-tight">
+                Progress_Signals
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Per-domain accuracy, response times, and 14-day cadence.
+              </p>
+            </div>
+            <div className="mt-6 font-mono text-[10px] uppercase tracking-widest text-primary group-hover:underline">
+              Open →
+            </div>
+          </a>
         </div>
       </main>
     </div>
