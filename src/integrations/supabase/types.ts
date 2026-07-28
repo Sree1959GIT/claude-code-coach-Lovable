@@ -44,6 +44,36 @@ export type Database = {
         }
         Relationships: []
       }
+      domains: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          slug: string
+          sort_order: number
+          title: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          slug: string
+          sort_order?: number
+          title: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          slug?: string
+          sort_order?: number
+          title?: string
+          weight?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -67,6 +97,130 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      question_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          is_correct: boolean
+          question_id: string
+          selected_option_id: string | null
+          time_ms: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_correct: boolean
+          question_id: string
+          selected_option_id?: string | null
+          time_ms?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          question_id?: string
+          selected_option_id?: string | null
+          time_ms?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_attempts_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_attempts_selected_option_id_fkey"
+            columns: ["selected_option_id"]
+            isOneToOne: false
+            referencedRelation: "question_options"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_options: {
+        Row: {
+          explanation: string | null
+          id: string
+          is_correct: boolean
+          label: string
+          question_id: string
+          sort_order: number
+          text: string
+        }
+        Insert: {
+          explanation?: string | null
+          id?: string
+          is_correct?: boolean
+          label: string
+          question_id: string
+          sort_order?: number
+          text: string
+        }
+        Update: {
+          explanation?: string | null
+          id?: string
+          is_correct?: boolean
+          label?: string
+          question_id?: string
+          sort_order?: number
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questions: {
+        Row: {
+          created_at: string
+          difficulty: string
+          domain_id: string
+          id: string
+          key_concept: string | null
+          scenario: string | null
+          sort_order: number
+          stem: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty?: string
+          domain_id: string
+          id?: string
+          key_concept?: string | null
+          scenario?: string | null
+          sort_order?: number
+          stem: string
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string
+          domain_id?: string
+          id?: string
+          key_concept?: string | null
+          scenario?: string | null
+          sort_order?: number
+          stem?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "domains"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
