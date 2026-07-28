@@ -112,18 +112,18 @@ function AnalyticsPage() {
           <Panel title="Attempts_Last_14_Days">
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={byDay}>
-                <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
-                <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} allowDecimals={false} />
+                <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
+                <XAxis dataKey="day" stroke="var(--color-muted-foreground)" fontSize={10} />
+                <YAxis stroke="var(--color-muted-foreground)" fontSize={10} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    background: "var(--color-card)",
+                    border: "1px solid var(--color-border)",
                     fontSize: 11,
                   }}
                 />
-                <Line type="monotone" dataKey="attempts" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="correct" stroke="hsl(var(--muted-foreground))" strokeWidth={1.5} dot={false} />
+                <Line type="monotone" dataKey="attempts" stroke="var(--color-primary)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="correct" stroke="var(--color-muted-foreground)" strokeWidth={1.5} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </Panel>
@@ -131,18 +131,18 @@ function AnalyticsPage() {
           <Panel title="Accuracy_By_Domain">
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={byDomain}>
-                <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
-                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} domain={[0, 100]} />
+                <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
+                <XAxis dataKey="name" stroke="var(--color-muted-foreground)" fontSize={10} />
+                <YAxis stroke="var(--color-muted-foreground)" fontSize={10} domain={[0, 100]} />
                 <Tooltip
                   contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    background: "var(--color-card)",
+                    border: "1px solid var(--color-border)",
                     fontSize: 11,
                   }}
                   formatter={(v: number) => `${v}%`}
                 />
-                <Bar dataKey="accuracy" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="accuracy" fill="var(--color-primary)" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Panel>
