@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { fetchDomains, fetchMyDomainProgress } from "@/lib/study";
 import { logEvent } from "@/lib/analytics";
 
-export const Route = createFileRoute("/_authenticated/study")({
+export const Route = createFileRoute("/_authenticated/study/")({
   component: StudyHub,
   head: () => ({
     meta: [

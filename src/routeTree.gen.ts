@@ -13,9 +13,9 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedStudyRouteImport } from './routes/_authenticated/study'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
+import { Route as AuthenticatedStudyIndexRouteImport } from './routes/_authenticated/study.index'
 import { Route as AuthenticatedStudySlugRouteImport } from './routes/_authenticated/study.$slug'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -37,11 +37,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedStudyRoute = AuthenticatedStudyRouteImport.update({
-  id: '/study',
-  path: '/study',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -52,10 +47,15 @@ const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedStudyIndexRoute = AuthenticatedStudyIndexRouteImport.update({
+  id: '/study/',
+  path: '/study/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedStudySlugRoute = AuthenticatedStudySlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => AuthenticatedStudyRoute,
+  id: '/study/$slug',
+  path: '/study/$slug',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -64,8 +64,8 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/study': typeof AuthenticatedStudyRouteWithChildren
   '/study/$slug': typeof AuthenticatedStudySlugRoute
+  '/study/': typeof AuthenticatedStudyIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -73,8 +73,8 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/study': typeof AuthenticatedStudyRouteWithChildren
   '/study/$slug': typeof AuthenticatedStudySlugRoute
+  '/study': typeof AuthenticatedStudyIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -84,8 +84,8 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/study': typeof AuthenticatedStudyRouteWithChildren
   '/_authenticated/study/$slug': typeof AuthenticatedStudySlugRoute
+  '/_authenticated/study/': typeof AuthenticatedStudyIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -95,8 +95,8 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/analytics'
     | '/dashboard'
-    | '/study'
     | '/study/$slug'
+    | '/study/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -104,8 +104,8 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/analytics'
     | '/dashboard'
-    | '/study'
     | '/study/$slug'
+    | '/study'
   id:
     | '__root__'
     | '/'
@@ -114,8 +114,8 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/analytics'
     | '/_authenticated/dashboard'
-    | '/_authenticated/study'
     | '/_authenticated/study/$slug'
+    | '/_authenticated/study/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -155,13 +155,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/study': {
-      id: '/_authenticated/study'
-      path: '/study'
-      fullPath: '/study'
-      preLoaderRoute: typeof AuthenticatedStudyRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -176,37 +169,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/study/': {
+      id: '/_authenticated/study/'
+      path: '/study'
+      fullPath: '/study/'
+      preLoaderRoute: typeof AuthenticatedStudyIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/study/$slug': {
       id: '/_authenticated/study/$slug'
-      path: '/$slug'
+      path: '/study/$slug'
       fullPath: '/study/$slug'
       preLoaderRoute: typeof AuthenticatedStudySlugRouteImport
-      parentRoute: typeof AuthenticatedStudyRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
-interface AuthenticatedStudyRouteChildren {
-  AuthenticatedStudySlugRoute: typeof AuthenticatedStudySlugRoute
-}
-
-const AuthenticatedStudyRouteChildren: AuthenticatedStudyRouteChildren = {
-  AuthenticatedStudySlugRoute: AuthenticatedStudySlugRoute,
-}
-
-const AuthenticatedStudyRouteWithChildren =
-  AuthenticatedStudyRoute._addFileChildren(AuthenticatedStudyRouteChildren)
-
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedStudyRoute: typeof AuthenticatedStudyRouteWithChildren
+  AuthenticatedStudySlugRoute: typeof AuthenticatedStudySlugRoute
+  AuthenticatedStudyIndexRoute: typeof AuthenticatedStudyIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedStudyRoute: AuthenticatedStudyRouteWithChildren,
+  AuthenticatedStudySlugRoute: AuthenticatedStudySlugRoute,
+  AuthenticatedStudyIndexRoute: AuthenticatedStudyIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
