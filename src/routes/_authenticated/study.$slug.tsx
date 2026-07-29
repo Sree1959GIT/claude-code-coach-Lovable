@@ -2,6 +2,7 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { MentorCanvas } from "@/components/MentorCanvas";
 import { useSession } from "@/hooks/useSession";
 import {
   fetchDomainBySlug,
@@ -42,6 +43,7 @@ function DomainRunner() {
   const [revealed, setRevealed] = useState(false);
   const [startedAt, setStartedAt] = useState(() => Date.now());
   const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [mentorOpen, setMentorOpen] = useState(false);
 
   useEffect(() => { logEvent("page_view", { page: "study_run", slug }); }, [slug]);
 
@@ -190,6 +192,14 @@ function DomainRunner() {
                   </div>
                 </div>
                 <h1 className="text-lg font-semibold leading-snug">{q.stem}</h1>
+                <div className="mt-4">
+                  <button
+                    onClick={() => setMentorOpen(true)}
+                    className="inline-flex items-center gap-2 border border-primary/40 bg-primary/5 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary hover:bg-primary/10"
+                  >
+                    🎙 Ask_Mentor
+                  </button>
+                </div>
               </section>
               <section className="p-6">
                 <div className="mb-3 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
