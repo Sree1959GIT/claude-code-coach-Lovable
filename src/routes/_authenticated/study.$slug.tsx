@@ -266,6 +266,19 @@ function DomainRunner() {
           )}
         </main>
       </div>
+      {q && (
+        <MentorCanvas
+          open={mentorOpen}
+          onClose={() => setMentorOpen(false)}
+          context={{
+            scenario: q.scenario,
+            stem: q.stem,
+            key_concept: q.key_concept,
+            options: optionsSorted.map((o) => ({ label: o.label, text: o.text })),
+            domain: domainQ.data?.title,
+          }}
+        />
+      )}
     </div>
   );
 }
