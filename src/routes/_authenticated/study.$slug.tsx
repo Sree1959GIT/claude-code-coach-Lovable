@@ -1,8 +1,9 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PanelLeftClose, PanelLeftOpen, UserRound } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { MentorCanvas } from "@/components/MentorCanvas";
+import { MentorCanvas, type HighlightTarget } from "@/components/MentorCanvas";
 import { useSession } from "@/hooks/useSession";
 import {
   fetchDomainBySlug,
@@ -21,6 +22,9 @@ export const Route = createFileRoute("/_authenticated/study/$slug")({
     ],
   }),
 });
+
+const MIN_MENTOR_W = 300;
+const MAX_MENTOR_W = 720;
 
 function DomainRunner() {
   const { slug } = Route.useParams();
@@ -44,8 +48,14 @@ function DomainRunner() {
   const [startedAt, setStartedAt] = useState(() => Date.now());
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [mentorOpen, setMentorOpen] = useState(false);
+  const [mentorWidth, setMentorWidth] = useState(400);
+  const [navOpen, setNavOpen] = useState(true);
+  const [focus, setFocus] = useState<HighlightTarget>(null);
+  const draggingRef = useRef(false);
 
-  useEffect(() => { logEvent("page_view", { page: "study_run", slug }); }, [slug]);
+  useEffect(() => {
+    logEvent("page_view", { page: "study_run", slug });
+  }, [slug]);
 
   const questions = questionsQ.data ?? [];
   const q = questions[idx];
@@ -54,7 +64,28 @@ function DomainRunner() {
     setSelected(null);
     setRevealed(false);
     setStartedAt(Date.now());
+    setFocus(null);
   }, [q?.id]);
+
+  // Drag-to-resize the mentor frame
+  useEffect(() => {
+    function onMove(e: MouseEvent) {
+      if (!draggingRef.current) return;
+      const w = window.innerWidth - e.clientX;
+      setMentorWidth(Math.min(MAX_MENTOR_W, Math.max(MIN_MENTOR_W, w)));
+    }
+    function onUp() {
+      if (!draggingRef.current) return;
+      draggingRef.current = false;
+      document.body.style.userSelect = "";
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, []);
 
   const finished = questions.length > 0 && idx >= questions.length;
 
@@ -92,45 +123,90 @@ function DomainRunner() {
     [q],
   );
 
+  const mentorContext = useMemo(
+    () => ({
+      scenario: q?.scenario ?? null,
+      stem: q?.stem ?? "",
+      key_concept: q?.key_concept ?? null,
+      options: optionsSorted.map((o) => ({ label: o.label, text: o.text })),
+      domain: domainQ.data?.title,
+    }),
+    [q?.scenario, q?.stem, q?.key_concept, optionsSorted, domainQ.data?.title],
+  );
+
+  const onHighlight = useCallback((t: HighlightTarget) => setFocus(t), []);
+
+  const focusStem = focus?.type === "stem";
+  const focusScenario = focus?.type === "scenario";
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
       <SiteHeader />
-      <div className="mx-auto flex max-w-7xl gap-8 px-6 py-12 lg:flex-row">
-        <aside className="hidden w-56 shrink-0 lg:block">
-          <div className="sticky top-24">
-            <div className="mb-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              Course_Viewer
-            </div>
-            <nav className="space-y-1">
-              {questions.map((qq, i) => (
-                <button
-                  key={qq.id}
-                  onClick={() => setIdx(i)}
-                  className={`block w-full border-l-2 px-3 py-1.5 text-left font-mono text-[10px] uppercase tracking-widest transition-colors ${
-                    i === idx
-                      ? "border-primary bg-secondary text-foreground"
-                      : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
-                  }`}
-                >
-                  Q{String(i + 1).padStart(2, "0")} · {qq.difficulty}
-                </button>
-              ))}
-            </nav>
-            <div className="mt-6 border-t border-border pt-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+
+      <div className="flex min-h-0 flex-1">
+        {/* Frame 1 — collapsible question navigator */}
+        <aside
+          className={`hidden shrink-0 flex-col border-r border-border bg-card/40 transition-all lg:flex ${
+            navOpen ? "w-52" : "w-12"
+          }`}
+        >
+          <div className="flex items-center justify-between border-b border-border px-3 py-2">
+            {navOpen && (
+              <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                Course_Viewer
+              </span>
+            )}
+            <button
+              onClick={() => setNavOpen((v) => !v)}
+              aria-label={navOpen ? "Collapse navigator" : "Expand navigator"}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              {navOpen ? (
+                <PanelLeftClose className="h-4 w-4" />
+              ) : (
+                <PanelLeftOpen className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+          <nav className="flex-1 space-y-0.5 overflow-y-auto p-1">
+            {questions.map((qq, i) => (
+              <button
+                key={qq.id}
+                onClick={() => setIdx(i)}
+                title={`Q${i + 1} · ${qq.difficulty}`}
+                className={`block w-full border-l-2 px-2 py-1.5 text-left font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                  i === idx
+                    ? "border-primary bg-secondary text-foreground"
+                    : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
+                }`}
+              >
+                {navOpen ? `Q${String(i + 1).padStart(2, "0")} · ${qq.difficulty}` : i + 1}
+              </button>
+            ))}
+          </nav>
+          {navOpen && (
+            <div className="border-t border-border px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               Score: {score.correct}/{score.total}
             </div>
-          </div>
+          )}
         </aside>
 
-        <main className="flex-1 min-w-0">
-          <div className="mb-6 flex items-center justify-between">
+        {/* Frame 2 — question */}
+        <main className="flex min-w-0 flex-1 flex-col overflow-y-auto px-5 py-4">
+          <div className="mb-3 flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => setMentorOpen(true)}
+              className="inline-flex items-center gap-2 border-2 border-primary bg-primary px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-widest text-primary-foreground shadow-sm hover:opacity-90"
+            >
+              <UserRound className="h-4 w-4" /> Ask_Mentor
+            </button>
             <Link
               to="/study"
               className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
             >
               ← Study_Hub
             </Link>
-            <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <div className="ml-auto font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               {domainQ.data?.title} · Q{Math.min(idx + 1, questions.length)}/{questions.length}
             </div>
           </div>
@@ -168,17 +244,19 @@ function DomainRunner() {
           )}
 
           {q && !finished && (
-            <article className="border border-border bg-card">
+            <article className="flex min-h-0 flex-1 flex-col border border-border bg-card">
               {q.scenario && (
-                <section className="border-b border-border bg-secondary/30 p-6">
-                  <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
+                <section className="border-b border-border bg-secondary/30 px-5 py-3">
+                  <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
                     Scenario
                   </div>
-                  <p className="text-sm leading-relaxed">{q.scenario}</p>
+                  <p className={`text-sm leading-relaxed ${focusScenario ? "mentor-focus" : ""}`}>
+                    {q.scenario}
+                  </p>
                 </section>
               )}
-              <section className="border-b border-border p-6">
-                <div className="mb-3 flex items-center gap-3">
+              <section className="border-b border-border px-5 py-3">
+                <div className="mb-2 flex flex-wrap items-center gap-3">
                   <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-primary">
                     Stem
                   </div>
@@ -191,31 +269,26 @@ function DomainRunner() {
                     {q.difficulty}
                   </div>
                 </div>
-                <h1 className="text-lg font-semibold leading-snug">{q.stem}</h1>
-                <div className="mt-4">
-                  <button
-                    onClick={() => setMentorOpen(true)}
-                    className="inline-flex items-center gap-2 border border-primary/40 bg-primary/5 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary hover:bg-primary/10"
-                  >
-                    🎙 Ask_Mentor
-                  </button>
-                </div>
+                <h1 className={`text-base font-semibold leading-snug ${focusStem ? "mentor-focus" : ""}`}>
+                  {q.stem}
+                </h1>
               </section>
-              <section className="p-6">
-                <div className="mb-3 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
+              <section className="flex min-h-0 flex-1 flex-col px-5 py-3">
+                <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
                   Options
                 </div>
-                <ul className="space-y-2">
+                <ul className="space-y-1.5">
                   {optionsSorted.map((opt) => {
                     const isSelected = selected?.id === opt.id;
                     const showCorrect = revealed && opt.is_correct;
                     const showWrong = revealed && isSelected && !opt.is_correct;
+                    const isFocused = focus?.type === "option" && focus.label === opt.label;
                     return (
                       <li key={opt.id}>
                         <button
                           disabled={revealed}
                           onClick={() => setSelected(opt)}
-                          className={`flex w-full items-start gap-4 border p-4 text-left transition-colors ${
+                          className={`flex w-full items-start gap-3 border px-3 py-2.5 text-left transition-colors ${
                             showCorrect
                               ? "border-primary bg-primary/10"
                               : showWrong
@@ -223,15 +296,15 @@ function DomainRunner() {
                                 : isSelected
                                   ? "border-primary bg-secondary"
                                   : "border-border hover:bg-secondary"
-                          }`}
+                          } ${isFocused ? "mentor-focus" : ""}`}
                         >
                           <span className="font-mono text-xs font-bold text-primary">
                             {opt.label}
                           </span>
-                          <span className="flex-1 text-sm">{opt.text}</span>
+                          <span className="flex-1 text-sm leading-relaxed">{opt.text}</span>
                         </button>
                         {revealed && (opt.is_correct || isSelected) && opt.explanation && (
-                          <div className="mt-1 border-l-2 border-primary/40 bg-secondary/30 px-4 py-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                          <div className="mt-1 border-l-2 border-primary/40 bg-secondary/30 px-3 py-1.5 font-mono text-[11px] leading-relaxed text-muted-foreground">
                             {opt.explanation}
                           </div>
                         )}
@@ -240,7 +313,7 @@ function DomainRunner() {
                   })}
                 </ul>
 
-                <div className="mt-6 flex items-center justify-between">
+                <div className="mt-4 flex items-center justify-between">
                   <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                     Score: {score.correct}/{score.total}
                   </div>
@@ -265,20 +338,30 @@ function DomainRunner() {
             </article>
           )}
         </main>
+
+        {/* Frame 3 — mentor (resizable, non-blocking) */}
+        {mentorOpen && q && (
+          <>
+            <div
+              role="separator"
+              aria-orientation="vertical"
+              onMouseDown={() => {
+                draggingRef.current = true;
+                document.body.style.userSelect = "none";
+              }}
+              className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-primary"
+            />
+            <div style={{ width: mentorWidth }} className="shrink-0">
+              <MentorCanvas
+                open={mentorOpen}
+                onClose={() => setMentorOpen(false)}
+                context={mentorContext}
+                onHighlight={onHighlight}
+              />
+            </div>
+          </>
+        )}
       </div>
-      {q && (
-        <MentorCanvas
-          open={mentorOpen}
-          onClose={() => setMentorOpen(false)}
-          context={{
-            scenario: q.scenario,
-            stem: q.stem,
-            key_concept: q.key_concept,
-            options: optionsSorted.map((o) => ({ label: o.label, text: o.text })),
-            domain: domainQ.data?.title,
-          }}
-        />
-      )}
     </div>
   );
 }
