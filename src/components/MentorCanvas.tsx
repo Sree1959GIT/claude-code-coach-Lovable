@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Mic, MicOff, Radio, User, X } from "lucide-react";
-import { askMentor, synthesizeSpeech } from "@/lib/mentor.functions";
+import { Mic, MicOff, PlayCircle, Radio, Square, User, X } from "lucide-react";
+import { synthesizeSpeech } from "@/lib/mentor.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/analytics";
+import { matchResources, thumbnailFor, type LearnResource } from "@/lib/resources";
+import { VideoModal } from "@/components/VideoModal";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -18,6 +21,7 @@ type QuestionContext = {
   key_concept: string | null;
   options: { label: string; text: string }[];
   domain?: string;
+  selectedOption?: string | null;
 };
 
 type Props = {
@@ -27,32 +31,101 @@ type Props = {
   onHighlight?: (t: HighlightTarget) => void;
 };
 
-const QUICK_PROMPTS = [
-  { label: "Explain_Question", text: "Explain the question in simple words." },
-  {
-    label: "Read_Fast",
-    text: "How do I understand this question and its answer options quickly? Give me a reading strategy for this exact item.",
-  },
-  {
-    label: "Why_Correct",
-    text: "Explain which option is most apt and why, and why each of the other options is a false positive here.",
-  },
-  {
-    label: "Trap_Spotting",
-    text: "What are the distractor traps in these options and what keyword in the stem rules them out?",
-  },
-];
+type Segment = { text: string; target: HighlightTarget };
+
+const MARKER_RE = /\[\[(scenario|stem|none|opt:[A-Za-z0-9]+)\]\]/;
+
+function parseMarker(token: string): HighlightTarget {
+  if (token === "scenario") return { type: "scenario" };
+  if (token === "stem") return { type: "stem" };
+  if (token.startsWith("opt:")) return { type: "option", label: token.slice(4).toUpperCase() };
+  return null;
+}
+
+/** Splits streamed mentor text into marker-free display text + spoken segments. */
+class SegmentParser {
+  private raw = "";
+  private pending = "";
+  private target: HighlightTarget = null;
+  display = "";
+
+  constructor(private emit: (s: Segment) => void) {}
+
+  push(chunk: string) {
+    this.raw += chunk;
+    // Hold back a possible partial marker at the tail.
+    let safeEnd = this.raw.length;
+    const open = this.raw.lastIndexOf("[[");
+    if (open !== -1 && this.raw.indexOf("]]", open) === -1) safeEnd = open;
+
+    let work = this.raw.slice(0, safeEnd);
+    this.raw = this.raw.slice(safeEnd);
+
+    while (work.length) {
+      const m = MARKER_RE.exec(work);
+      if (!m) {
+        this.consume(work);
+        break;
+      }
+      this.consume(work.slice(0, m.index));
+      this.flush();
+      this.target = parseMarker(m[1]);
+      work = work.slice(m.index + m[0].length);
+    }
+    this.drainSentences();
+  }
+
+  private consume(text: string) {
+    if (!text) return;
+    this.pending += text;
+    this.display += text;
+  }
+
+  private drainSentences() {
+    // Emit whole sentences as soon as they're complete so speech starts early.
+    const re = /[^.!?]*[.!?]+["')\]]*\s*/g;
+    let last = 0;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(this.pending))) {
+      const sentence = m[0].trim();
+      if (sentence.length > 1) this.emit({ text: sentence, target: this.target });
+      last = re.lastIndex;
+    }
+    if (last) this.pending = this.pending.slice(last);
+  }
+
+  private flush() {
+    const rest = this.pending.trim();
+    if (rest.length > 1) this.emit({ text: rest, target: this.target });
+    this.pending = "";
+  }
+
+  end() {
+    if (this.raw) this.consume(this.raw);
+    this.raw = "";
+    this.drainSentences();
+    this.flush();
+  }
+}
 
 // Minimal Web Speech typings — kept local to avoid global lib bloat.
 type SpeechRecognitionLike = {
   lang: string;
   interimResults: boolean;
   continuous: boolean;
-  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  resultIndex?: number;
+  onresult:
+    | ((e: {
+        resultIndex?: number;
+        results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal?: boolean }>;
+      }) => void)
+    | null;
   onerror: ((e: unknown) => void) | null;
   onend: (() => void) | null;
+  onstart: (() => void) | null;
   start: () => void;
   stop: () => void;
+  abort: () => void;
 };
 
 function getSpeechRecognition(): (new () => SpeechRecognitionLike) | null {
@@ -64,149 +137,276 @@ function getSpeechRecognition(): (new () => SpeechRecognitionLike) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-/** Work out, in order of mention, what parts of the question the reply talks about. */
-function extractTargets(reply: string, options: { label: string; text: string }[]): HighlightTarget[] {
-  const hits: { at: number; target: HighlightTarget }[] = [];
-  for (const o of options) {
-    const re = new RegExp(`\\boption\\s+${o.label}\\b|\\b${o.label}\\)|\\b${o.label}\\.`, "i");
-    const m = re.exec(reply);
-    if (m) hits.push({ at: m.index, target: { type: "option", label: o.label } });
-  }
-  const stemRe = /\b(question|stem|asks|asking|scenario)\b/i;
-  const sm = stemRe.exec(reply);
-  if (sm) {
-    hits.push({
-      at: sm.index,
-      target: { type: /scenario/i.test(sm[0]) ? "scenario" : "stem" },
-    });
-  }
-  return hits.sort((a, b) => a.at - b.at).map((h) => h.target);
-}
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
-  const ask = useServerFn(askMentor);
   const speak = useServerFn(synthesizeSpeech);
 
   const [messages, setMessages] = useState<Msg[]>([]);
+  const [streaming, setStreaming] = useState("");
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [listening, setListening] = useState(false);
   const [live, setLive] = useState(false);
   const [voiceOn, setVoiceOn] = useState(true);
+  const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [video, setVideo] = useState<LearnResource | null>(null);
 
-  const recogRef = useRef<SpeechRecognitionLike | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const recogRef = useRef<SpeechRecognitionLike | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const liveRef = useRef(false);
-  const targetsRef = useRef<HighlightTarget[]>([]);
-  const sttSupported = typeof window !== "undefined" && !!getSpeechRecognition();
+  const voiceRef = useRef(true);
+  const busyRef = useRef(false);
+  const messagesRef = useRef<Msg[]>([]);
+  const queueRef = useRef<Segment[]>([]);
+  const drainingRef = useRef(false);
+  const stoppedRef = useRef(false);
+  const contextRef = useRef(context);
 
+  const sttSupported = typeof window !== "undefined" && !!getSpeechRecognition();
   const highlight = useCallback((t: HighlightTarget) => onHighlight?.(t), [onHighlight]);
+
+  const resources = useMemo(
+    () => matchResources([context.key_concept, context.domain, context.stem]),
+    [context.key_concept, context.domain, context.stem],
+  );
 
   useEffect(() => {
     liveRef.current = live;
   }, [live]);
+  useEffect(() => {
+    voiceRef.current = voiceOn;
+  }, [voiceOn]);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+  useEffect(() => {
+    contextRef.current = context;
+  }, [context]);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages, streaming, busy]);
+
+  const stopAll = useCallback(() => {
+    stoppedRef.current = true;
+    queueRef.current = [];
+    audioRef.current?.pause();
+    try {
+      recogRef.current?.abort();
+    } catch {
+      /* noop */
+    }
+    setListening(false);
+    setStatus(null);
+    highlight(null);
+  }, [highlight]);
 
   useEffect(() => {
     if (open) {
       logEvent("mentor_opened", { key_concept: context.key_concept });
       setError(null);
     } else {
-      audioRef.current?.pause();
-      recogRef.current?.stop();
-      setListening(false);
       setLive(false);
-      highlight(null);
+      liveRef.current = false;
+      stopAll();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, busy]);
-
-  async function playAudio(text: string) {
-    if (!voiceOn) {
-      // still walk the highlights on a timer so the learner sees the focus
-      const targets = targetsRef.current;
-      targets.forEach((t, i) => setTimeout(() => highlight(t), i * 2500));
-      setTimeout(() => highlight(null), targets.length * 2500 + 2000);
-      return;
-    }
+  // ---- speech synthesis queue -------------------------------------------
+  async function synth(text: string): Promise<string | null> {
     try {
       const { audio, mimeType } = await speak({ data: { text, voice: "alloy" } });
-      const blob = new Blob([Uint8Array.from(atob(audio), (c) => c.charCodeAt(0))], {
-        type: mimeType,
-      });
-      const url = URL.createObjectURL(blob);
-      const el = audioRef.current;
-      if (!el) return;
-      el.pause();
-      el.src = url;
-      el.ontimeupdate = () => {
-        const targets = targetsRef.current;
-        if (!targets.length || !el.duration || Number.isNaN(el.duration)) return;
-        const i = Math.min(targets.length - 1, Math.floor((el.currentTime / el.duration) * targets.length));
-        highlight(targets[i]);
-      };
-      el.onended = () => highlight(null);
-      await el.play().catch(() => {});
+      const bytes = Uint8Array.from(atob(audio), (c) => c.charCodeAt(0));
+      return URL.createObjectURL(new Blob([bytes], { type: mimeType }));
     } catch (e) {
-      console.error(e);
+      console.error("[mentor] tts failed", e);
+      return null;
     }
   }
 
+  function playUrl(url: string): Promise<void> {
+    return new Promise((resolve) => {
+      const el = audioRef.current;
+      if (!el) return resolve();
+      el.onended = () => resolve();
+      el.onerror = () => resolve();
+      el.src = url;
+      void el.play().catch(() => resolve());
+    });
+  }
+
+  const drain = useCallback(async () => {
+    if (drainingRef.current) return;
+    drainingRef.current = true;
+    let next: Promise<string | null> | null = null;
+    try {
+      while (!stoppedRef.current) {
+        const seg = queueRef.current.shift();
+        if (!seg) {
+          // wait a beat in case the stream is still producing
+          if (busyRef.current) {
+            await sleep(120);
+            continue;
+          }
+          break;
+        }
+        highlight(seg.target);
+        if (!voiceRef.current) {
+          await sleep(Math.min(5000, 400 + seg.text.length * 38));
+          continue;
+        }
+        const url = next ? await next : await synth(seg.text);
+        next = queueRef.current[0] ? synth(queueRef.current[0].text) : null;
+        if (stoppedRef.current) break;
+        if (url) {
+          await playUrl(url);
+          URL.revokeObjectURL(url);
+        }
+      }
+    } finally {
+      drainingRef.current = false;
+      highlight(null);
+      setStatus(null);
+      if (!stoppedRef.current && liveRef.current) startRecognition(true);
+    }
+  }, [highlight]);
+
+  // ---- chat -------------------------------------------------------------
   async function send(text: string) {
     const trimmed = text.trim();
-    if (!trimmed || busy) return;
+    if (!trimmed || busyRef.current) return;
+    stoppedRef.current = false;
     setError(null);
-    const next: Msg[] = [...messages, { role: "user", content: trimmed }];
+    const next: Msg[] = [...messagesRef.current, { role: "user", content: trimmed }];
     setMessages(next);
+    messagesRef.current = next;
     setInput("");
     setBusy(true);
+    busyRef.current = true;
+    setStreaming("");
+    setStatus("Mentor_thinking");
+    // Mic off while the mentor talks so it doesn't hear itself.
     try {
-      const { text: reply } = await ask({ data: { messages: next, context } });
-      const assistantMsg: Msg = { role: "assistant", content: reply || "…" };
-      setMessages((m) => [...m, assistantMsg]);
-      targetsRef.current = extractTargets(reply, context.options);
-      logEvent("mentor_reply", { chars: reply.length });
-      void playAudio(reply);
+      recogRef.current?.abort();
+    } catch {
+      /* noop */
+    }
+    setListening(false);
+
+    const parser = new SegmentParser((seg) => {
+      queueRef.current.push(seg);
+      void drain();
+    });
+
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      if (!token) throw new Error("Session expired — sign in again.");
+
+      const res = await fetch("/api/mentor-stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ messages: next, context: contextRef.current }),
+      });
+      if (!res.ok || !res.body) {
+        throw new Error((await res.text().catch(() => "")) || `Mentor failed (${res.status})`);
+      }
+      setStatus("Mentor_speaking");
+
+      const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+      let buffer = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += value;
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          const t = line.trim();
+          if (!t.startsWith("data:")) continue;
+          const payload = t.slice(5).trim();
+          if (!payload || payload === "[DONE]") continue;
+          try {
+            const json = JSON.parse(payload) as {
+              choices?: { delta?: { content?: string } }[];
+            };
+            const delta = json.choices?.[0]?.delta?.content;
+            if (delta) {
+              parser.push(delta);
+              setStreaming(parser.display);
+            }
+          } catch {
+            /* partial json — ignore */
+          }
+        }
+      }
+      parser.end();
+      const full = parser.display.trim();
+      setStreaming("");
+      if (full) {
+        setMessages((m) => {
+          const updated: Msg[] = [...m, { role: "assistant", content: full }];
+          messagesRef.current = updated;
+          return updated;
+        });
+        logEvent("mentor_reply", { chars: full.length });
+      }
     } catch (e) {
+      setStreaming("");
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setBusy(false);
-      if (liveRef.current) startRecognition(true);
+      busyRef.current = false;
+      if (!drainingRef.current) {
+        setStatus(null);
+        if (!stoppedRef.current && liveRef.current) startRecognition(true);
+      }
     }
   }
 
+  // ---- speech recognition ------------------------------------------------
   function startRecognition(continuous: boolean) {
     const Ctor = getSpeechRecognition();
-    if (!Ctor) return;
-    recogRef.current?.stop();
+    if (!Ctor || busyRef.current || drainingRef.current) return;
+    try {
+      recogRef.current?.abort();
+    } catch {
+      /* noop */
+    }
     const recog = new Ctor();
     recog.lang = "en-US";
     recog.interimResults = false;
     recog.continuous = continuous;
+    recog.onstart = () => setListening(true);
     recog.onresult = (e) => {
-      const transcript = Array.from(e.results)
-        .map((r) => r[0]?.transcript ?? "")
-        .join(" ")
-        .trim();
-      if (transcript) void send(transcript);
+      const from = typeof e.resultIndex === "number" ? e.resultIndex : 0;
+      let transcript = "";
+      for (let i = from; i < e.results.length; i++) {
+        transcript += e.results[i]?.[0]?.transcript ?? "";
+      }
+      transcript = transcript.trim();
+      if (!transcript) return;
+      try {
+        recog.stop();
+      } catch {
+        /* noop */
+      }
+      void send(transcript);
     };
     recog.onerror = () => setListening(false);
     recog.onend = () => {
       setListening(false);
-      if (liveRef.current) {
-        // auto-restart for continuous conversation
+      if (liveRef.current && !busyRef.current && !drainingRef.current && !stoppedRef.current) {
         setTimeout(() => {
-          if (liveRef.current) startRecognition(true);
-        }, 400);
+          if (liveRef.current && !busyRef.current && !drainingRef.current) startRecognition(true);
+        }, 500);
       }
     };
     recogRef.current = recog;
-    setListening(true);
     try {
       recog.start();
     } catch {
@@ -216,10 +416,15 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
 
   function toggleListen() {
     if (listening) {
-      recogRef.current?.stop();
+      try {
+        recogRef.current?.stop();
+      } catch {
+        /* noop */
+      }
       setListening(false);
       return;
     }
+    stoppedRef.current = false;
     startRecognition(false);
   }
 
@@ -227,12 +432,39 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
     const nextLive = !live;
     setLive(nextLive);
     liveRef.current = nextLive;
-    if (nextLive) startRecognition(true);
-    else {
-      recogRef.current?.stop();
+    if (nextLive) {
+      stoppedRef.current = false;
+      startRecognition(true);
+    } else {
+      try {
+        recogRef.current?.abort();
+      } catch {
+        /* noop */
+      }
       setListening(false);
     }
   }
+
+  const quickPrompts = useMemo(() => {
+    const base = [
+      { label: "Explain_Question", text: "Explain the question in simple words." },
+      {
+        label: "Read_Fast",
+        text: "How do I read this question and its options quickly? Give me a reading strategy for this exact item.",
+      },
+      {
+        label: "Trap_Spotting",
+        text: "What are the distractor traps in these options and what keyword in the stem rules them out?",
+      },
+    ];
+    if (context.selectedOption) {
+      base.unshift({
+        label: `Rate_Option_${context.selectedOption}`,
+        text: `I picked option ${context.selectedOption}. How apt is that option for this question — what does it get right, what does it miss, and which words in the stem decide it?`,
+      });
+    }
+    return base;
+  }, [context.selectedOption]);
 
   if (!open) return null;
 
@@ -257,7 +489,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
       </header>
 
       <div className="flex flex-wrap gap-1.5 border-b border-border px-3 py-2">
-        {QUICK_PROMPTS.map((p) => (
+        {quickPrompts.map((p) => (
           <button
             key={p.label}
             onClick={() => void send(p.text)}
@@ -270,10 +502,11 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
       </div>
 
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
-        {messages.length === 0 && (
+        {messages.length === 0 && !streaming && (
           <div className="border border-dashed border-border p-3 text-sm leading-relaxed text-muted-foreground">
-            Pick a quick prompt above, type, or go live with your mic. I'll walk you through how to
-            read the stem and separate the true option from the false positives.
+            Pick a quick prompt, type, or go live with your mic. I'll walk you through how to read
+            the stem and separate the true option from the false positives — and highlight what I'm
+            talking about as I speak.
           </div>
         )}
         {messages.map((m, i) => (
@@ -293,9 +526,20 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
             <div className="whitespace-pre-wrap">{m.content}</div>
           </div>
         ))}
-        {busy && (
+        {streaming && (
+          <div className="border border-primary/30 bg-primary/5 p-3 text-sm leading-relaxed">
+            <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-primary">
+              Mentor
+            </div>
+            <div className="whitespace-pre-wrap">
+              {streaming}
+              <span className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-primary align-middle" />
+            </div>
+          </div>
+        )}
+        {status && !streaming && (
           <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Mentor_thinking…
+            {status}…
           </div>
         )}
         {error && (
@@ -303,6 +547,55 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
             {error}
           </div>
         )}
+
+        <div className="border-t border-border pt-3">
+          <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
+            Watch_This
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {resources.map((r) => {
+              const thumb = thumbnailFor(r);
+              return (
+                <button
+                  key={r.title}
+                  onClick={() => {
+                    logEvent("resource_opened", { title: r.title, video: !!r.videoId });
+                    if (r.videoId) setVideo(r);
+                    else if (r.url) window.open(r.url, "_blank", "noopener,noreferrer");
+                  }}
+                  className="group border border-border text-left hover:border-primary"
+                >
+                  <div className="relative flex aspect-video items-center justify-center bg-secondary/50">
+                    {thumb ? (
+                      <img
+                        src={thumb}
+                        alt={`${r.title} thumbnail`}
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="px-2 text-center font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                        Doc
+                      </span>
+                    )}
+                    {r.videoId && (
+                      <PlayCircle className="absolute h-8 w-8 text-primary-foreground/90 drop-shadow" />
+                    )}
+                  </div>
+                  <div className="p-1.5">
+                    <div className="line-clamp-2 text-[11px] font-medium leading-tight group-hover:text-primary">
+                      {r.title}
+                    </div>
+                    <div className="mt-0.5 font-mono text-[8px] uppercase tracking-widest text-muted-foreground">
+                      {r.source}
+                      {r.start ? ` · @${Math.floor(r.start / 60)}:${String(r.start % 60).padStart(2, "0")}` : ""}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <footer className="border-t border-border p-3">
@@ -316,23 +609,31 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
             />
             Voice_reply
           </label>
-          {sttSupported ? (
+          <div className="flex items-center gap-1.5">
             <button
-              onClick={toggleLive}
-              className={`flex items-center gap-1.5 border px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-widest ${
-                live
-                  ? "border-primary bg-primary/15 text-primary"
-                  : "border-border text-muted-foreground hover:text-foreground"
-              }`}
-              aria-pressed={live}
+              onClick={stopAll}
+              className="flex items-center gap-1 border border-border px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
             >
-              <Radio className="h-3 w-3" /> {live ? "Live_On" : "Live_Talk"}
+              <Square className="h-3 w-3" /> Stop
             </button>
-          ) : (
-            <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-              Mic_unsupported
-            </span>
-          )}
+            {sttSupported ? (
+              <button
+                onClick={toggleLive}
+                className={`flex items-center gap-1.5 border px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-widest ${
+                  live
+                    ? "border-primary bg-primary/15 text-primary"
+                    : "border-border text-muted-foreground hover:text-foreground"
+                }`}
+                aria-pressed={live}
+              >
+                <Radio className="h-3 w-3" /> {live ? (listening ? "Listening" : "Live_On") : "Live_Talk"}
+              </button>
+            ) : (
+              <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                Mic_unsupported
+              </span>
+            )}
+          </div>
         </div>
         <form
           onSubmit={(e) => {
@@ -380,6 +681,8 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
         </form>
         <audio ref={audioRef} className="hidden" />
       </footer>
+
+      <VideoModal resource={video} onClose={() => setVideo(null)} />
     </aside>
   );
 }

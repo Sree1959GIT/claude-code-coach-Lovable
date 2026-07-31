@@ -130,8 +130,9 @@ function DomainRunner() {
       key_concept: q?.key_concept ?? null,
       options: optionsSorted.map((o) => ({ label: o.label, text: o.text })),
       domain: domainQ.data?.title,
+      selectedOption: selected?.label ?? null,
     }),
-    [q?.scenario, q?.stem, q?.key_concept, optionsSorted, domainQ.data?.title],
+    [q?.scenario, q?.stem, q?.key_concept, optionsSorted, domainQ.data?.title, selected?.label],
   );
 
   const onHighlight = useCallback((t: HighlightTarget) => setFocus(t), []);
@@ -290,7 +291,7 @@ function DomainRunner() {
                           onClick={() => setSelected(opt)}
                           className={`flex w-full items-start gap-3 border px-3 py-2.5 text-left transition-colors ${
                             showCorrect
-                              ? "border-primary bg-primary/10"
+                              ? "border-success bg-success/10"
                               : showWrong
                                 ? "border-destructive bg-destructive/10"
                                 : isSelected
@@ -298,10 +299,20 @@ function DomainRunner() {
                                   : "border-border hover:bg-secondary"
                           } ${isFocused ? "mentor-focus" : ""}`}
                         >
-                          <span className="font-mono text-xs font-bold text-primary">
+                          <span
+                            className={`font-mono text-xs font-bold ${
+                              showCorrect ? "text-success" : "text-primary"
+                            }`}
+                          >
                             {opt.label}
                           </span>
-                          <span className="flex-1 text-sm leading-relaxed">{opt.text}</span>
+                          <span
+                            className={`flex-1 text-sm leading-relaxed ${
+                              showCorrect ? "font-semibold text-success" : ""
+                            }`}
+                          >
+                            {opt.text}
+                          </span>
                         </button>
                         {revealed && (opt.is_correct || isSelected) && opt.explanation && (
                           <div className="mt-1 border-l-2 border-primary/40 bg-secondary/30 px-3 py-1.5 font-mono text-[11px] leading-relaxed text-muted-foreground">

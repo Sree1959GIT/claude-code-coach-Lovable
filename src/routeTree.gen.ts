@@ -13,6 +13,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiMentorStreamRouteImport } from './routes/api/mentor-stream'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedStudyIndexRouteImport } from './routes/_authenticated/study.index'
@@ -35,6 +36,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMentorStreamRoute = ApiMentorStreamRouteImport.update({
+  id: '/api/mentor-stream',
+  path: '/api/mentor-stream',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/study/$slug': typeof AuthenticatedStudySlugRoute
   '/study/': typeof AuthenticatedStudyIndexRoute
 }
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/study/$slug': typeof AuthenticatedStudySlugRoute
   '/study': typeof AuthenticatedStudyIndexRoute
 }
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/_authenticated/study/$slug': typeof AuthenticatedStudySlugRoute
   '/_authenticated/study/': typeof AuthenticatedStudyIndexRoute
 }
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/analytics'
     | '/dashboard'
+    | '/api/mentor-stream'
     | '/study/$slug'
     | '/study/'
   fileRoutesByTo: FileRoutesByTo
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/analytics'
     | '/dashboard'
+    | '/api/mentor-stream'
     | '/study/$slug'
     | '/study'
   id:
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/analytics'
     | '/_authenticated/dashboard'
+    | '/api/mentor-stream'
     | '/_authenticated/study/$slug'
     | '/_authenticated/study/'
   fileRoutesById: FileRoutesById
@@ -123,6 +135,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiMentorStreamRoute: typeof ApiMentorStreamRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -153,6 +166,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/mentor-stream': {
+      id: '/api/mentor-stream'
+      path: '/api/mentor-stream'
+      fullPath: '/api/mentor-stream'
+      preLoaderRoute: typeof ApiMentorStreamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/dashboard': {
@@ -208,6 +228,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiMentorStreamRoute: ApiMentorStreamRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
