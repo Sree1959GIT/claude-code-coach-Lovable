@@ -66,6 +66,7 @@
   --border: oklch(0.18 0.01 260 / 0.12);
   --input: oklch(0.18 0.01 260 / 0.12);
   --ring: oklch(0.62 0.19 256);
+  --success: oklch(0.55 0.15 150);
 }
 
 .dark {
@@ -89,6 +90,7 @@
   --border: oklch(0.98 0.003 260 / 0.12);
   --input: oklch(0.98 0.003 260 / 0.15);
   --ring: oklch(0.68 0.19 256);
+  --success: oklch(0.75 0.16 155);
 }
 
 @layer base {
