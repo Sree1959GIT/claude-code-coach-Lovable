@@ -38,6 +38,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-success: var(--success);
 
   --ease-out-terminal: cubic-bezier(0.16, 1, 0.3, 1);
 }
