@@ -130,8 +130,9 @@ function DomainRunner() {
       key_concept: q?.key_concept ?? null,
       options: optionsSorted.map((o) => ({ label: o.label, text: o.text })),
       domain: domainQ.data?.title,
+      selectedOption: selected?.label ?? null,
     }),
-    [q?.scenario, q?.stem, q?.key_concept, optionsSorted, domainQ.data?.title],
+    [q?.scenario, q?.stem, q?.key_concept, optionsSorted, domainQ.data?.title, selected?.label],
   );
 
   const onHighlight = useCallback((t: HighlightTarget) => setFocus(t), []);
