@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Mic, MicOff, PlayCircle, Radio, Square, User, X } from "lucide-react";
+import { ChevronDown, Mic, MicOff, PlayCircle, Radio, Square, User, Volume2, X } from "lucide-react";
 import { synthesizeSpeech } from "@/lib/mentor.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/analytics";
@@ -164,6 +164,8 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [video, setVideo] = useState<LearnResource | null>(null);
+  const [openRefs, setOpenRefs] = useState<number | null>(null);
+
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const recogRef = useRef<SpeechRecognitionLike | null>(null);
@@ -521,23 +523,91 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
             talking about as I speak.
           </div>
         )}
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            className={`border p-3 text-sm leading-relaxed ${
-              m.role === "user" ? "border-border bg-secondary/40" : "border-primary/30 bg-primary/5"
-            }`}
-          >
+        {messages.map((m, i) => {
+          const isUser = m.role === "user";
+          const refs = isUser
+            ? []
+            : matchResources([context.key_concept, context.domain, context.stem, m.content]);
+          const expanded = openRefs === i;
+          return (
             <div
-              className={`mb-1 font-mono text-[9px] uppercase tracking-[0.3em] ${
-                m.role === "user" ? "text-muted-foreground" : "text-primary"
+              key={i}
+              className={`border p-3 text-sm leading-relaxed ${
+                isUser ? "border-border bg-secondary/40" : "border-primary/30 bg-primary/5"
               }`}
             >
-              {m.role === "user" ? "You" : "Mentor"}
+              <div
+                className={`mb-1 font-mono text-[9px] uppercase tracking-[0.3em] ${
+                  isUser ? "text-muted-foreground" : "text-primary"
+                }`}
+              >
+                {isUser ? "You" : "Mentor"}
+              </div>
+              <div className="whitespace-pre-wrap">{m.content}</div>
+              {!isUser && (
+                <div className="mt-2 flex flex-wrap items-center gap-3 border-t border-primary/20 pt-2">
+                  <button
+                    onClick={() => readAloud(m.content)}
+                    className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground hover:text-primary"
+                  >
+                    <Volume2 className="h-3 w-3" /> Read_Response
+                  </button>
+                  {refs.length > 0 && (
+                    <button
+                      onClick={() => setOpenRefs(expanded ? null : i)}
+                      className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest text-primary underline underline-offset-4 hover:opacity-80"
+                      aria-expanded={expanded}
+                    >
+                      <ChevronDown
+                        className={`h-3 w-3 transition-transform ${expanded ? "rotate-180" : ""}`}
+                      />
+                      References ({refs.length})
+                    </button>
+                  )}
+                </div>
+              )}
+              {!isUser && expanded && (
+                <ul className="mt-2 space-y-1.5">
+                  {refs.map((r) => (
+                    <li key={r.title}>
+                      <button
+                        onClick={() => {
+                          logEvent("resource_opened", { title: r.title, video: !!r.videoId });
+                          if (r.videoId) setVideo(r);
+                          else if (r.url) window.open(r.url, "_blank", "noopener,noreferrer");
+                        }}
+                        className="flex w-full items-center gap-2 border border-border p-1.5 text-left hover:border-primary"
+                      >
+                        {thumbnailFor(r) ? (
+                          <img
+                            src={thumbnailFor(r)!}
+                            alt={`${r.title} thumbnail`}
+                            loading="lazy"
+                            className="h-8 w-14 shrink-0 object-cover"
+                          />
+                        ) : (
+                          <span className="flex h-8 w-14 shrink-0 items-center justify-center bg-secondary/50 font-mono text-[8px] uppercase tracking-widest text-muted-foreground">
+                            Doc
+                          </span>
+                        )}
+                        <span className="min-w-0">
+                          <span className="block truncate text-[11px] font-medium">{r.title}</span>
+                          <span className="block font-mono text-[8px] uppercase tracking-widest text-muted-foreground">
+                            {r.source}
+                            {r.start
+                              ? ` · @${Math.floor(r.start / 60)}:${String(r.start % 60).padStart(2, "0")}`
+                              : ""}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-            <div className="whitespace-pre-wrap">{m.content}</div>
-          </div>
-        ))}
+          );
+        })}
+
         {streaming && (
           <div className="border border-primary/30 bg-primary/5 p-3 text-sm leading-relaxed">
             <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-primary">
@@ -560,7 +630,9 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
           </div>
         )}
 
+        {messages.length === 0 && (
         <div className="border-t border-border pt-3">
+
           <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
             Watch_This
           </div>
@@ -607,7 +679,9 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
               );
             })}
           </div>
-        </div>
+          </div>
+        )}
+
       </div>
 
       <footer className="border-t border-border p-3">
