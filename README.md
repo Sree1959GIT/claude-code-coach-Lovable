@@ -1,14 +1,16 @@
-# Welcome to your Lovable project
+# Claude Code Coach
+
+I have uploaded an implementation plan to build Claude Code Architect Certification Tutor. Please evaluate the same & to include very attractive landing page (light+dark mode) with analytics, login etc. Also let me know what is the estimated (lovable) credits are required to implement each stage & app as a whole.
 
 This project was built with [Lovable](https://lovable.dev).
 
 ## Build with Lovable
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/fa108a4c-d97d-4b5c-9fa8-87f1e2c1254a).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 
@@ -20,10 +22,3 @@ cd <repository-name>
 npm i
 npm run dev
 ```
-
-## Built with
-
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
