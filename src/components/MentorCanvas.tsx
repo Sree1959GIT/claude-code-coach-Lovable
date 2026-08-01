@@ -289,7 +289,21 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
     }
   }, [highlight]);
 
+  /** Speaks a full written answer on demand (Read_Response button). */
+  function readAloud(text: string) {
+    const sentences = text.match(/[^.!?]+[.!?]*/g) ?? [text];
+    stoppedRef.current = false;
+    queueRef.current = sentences
+      .map((s) => s.trim())
+      .filter((s) => s.length > 1)
+      .map((s) => ({ text: s, target: null }));
+    voiceRef.current = true;
+    setVoiceOn(true);
+    void drain();
+  }
+
   // ---- chat -------------------------------------------------------------
+
   async function send(text: string) {
     const trimmed = text.trim();
     if (!trimmed || busyRef.current) return;
