@@ -33,7 +33,7 @@ type Props = {
 
 type Segment = { text: string; target: HighlightTarget };
 
-const MARKER_RE = /\[\[(scenario|stem|none|opt:[A-Za-z0-9]+)\]\]/;
+const MARKER_RE = /\[\[(scenario|stem|none|brief|opt:[A-Za-z0-9]+)\]\]/;
 
 function parseMarker(token: string): HighlightTarget {
   if (token === "scenario") return { type: "scenario" };
@@ -42,11 +42,15 @@ function parseMarker(token: string): HighlightTarget {
   return null;
 }
 
-/** Splits streamed mentor text into marker-free display text + spoken segments. */
+/**
+ * Splits streamed mentor text into the written answer (displayed) and the
+ * short spoken summary that follows the [[brief]] marker (spoken only).
+ */
 class SegmentParser {
   private raw = "";
   private pending = "";
   private target: HighlightTarget = null;
+  private speaking = false;
   display = "";
 
   constructor(private emit: (s: Segment) => void) {}
@@ -69,7 +73,12 @@ class SegmentParser {
       }
       this.consume(work.slice(0, m.index));
       this.flush();
-      this.target = parseMarker(m[1]);
+      if (m[1] === "brief") {
+        this.speaking = true;
+        this.target = null;
+      } else {
+        this.target = parseMarker(m[1]!);
+      }
       work = work.slice(m.index + m[0].length);
     }
     this.drainSentences();
@@ -77,11 +86,12 @@ class SegmentParser {
 
   private consume(text: string) {
     if (!text) return;
-    this.pending += text;
-    this.display += text;
+    if (this.speaking) this.pending += text;
+    else this.display += text;
   }
 
   private drainSentences() {
+    if (!this.speaking) return;
     // Emit whole sentences as soon as they're complete so speech starts early.
     const re = /[^.!?]*[.!?]+["')\]]*\s*/g;
     let last = 0;
@@ -95,6 +105,7 @@ class SegmentParser {
   }
 
   private flush() {
+    if (!this.speaking) return;
     const rest = this.pending.trim();
     if (rest.length > 1) this.emit({ text: rest, target: this.target });
     this.pending = "";
@@ -107,6 +118,7 @@ class SegmentParser {
     this.flush();
   }
 }
+
 
 // Minimal Web Speech typings — kept local to avoid global lib bloat.
 type SpeechRecognitionLike = {
