@@ -11,6 +11,9 @@ import {
   Tooltip,
   BarChart,
   Bar,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 import { SiteHeader } from "@/components/SiteHeader";
 import { logEvent } from "@/lib/analytics";
@@ -19,19 +22,22 @@ import {
   fetchMyAttempts,
   fetchMyDomainProgress,
 } from "@/lib/study";
+import { useServerFn } from "@tanstack/react-start";
+import { getMasteryOverview } from "@/lib/study.functions";
 
 export const Route = createFileRoute("/_authenticated/analytics")({
   component: AnalyticsPage,
   head: () => ({
     meta: [
       { title: "Analytics · Claude Architect Prep" },
-      { name: "description", content: "Your per-domain accuracy, response times, and study cadence." },
+      { name: "description", content: "Your per-domain accuracy, response times, study cadence, and mastery state." },
       { property: "og:title", content: "Analytics · Claude Architect Prep" },
       { property: "og:description", content: "Per-domain accuracy and study cadence." },
       { name: "robots", content: "noindex" },
     ],
   }),
 });
+
 
 function AnalyticsPage() {
   useEffect(() => { logEvent("page_view", { page: "analytics" }); }, []);
