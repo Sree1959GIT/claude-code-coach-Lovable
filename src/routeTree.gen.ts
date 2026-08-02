@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiMentorStreamRouteImport } from './routes/api/mentor-stream'
+import { Route as AuthenticatedEstimatorRouteImport } from './routes/_authenticated/estimator'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedStudyIndexRouteImport } from './routes/_authenticated/study.index'
@@ -43,6 +44,11 @@ const ApiMentorStreamRoute = ApiMentorStreamRouteImport.update({
   id: '/api/mentor-stream',
   path: '/api/mentor-stream',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedEstimatorRoute = AuthenticatedEstimatorRouteImport.update({
+  id: '/estimator',
+  path: '/estimator',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/estimator': typeof AuthenticatedEstimatorRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/study/$slug': typeof AuthenticatedStudySlugRoute
   '/study/session': typeof AuthenticatedStudySessionRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/estimator': typeof AuthenticatedEstimatorRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/study/$slug': typeof AuthenticatedStudySlugRoute
   '/study/session': typeof AuthenticatedStudySessionRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/estimator': typeof AuthenticatedEstimatorRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/_authenticated/study/$slug': typeof AuthenticatedStudySlugRoute
   '/_authenticated/study/session': typeof AuthenticatedStudySessionRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/analytics'
     | '/dashboard'
+    | '/estimator'
     | '/api/mentor-stream'
     | '/study/$slug'
     | '/study/session'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/analytics'
     | '/dashboard'
+    | '/estimator'
     | '/api/mentor-stream'
     | '/study/$slug'
     | '/study/session'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/analytics'
     | '/_authenticated/dashboard'
+    | '/_authenticated/estimator'
     | '/api/mentor-stream'
     | '/_authenticated/study/$slug'
     | '/_authenticated/study/session'
@@ -188,6 +200,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMentorStreamRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/estimator': {
+      id: '/_authenticated/estimator'
+      path: '/estimator'
+      fullPath: '/estimator'
+      preLoaderRoute: typeof AuthenticatedEstimatorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -229,6 +248,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEstimatorRoute: typeof AuthenticatedEstimatorRoute
   AuthenticatedStudySlugRoute: typeof AuthenticatedStudySlugRoute
   AuthenticatedStudySessionRoute: typeof AuthenticatedStudySessionRoute
   AuthenticatedStudyIndexRoute: typeof AuthenticatedStudyIndexRoute
@@ -237,6 +257,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEstimatorRoute: AuthenticatedEstimatorRoute,
   AuthenticatedStudySlugRoute: AuthenticatedStudySlugRoute,
   AuthenticatedStudySessionRoute: AuthenticatedStudySessionRoute,
   AuthenticatedStudyIndexRoute: AuthenticatedStudyIndexRoute,
@@ -255,13 +276,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

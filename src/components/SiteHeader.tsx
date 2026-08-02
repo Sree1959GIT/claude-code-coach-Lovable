@@ -44,6 +44,13 @@ export function SiteHeader() {
                 Analytics
               </Link>
               <Link
+                to="/estimator"
+                className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+              >
+                Estimator
+              </Link>
+              <Link
                 to="/dashboard"
                 className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
                 activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
