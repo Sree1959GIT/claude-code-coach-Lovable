@@ -1,4 +1,4 @@
-import { Link, createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PanelLeftClose, PanelLeftOpen, UserRound } from "lucide-react";
@@ -15,6 +15,14 @@ import {
 } from "@/lib/study.functions";
 
 export const Route = createFileRoute("/_authenticated/study/session")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    sessionId: typeof search.sessionId === "string" ? search.sessionId : "",
+  }),
+  errorComponent: ({ error }) => (
+    <div className="p-8 font-mono text-sm text-destructive">
+      Session error: {error.message}
+    </div>
+  ),
   component: SessionRunner,
   head: () => ({
     meta: [
@@ -28,7 +36,7 @@ const MIN_MENTOR_W = 300;
 const MAX_MENTOR_W = 720;
 
 function SessionRunner() {
-  const { sessionId } = useSearch({ from: Route.fullPath }) as { sessionId: string };
+  const { sessionId } = Route.useSearch();
   const { user } = useSession();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -79,17 +87,17 @@ function SessionRunner() {
   useEffect(() => {
     if (!timeLimitMs || finished) return;
     const interval = setInterval(() => {
-      setElapsed((e) => {
-        if (e + 1000 >= timeLimitMs) {
-          clearInterval(interval);
-          finishRun();
-          return timeLimitMs;
-        }
-        return e + 1000;
-      });
+      setElapsed((e) => Math.min(timeLimitMs, e + 1000));
     }, 1000);
     return () => clearInterval(interval);
   }, [timeLimitMs, finished, sessionId]);
+
+  useEffect(() => {
+    if (timeLimitMs && !finished && elapsed >= timeLimitMs) {
+      void finishRun();
+    }
+  }, [elapsed, timeLimitMs, finished]);
+
 
   // Drag-to-resize the mentor frame
   useEffect(() => {
@@ -263,6 +271,30 @@ function SessionRunner() {
           {sessionQ.isLoading && (
             <div className="font-mono text-xs text-muted-foreground">Loading session…</div>
           )}
+
+          {!sessionId && (
+            <div className="border border-destructive/40 bg-destructive/10 p-6 font-mono text-xs">
+              Missing session id.{" "}
+              <Link to="/study" className="underline">
+                Back to Study_Hub
+              </Link>
+            </div>
+          )}
+
+          {sessionQ.isError && (
+            <div className="border border-destructive/40 bg-destructive/10 p-6 font-mono text-xs">
+              Could not load session: {(sessionQ.error as Error).message}
+              <div className="mt-3">
+                <button
+                  onClick={() => sessionQ.refetch()}
+                  className="border border-border px-3 py-1.5 uppercase tracking-widest hover:bg-secondary"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          )}
+
 
           {finished && (
             <div className="border border-border bg-card p-8 text-center">
