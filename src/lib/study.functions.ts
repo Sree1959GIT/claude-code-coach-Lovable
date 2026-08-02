@@ -145,14 +145,17 @@ export const startSession = createServerFn({ method: "POST" })
         difficulty: q.difficulty,
         options: q.options.map((o) => ({
           id: o.id,
+          question_id: o.question_id,
           label: o.label,
           text: o.text,
           is_correct: o.is_correct,
           explanation: o.explanation,
+          sort_order: o.sort_order,
         })),
-      })),
+      })) as SessionQuestion[],
     };
   });
+
 
 export const recordSessionAnswer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
