@@ -36,7 +36,7 @@ const MIN_MENTOR_W = 300;
 const MAX_MENTOR_W = 720;
 
 function SessionRunner() {
-  const { sessionId } = useSearch({ from: Route.fullPath }) as { sessionId: string };
+  const { sessionId } = Route.useSearch();
   const { user } = useSession();
   const navigate = useNavigate();
   const qc = useQueryClient();
