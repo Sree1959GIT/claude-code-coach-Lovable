@@ -17,6 +17,7 @@ import { Route as ApiMentorStreamRouteImport } from './routes/api/mentor-stream'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedStudyIndexRouteImport } from './routes/_authenticated/study.index'
+import { Route as AuthenticatedStudySessionRouteImport } from './routes/_authenticated/study.session'
 import { Route as AuthenticatedStudySlugRouteImport } from './routes/_authenticated/study.$slug'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -58,6 +59,12 @@ const AuthenticatedStudyIndexRoute = AuthenticatedStudyIndexRouteImport.update({
   path: '/study/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedStudySessionRoute =
+  AuthenticatedStudySessionRouteImport.update({
+    id: '/study/session',
+    path: '/study/session',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedStudySlugRoute = AuthenticatedStudySlugRouteImport.update({
   id: '/study/$slug',
   path: '/study/$slug',
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/study/$slug': typeof AuthenticatedStudySlugRoute
+  '/study/session': typeof AuthenticatedStudySessionRoute
   '/study/': typeof AuthenticatedStudyIndexRoute
 }
 export interface FileRoutesByTo {
@@ -82,6 +90,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/study/$slug': typeof AuthenticatedStudySlugRoute
+  '/study/session': typeof AuthenticatedStudySessionRoute
   '/study': typeof AuthenticatedStudyIndexRoute
 }
 export interface FileRoutesById {
@@ -94,6 +103,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/_authenticated/study/$slug': typeof AuthenticatedStudySlugRoute
+  '/_authenticated/study/session': typeof AuthenticatedStudySessionRoute
   '/_authenticated/study/': typeof AuthenticatedStudyIndexRoute
 }
 export interface FileRouteTypes {
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/api/mentor-stream'
     | '/study/$slug'
+    | '/study/session'
     | '/study/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/api/mentor-stream'
     | '/study/$slug'
+    | '/study/session'
     | '/study'
   id:
     | '__root__'
@@ -127,6 +139,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/api/mentor-stream'
     | '/_authenticated/study/$slug'
+    | '/_authenticated/study/session'
     | '/_authenticated/study/'
   fileRoutesById: FileRoutesById
 }
@@ -196,6 +209,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudyIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/study/session': {
+      id: '/_authenticated/study/session'
+      path: '/study/session'
+      fullPath: '/study/session'
+      preLoaderRoute: typeof AuthenticatedStudySessionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/study/$slug': {
       id: '/_authenticated/study/$slug'
       path: '/study/$slug'
@@ -210,6 +230,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedStudySlugRoute: typeof AuthenticatedStudySlugRoute
+  AuthenticatedStudySessionRoute: typeof AuthenticatedStudySessionRoute
   AuthenticatedStudyIndexRoute: typeof AuthenticatedStudyIndexRoute
 }
 
@@ -217,6 +238,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedStudySlugRoute: AuthenticatedStudySlugRoute,
+  AuthenticatedStudySessionRoute: AuthenticatedStudySessionRoute,
   AuthenticatedStudyIndexRoute: AuthenticatedStudyIndexRoute,
 }
 
