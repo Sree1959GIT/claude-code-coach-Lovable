@@ -129,7 +129,7 @@ export function buildMasteryMap(
   rows: {
     question_id: string;
     status: string;
-    due_at: string;
+    due_at: string | null;
     stability: number;
     difficulty: number;
     reps: number;
@@ -142,7 +142,7 @@ export function buildMasteryMap(
   for (const r of rows) {
     map.set(r.question_id, {
       status: r.status as MasteryState["status"],
-      dueAt: new Date(r.due_at),
+      dueAt: new Date(r.due_at ?? Date.now()),
       stability: Number(r.stability),
       difficulty: Number(r.difficulty),
       reps: r.reps,
@@ -153,6 +153,7 @@ export function buildMasteryMap(
   }
   return map;
 }
+
 
 export function buildAttemptsMap(
   attempts: { question_id: string; is_correct: boolean; time_ms: number }[],
