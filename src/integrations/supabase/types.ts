@@ -74,6 +74,53 @@ export type Database = {
         }
         Relationships: []
       }
+      practice_sessions: {
+        Row: {
+          created_at: string
+          domain_id: string | null
+          ended_at: string | null
+          id: string
+          metadata: Json
+          mode: string
+          started_at: string
+          target_count: number
+          time_limit_ms: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          domain_id?: string | null
+          ended_at?: string | null
+          id?: string
+          metadata?: Json
+          mode: string
+          started_at?: string
+          target_count?: number
+          time_limit_ms?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          domain_id?: string | null
+          ended_at?: string | null
+          id?: string
+          metadata?: Json
+          mode?: string
+          started_at?: string
+          target_count?: number
+          time_limit_ms?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practice_sessions_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "domains"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -218,6 +265,62 @@ export type Database = {
             columns: ["domain_id"]
             isOneToOne: false
             referencedRelation: "domains"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_mastery: {
+        Row: {
+          created_at: string
+          difficulty: number
+          due_at: string | null
+          id: string
+          lapses: number
+          last_attempt_at: string | null
+          last_attempt_correct: boolean | null
+          question_id: string
+          reps: number
+          stability: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty?: number
+          due_at?: string | null
+          id?: string
+          lapses?: number
+          last_attempt_at?: string | null
+          last_attempt_correct?: boolean | null
+          question_id: string
+          reps?: number
+          stability?: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          difficulty?: number
+          due_at?: string | null
+          id?: string
+          lapses?: number
+          last_attempt_at?: string | null
+          last_attempt_correct?: boolean | null
+          question_id?: string
+          reps?: number
+          stability?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_mastery_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
             referencedColumns: ["id"]
           },
         ]
