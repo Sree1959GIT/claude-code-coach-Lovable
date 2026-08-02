@@ -87,17 +87,17 @@ function SessionRunner() {
   useEffect(() => {
     if (!timeLimitMs || finished) return;
     const interval = setInterval(() => {
-      setElapsed((e) => {
-        if (e + 1000 >= timeLimitMs) {
-          clearInterval(interval);
-          finishRun();
-          return timeLimitMs;
-        }
-        return e + 1000;
-      });
+      setElapsed((e) => Math.min(timeLimitMs, e + 1000));
     }, 1000);
     return () => clearInterval(interval);
   }, [timeLimitMs, finished, sessionId]);
+
+  useEffect(() => {
+    if (timeLimitMs && !finished && elapsed >= timeLimitMs) {
+      void finishRun();
+    }
+  }, [elapsed, timeLimitMs, finished]);
+
 
   // Drag-to-resize the mentor frame
   useEffect(() => {
