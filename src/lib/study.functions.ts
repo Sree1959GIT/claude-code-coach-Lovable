@@ -1,8 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { Database } from "@/integrations/supabase/types";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   buildAttemptsMap,
   buildExamSample,
@@ -13,8 +11,6 @@ import {
 } from "./adaptive";
 import { fetchDomains } from "./study";
 import { initialState, scheduleNext } from "./fsrs";
-
-type Client = SupabaseClient<Database, "public", Database["public"]>;
 
 export const startSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -28,7 +24,7 @@ export const startSession = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context as { supabase: Client; userId: string };
+    const { supabase, userId } = context;
 
     const [questions, domains] = await Promise.all([
       getQuestions(supabase),
@@ -136,7 +132,7 @@ export const recordSessionAnswer = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context as { supabase: Client; userId: string };
+    const { supabase, userId } = context;
 
     // Verify session ownership
     const { data: session, error: sErr } = await supabase
@@ -221,7 +217,7 @@ export const endSession = createServerFn({ method: "POST" })
     z.object({ sessionId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context as { supabase: Client; userId: string };
+    const { supabase, userId } = context;
     const { error } = await supabase
       .from("practice_sessions")
       .update({ ended_at: new Date().toISOString() })
@@ -234,7 +230,7 @@ export const endSession = createServerFn({ method: "POST" })
 export const getMasteryOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, userId } = context as { supabase: Client; userId: string };
+    const { supabase, userId } = context;
     const { data, error } = await supabase
       .from("user_mastery")
       .select("*")
@@ -243,7 +239,13 @@ export const getMasteryOverview = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
-async function getQuestions(supabase: Client) {
+async function getQuestions(
+  supabase: Awaited<ReturnType<typeof requireSupabaseAuth>> extends {
+    context: { supabase: infer C };
+  }
+    ? C
+    : never,
+) {
   const { data, error } = await supabase
     .from("questions")
     .select("*, options:question_options(*)")
