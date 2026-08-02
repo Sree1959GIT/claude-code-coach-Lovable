@@ -15,6 +15,14 @@ import {
 } from "@/lib/study.functions";
 
 export const Route = createFileRoute("/_authenticated/study/session")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    sessionId: typeof search.sessionId === "string" ? search.sessionId : "",
+  }),
+  errorComponent: ({ error }) => (
+    <div className="p-8 font-mono text-sm text-destructive">
+      Session error: {error.message}
+    </div>
+  ),
   component: SessionRunner,
   head: () => ({
     meta: [
