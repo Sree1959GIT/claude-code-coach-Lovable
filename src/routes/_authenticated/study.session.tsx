@@ -272,6 +272,30 @@ function SessionRunner() {
             <div className="font-mono text-xs text-muted-foreground">Loading session…</div>
           )}
 
+          {!sessionId && (
+            <div className="border border-destructive/40 bg-destructive/10 p-6 font-mono text-xs">
+              Missing session id.{" "}
+              <Link to="/study" className="underline">
+                Back to Study_Hub
+              </Link>
+            </div>
+          )}
+
+          {sessionQ.isError && (
+            <div className="border border-destructive/40 bg-destructive/10 p-6 font-mono text-xs">
+              Could not load session: {(sessionQ.error as Error).message}
+              <div className="mt-3">
+                <button
+                  onClick={() => sessionQ.refetch()}
+                  className="border border-border px-3 py-1.5 uppercase tracking-widest hover:bg-secondary"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          )}
+
+
           {finished && (
             <div className="border border-border bg-card p-8 text-center">
               <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
