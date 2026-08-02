@@ -42,9 +42,11 @@ export const Route = createFileRoute("/_authenticated/analytics")({
 function AnalyticsPage() {
   useEffect(() => { logEvent("page_view", { page: "analytics" }); }, []);
 
+  const getMasteryFn = useServerFn(getMasteryOverview);
   const domainsQ = useQuery({ queryKey: ["domains"], queryFn: fetchDomains });
   const attemptsQ = useQuery({ queryKey: ["my_attempts"], queryFn: fetchMyAttempts });
   const progressQ = useQuery({ queryKey: ["my_progress"], queryFn: fetchMyDomainProgress });
+  const masteryQ = useQuery({ queryKey: ["mastery"], queryFn: () => getMasteryFn() });
 
   const totals = useMemo(() => {
     const attempts = attemptsQ.data ?? [];
@@ -54,6 +56,7 @@ function AnalyticsPage() {
       : 0;
     return { total: attempts.length, correct, avgMs };
   }, [attemptsQ.data]);
+
 
   const byDay = useMemo(() => {
     const attempts = attemptsQ.data ?? [];
