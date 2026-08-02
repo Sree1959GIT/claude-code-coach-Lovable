@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Question, QuestionOption, QuestionWithOptions } from "./study";
 import {
   buildAttemptsMap,
   buildExamSample,
@@ -26,10 +27,22 @@ export const startSession = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    const [questions, domains] = await Promise.all([
-      getQuestions(supabase),
+    const [{ data: rawQuestions, error: qErr }, domains] = await Promise.all([
+      supabase
+        .from("questions")
+        .select("*, options:question_options(*)")
+        .order("sort_order") as unknown as Promise<{
+          data: (Question & { options: QuestionOption[] })[] | null;
+          error: Error | null;
+        }>,
       fetchDomains(),
     ]);
+    if (qErr) throw qErr;
+
+    const questions = (rawQuestions ?? []).map((q) => ({
+      ...q,
+      options: q.options.sort((a, b) => a.sort_order - b.sort_order),
+    }));
 
     let pool = questions;
     if (data.domainId) {
@@ -238,31 +251,3 @@ export const getMasteryOverview = createServerFn({ method: "GET" })
     if (error) throw error;
     return data ?? [];
   });
-
-async function getQuestions(
-  supabase: Awaited<ReturnType<typeof requireSupabaseAuth>> extends {
-    context: { supabase: infer C };
-  }
-    ? C
-    : never,
-) {
-  const { data, error } = await supabase
-    .from("questions")
-    .select("*, options:question_options(*)")
-    .order("sort_order");
-  if (error) throw error;
-  return (data ?? []).map((q) => ({
-    ...q,
-    options: (
-      q.options as {
-        id: string;
-        question_id: string;
-        label: string;
-        text: string;
-        is_correct: boolean;
-        explanation: string | null;
-        sort_order: number;
-      }[]
-    ).sort((a, b) => a.sort_order - b.sort_order),
-  }));
-}
