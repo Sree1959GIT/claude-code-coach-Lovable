@@ -277,3 +277,72 @@ export const getMasteryOverview = createServerFn({ method: "GET" })
     if (error) throw error;
     return data ?? [];
   });
+
+export const getSession = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ sessionId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: session, error } = await supabase
+      .from("practice_sessions")
+      .select("*")
+      .eq("id", data.sessionId)
+      .eq("user_id", userId)
+      .single();
+    if (error || !session) throw new Error("Session not found");
+
+    const ids = session.metadata?.question_ids as string[] | undefined;
+    if (!ids || ids.length === 0) throw new Error("Session has no questions");
+
+    const { data: rawQuestions, error: qErr } = await supabase
+      .from("questions")
+      .select("*, options:question_options(*)")
+      .in("id", ids) as unknown as Promise<{
+        data: (Question & { options: QuestionOption[] })[] | null;
+        error: Error | null;
+      }>;
+    if (qErr) throw qErr;
+
+    const byId = new Map(
+      (rawQuestions ?? []).map((q) => [
+        q.id,
+        {
+          ...q,
+          options: q.options.sort((a, b) => a.sort_order - b.sort_order),
+        },
+      ]),
+    );
+
+    const ordered = ids
+      .map((id) => byId.get(id))
+      .filter((q): q is NonNullable<typeof q> => !!q) as SessionQuestion[];
+
+    return {
+      id: session.id,
+      mode: session.mode,
+      domain_id: session.domain_id,
+      target_count: session.target_count,
+      time_limit_ms: session.time_limit_ms,
+      started_at: session.started_at,
+      ended_at: session.ended_at,
+      metadata: session.metadata as { question_ids: string[] },
+      questions: ordered.map((q) => ({
+        id: q.id,
+        domain_id: q.domain_id,
+        scenario: q.scenario,
+        stem: q.stem,
+        key_concept: q.key_concept,
+        difficulty: q.difficulty,
+        options: q.options.map((o) => ({
+          id: o.id,
+          question_id: o.question_id,
+          label: o.label,
+          text: o.text,
+          is_correct: o.is_correct,
+          explanation: o.explanation,
+          sort_order: o.sort_order,
+        })),
+      })) as SessionQuestion[],
+    } as SessionDetail;
+  });
+
