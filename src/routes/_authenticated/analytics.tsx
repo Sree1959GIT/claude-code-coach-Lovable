@@ -38,7 +38,6 @@ export const Route = createFileRoute("/_authenticated/analytics")({
   }),
 });
 
-
 function AnalyticsPage() {
   useEffect(() => { logEvent("page_view", { page: "analytics" }); }, []);
 
@@ -57,11 +56,9 @@ function AnalyticsPage() {
     return { total: attempts.length, correct, avgMs };
   }, [attemptsQ.data]);
 
-
   const byDay = useMemo(() => {
     const attempts = attemptsQ.data ?? [];
     const map = new Map<string, { day: string; attempts: number; correct: number }>();
-    // last 14 days baseline
     const today = new Date();
     for (let i = 13; i >= 0; i--) {
       const d = new Date(today);
@@ -90,6 +87,33 @@ function AnalyticsPage() {
     });
   }, [domainsQ.data, progressQ.data]);
 
+  const masteryDistribution = useMemo(() => {
+    const mastery = masteryQ.data ?? [];
+    const counts: Record<string, number> = {};
+    for (const m of mastery) {
+      counts[m.status] = (counts[m.status] ?? 0) + 1;
+    }
+    const labels: Record<string, string> = {
+      new: "New",
+      learning: "Learning",
+      review: "Review",
+      mastered: "Mastered",
+      lapsed: "Lapsed",
+    };
+    const colors: Record<string, string> = {
+      new: "var(--color-muted-foreground)",
+      learning: "var(--color-primary)",
+      review: "var(--color-accent)",
+      mastered: "var(--color-success)",
+      lapsed: "var(--color-destructive)",
+    };
+    return Object.entries(counts).map(([status, value]) => ({
+      name: labels[status] ?? status,
+      value,
+      fill: colors[status] ?? "var(--color-primary)",
+    }));
+  }, [masteryQ.data]);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
@@ -103,7 +127,7 @@ function AnalyticsPage() {
           </h1>
         </header>
 
-        <div className="mb-8 grid gap-px bg-border sm:grid-cols-4">
+        <div className="mb-8 grid gap-px bg-border sm:grid-cols-5">
           <Stat k="Total_Attempts" v={String(totals.total)} />
           <Stat
             k="Accuracy"
@@ -115,6 +139,7 @@ function AnalyticsPage() {
           />
           <Stat k="Correct" v={String(totals.correct)} />
           <Stat k="Avg_Time" v={totals.avgMs ? `${(totals.avgMs / 1000).toFixed(1)}s` : "—"} />
+          <Stat k="Cards" v={String(masteryQ.data?.length ?? 0)} />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
@@ -155,6 +180,44 @@ function AnalyticsPage() {
               </BarChart>
             </ResponsiveContainer>
           </Panel>
+
+          <Panel title="Mastery_Distribution">
+            <ResponsiveContainer width="100%" height={240}>
+              <PieChart>
+                <Pie
+                  data={masteryDistribution}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label={({ name, value }) => `${name}: ${value}`}
+                >
+                  {masteryDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    background: "var(--color-card)",
+                    border: "1px solid var(--color-border)",
+                    fontSize: 11,
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </Panel>
+
+          <Panel title="Mastery_Heatmap">
+            <div className="grid grid-cols-2 gap-3">
+              <HeatStat label="New" value={masteryDistribution.find((d) => d.name === "New")?.value ?? 0} />
+              <HeatStat label="Learning" value={masteryDistribution.find((d) => d.name === "Learning")?.value ?? 0} />
+              <HeatStat label="Review" value={masteryDistribution.find((d) => d.name === "Review")?.value ?? 0} />
+              <HeatStat label="Mastered" value={masteryDistribution.find((d) => d.name === "Mastered")?.value ?? 0} />
+              <HeatStat label="Lapsed" value={masteryDistribution.find((d) => d.name === "Lapsed")?.value ?? 0} />
+              <HeatStat label="Due Now" value={masteryQ.data?.filter((m) => m.due_at && new Date(m.due_at) <= new Date()).length ?? 0} />
+            </div>
+          </Panel>
         </div>
 
         {totals.total === 0 && (
@@ -174,6 +237,15 @@ function Stat({ k, v }: { k: string; v: string }) {
         {k}
       </div>
       <div className="font-mono text-2xl font-bold">{v}</div>
+    </div>
+  );
+}
+
+function HeatStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="border border-border bg-card p-3">
+      <div className="font-mono text-lg font-bold">{value}</div>
+      <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{label}</div>
     </div>
   );
 }
