@@ -1,4 +1,4 @@
-import { Link, createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PanelLeftClose, PanelLeftOpen, UserRound } from "lucide-react";
