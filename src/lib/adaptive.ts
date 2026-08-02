@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Question, QuestionWithOptions } from "./study";
+import type { QuestionWithOptions } from "./study";
 import type { MasteryState } from "./fsrs";
+
 
 export type StudyMode = "adaptive" | "weak" | "exam";
 
