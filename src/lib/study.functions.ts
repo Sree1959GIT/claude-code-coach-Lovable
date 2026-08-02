@@ -291,24 +291,26 @@ export const getSession = createServerFn({ method: "GET" })
       .single();
     if (error || !session) throw new Error("Session not found");
 
-    const ids = session.metadata?.question_ids as string[] | undefined;
+    const ids = (session.metadata as { question_ids?: string[] } | null)?.question_ids;
     if (!ids || ids.length === 0) throw new Error("Session has no questions");
 
-    const { data: rawQuestions, error: qErr } = await supabase
+    const { data: rawQuestions, error: qErr } = (await supabase
       .from("questions")
       .select("*, options:question_options(*)")
-      .in("id", ids) as unknown as Promise<{
-        data: (Question & { options: QuestionOption[] })[] | null;
-        error: Error | null;
-      }>;
+      .in("id", ids)) as {
+      data: (Question & { options: QuestionOption[] })[] | null;
+      error: Error | null;
+    };
     if (qErr) throw qErr;
 
     const byId = new Map(
-      (rawQuestions ?? []).map((q) => [
+      (rawQuestions ?? []).map((q: Question & { options: QuestionOption[] }) => [
         q.id,
         {
           ...q,
-          options: q.options.sort((a, b) => a.sort_order - b.sort_order),
+          options: (q.options as QuestionOption[]).sort(
+            (a: QuestionOption, b: QuestionOption) => a.sort_order - b.sort_order,
+          ),
         },
       ]),
     );
@@ -316,6 +318,7 @@ export const getSession = createServerFn({ method: "GET" })
     const ordered = ids
       .map((id) => byId.get(id))
       .filter((q): q is NonNullable<typeof q> => !!q) as SessionQuestion[];
+
 
     return {
       id: session.id,
