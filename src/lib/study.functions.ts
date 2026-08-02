@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   buildAttemptsMap,
   buildExamSample,
@@ -9,30 +10,11 @@ import {
   nextAdaptive,
   nextWeakArea,
   splitPool,
-  type StudyMode,
 } from "./adaptive";
 import { fetchDomains } from "./study";
 import { initialState, scheduleNext } from "./fsrs";
 
-type SupabaseClient = Awaited<ReturnType<typeof requireSupabaseAuth>> extends {
-  context: { supabase: infer C };
-}
-  ? C
-  : never;
-
-async function getQuestions(supabase: SupabaseClient) {
-  const { data, error } = await supabase
-    .from("questions")
-    .select("*, options:question_options(*)")
-    .order("sort_order");
-  if (error) throw error;
-  return (data ?? []).map((q) => ({
-    ...q,
-    options: (q.options as { id: string; question_id: string; label: string; text: string; is_correct: boolean; explanation: string | null; sort_order: number }[]).sort(
-      (a, b) => a.sort_order - b.sort_order,
-    ),
-  }));
-}
+type Client = SupabaseClient<Database, "public", Database["public"]>;
 
 export const startSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -46,7 +28,7 @@ export const startSession = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    const { supabase, userId } = context as { supabase: Client; userId: string };
 
     const [questions, domains] = await Promise.all([
       getQuestions(supabase),
@@ -63,12 +45,17 @@ export const startSession = createServerFn({ method: "POST" })
 
     if (data.mode === "exam") {
       const target = data.targetCount;
-      timeLimitMs = target >= 60 ? 90 * 60 * 1000 : Math.max(2, target) * 1.5 * 60 * 1000;
+      timeLimitMs =
+        target >= 60
+          ? 90 * 60 * 1000
+          : Math.max(2, target) * 1.5 * 60 * 1000;
       selected = buildExamSample(pool, domains, target);
     } else {
       const { data: masteryRows, error: mErr } = await supabase
         .from("user_mastery")
-        .select("question_id, status, due_at, stability, difficulty, reps, lapses, last_attempt_at, last_attempt_correct")
+        .select(
+          "question_id, status, due_at, stability, difficulty, reps, lapses, last_attempt_at, last_attempt_correct",
+        )
         .eq("user_id", userId);
       if (mErr) throw mErr;
       const mastery = buildMasteryMap(masteryRows ?? []);
@@ -149,7 +136,7 @@ export const recordSessionAnswer = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    const { supabase, userId } = context as { supabase: Client; userId: string };
 
     // Verify session ownership
     const { data: session, error: sErr } = await supabase
@@ -181,13 +168,20 @@ export const recordSessionAnswer = createServerFn({ method: "POST" })
 
     const previous = mastery
       ? {
-          status: mastery.status as "new" | "learning" | "review" | "mastered" | "lapsed",
-          dueAt: new Date(mastery.due_at),
+          status: mastery.status as
+            | "new"
+            | "learning"
+            | "review"
+            | "mastered"
+            | "lapsed",
+          dueAt: new Date(mastery.due_at ?? Date.now()),
           stability: Number(mastery.stability),
           difficulty: Number(mastery.difficulty),
           reps: mastery.reps,
           lapses: mastery.lapses,
-          lastAttemptAt: mastery.last_attempt_at ? new Date(mastery.last_attempt_at) : undefined,
+          lastAttemptAt: mastery.last_attempt_at
+            ? new Date(mastery.last_attempt_at)
+            : undefined,
           lastAttemptCorrect: mastery.last_attempt_correct ?? undefined,
         }
       : initialState();
@@ -223,9 +217,11 @@ export const recordSessionAnswer = createServerFn({ method: "POST" })
 
 export const endSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ sessionId: z.string().uuid() }).parse(input))
+  .inputValidator((input) =>
+    z.object({ sessionId: z.string().uuid() }).parse(input),
+  )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    const { supabase, userId } = context as { supabase: Client; userId: string };
     const { error } = await supabase
       .from("practice_sessions")
       .update({ ended_at: new Date().toISOString() })
@@ -238,7 +234,7 @@ export const endSession = createServerFn({ method: "POST" })
 export const getMasteryOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, userId } = context;
+    const { supabase, userId } = context as { supabase: Client; userId: string };
     const { data, error } = await supabase
       .from("user_mastery")
       .select("*")
@@ -246,3 +242,25 @@ export const getMasteryOverview = createServerFn({ method: "GET" })
     if (error) throw error;
     return data ?? [];
   });
+
+async function getQuestions(supabase: Client) {
+  const { data, error } = await supabase
+    .from("questions")
+    .select("*, options:question_options(*)")
+    .order("sort_order");
+  if (error) throw error;
+  return (data ?? []).map((q) => ({
+    ...q,
+    options: (
+      q.options as {
+        id: string;
+        question_id: string;
+        label: string;
+        text: string;
+        is_correct: boolean;
+        explanation: string | null;
+        sort_order: number;
+      }[]
+    ).sort((a, b) => a.sort_order - b.sort_order),
+  }));
+}
