@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { Question, QuestionOption, QuestionWithOptions } from "./study";
+import type { Question, QuestionOption } from "./study";
 import {
   buildAttemptsMap,
   buildExamSample,
@@ -12,6 +12,29 @@ import {
 } from "./adaptive";
 import { fetchDomains } from "./study";
 import { initialState, scheduleNext } from "./fsrs";
+
+export type SessionQuestion = {
+  id: string;
+  domain_id: string;
+  scenario: string | null;
+  stem: string;
+  key_concept: string | null;
+  difficulty: string;
+  options: QuestionOption[];
+};
+
+export type SessionDetail = {
+  id: string;
+  mode: string;
+  domain_id: string | null;
+  target_count: number;
+  time_limit_ms: number | null;
+  started_at: string;
+  ended_at: string | null;
+  metadata: { question_ids: string[] };
+  questions: SessionQuestion[];
+};
+
 
 export const startSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
