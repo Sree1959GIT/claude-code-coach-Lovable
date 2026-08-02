@@ -36,10 +36,11 @@ function Dashboard() {
 
   const name = user?.user_metadata?.full_name ?? user?.email ?? "Architect";
   const mastery = masteryQ.data ?? [];
-  const due = mastery.filter((m) => new Date(m.due_at) <= new Date()).length;
+  const due = mastery.filter((m) => m.due_at && new Date(m.due_at) <= new Date()).length;
   const mastered = mastery.filter((m) => m.status === "mastered").length;
   const lapsed = mastery.filter((m) => m.status === "lapsed").length;
   const total = mastery.length;
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
