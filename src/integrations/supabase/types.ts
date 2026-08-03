@@ -74,6 +74,80 @@ export type Database = {
         }
         Relationships: []
       }
+      library_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          created_at: string
+          document_id: string
+          embedding: string | null
+          id: string
+          token_count: number | null
+        }
+        Insert: {
+          chunk_index: number
+          content: string
+          created_at?: string
+          document_id: string
+          embedding?: string | null
+          id?: string
+          token_count?: number | null
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          document_id?: string
+          embedding?: string | null
+          id?: string
+          token_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "library_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      library_documents: {
+        Row: {
+          content_hash: string | null
+          created_at: string
+          id: string
+          kind: string
+          source: string
+          tags: string[]
+          title: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          content_hash?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          source: string
+          tags?: string[]
+          title: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          content_hash?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          source?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       practice_sessions: {
         Row: {
           created_at: string
