@@ -349,6 +349,24 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
       }
       setStatus("Mentor_speaking");
 
+      // Library citations arrive in a response header (see /api/mentor-stream).
+      const assistantIndex = next.length;
+      try {
+        const raw = res.headers.get("X-Mentor-Citations");
+        if (raw) {
+          const parsed = JSON.parse(decodeURIComponent(raw)) as {
+            n: number;
+            title: string;
+            url: string | null;
+            source: string;
+          }[];
+          if (parsed.length) setCitations((c) => ({ ...c, [assistantIndex]: parsed }));
+        }
+      } catch {
+        /* ignore malformed citation header */
+      }
+
+
       const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
       let buffer = "";
       while (true) {
