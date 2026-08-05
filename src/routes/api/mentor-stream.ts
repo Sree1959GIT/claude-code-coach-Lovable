@@ -76,6 +76,49 @@ export const Route = createFileRoute("/api/mentor-stream")({
         const messages = (body.messages ?? []).slice(-20);
         if (!messages.length) return new Response("No messages", { status: 400 });
 
+        // --- RAG grounding: retrieve library passages for the current turn ---
+        const lastUser = [...messages].reverse().find((m) => m.role === "user");
+        const retrievalQuery = [
+          lastUser?.content ?? "",
+          (body.context?.stem as string | undefined) ?? "",
+          (body.context?.key_concept as string | undefined) ?? "",
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .slice(0, 900);
+
+        let sourcesBlock = "";
+        let citations: {
+          n: number;
+          title: string;
+          url: string | null;
+          source: string;
+          similarity: number;
+        }[] = [];
+
+        try {
+          const { retrieveChunks, buildContextBlock } = await import(
+            "@/lib/retrieval.server"
+          );
+          const matches = await retrieveChunks({
+            query: retrievalQuery,
+            matchCount: 5,
+            minSimilarity: 0.2,
+          });
+          if (matches.length) {
+            sourcesBlock = `Library passages retrieved for this turn. Use them as the factual basis for your explanation. Cite them inline as [1], [2] etc. in the WRITTEN ANSWER only — never in the spoken part. If they do not cover the point, rely on your own knowledge and do not invent citations.\n\n${buildContextBlock(matches, 5000)}`;
+            citations = matches.map((m, i) => ({
+              n: i + 1,
+              title: m.title,
+              url: m.url,
+              source: m.source,
+              similarity: Number(m.similarity.toFixed(3)),
+            }));
+          }
+        } catch {
+          // Retrieval is best-effort — the mentor still answers without it.
+        }
+
         const upstream = await fetch(`${GATEWAY_URL}/chat/completions`, {
           method: "POST",
           headers: {
@@ -88,6 +131,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
             messages: [
               { role: "system", content: SYSTEM_PROMPT },
               { role: "system", content: contextBlock(body.context) },
+              ...(sourcesBlock ? [{ role: "system", content: sourcesBlock }] : []),
               ...messages,
             ],
           }),
@@ -109,8 +153,12 @@ export const Route = createFileRoute("/api/mentor-stream")({
             "Content-Type": "text/event-stream",
             "Cache-Control": "no-cache",
             Connection: "keep-alive",
+            // Citations travel in a header so the SSE token stream stays clean.
+            "X-Mentor-Citations": encodeURIComponent(JSON.stringify(citations)),
+            "Access-Control-Expose-Headers": "X-Mentor-Citations",
           },
         });
+
       },
     },
   },
