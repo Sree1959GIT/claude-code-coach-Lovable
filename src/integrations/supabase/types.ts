@@ -432,6 +432,25 @@ export type Database = {
         }
         Returns: boolean
       }
+      match_library_chunks: {
+        Args: {
+          match_count?: number
+          min_similarity?: number
+          query_embedding: string
+        }
+        Returns: {
+          chunk_id: string
+          chunk_index: number
+          content: string
+          document_id: string
+          kind: string
+          similarity: number
+          source: string
+          tags: string[]
+          title: string
+          url: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "pro" | "user"
