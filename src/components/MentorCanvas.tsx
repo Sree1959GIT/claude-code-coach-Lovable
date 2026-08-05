@@ -165,6 +165,10 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [video, setVideo] = useState<LearnResource | null>(null);
   const [openRefs, setOpenRefs] = useState<number | null>(null);
+  const [citations, setCitations] = useState<
+    Record<number, { n: number; title: string; url: string | null; source: string }[]>
+  >({});
+
 
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
