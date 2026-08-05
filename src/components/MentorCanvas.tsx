@@ -640,7 +640,37 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
                   ))}
                 </ul>
               )}
+              {!isUser && (citations[i]?.length ?? 0) > 0 && (
+                <div className="mt-2 border-t border-primary/20 pt-2">
+                  <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
+                    Library_sources
+                  </div>
+                  <ol className="space-y-1">
+                    {citations[i]!.map((c) => (
+                      <li key={c.n} className="text-[11px] leading-snug">
+                        <span className="font-mono text-primary">[{c.n}]</span>{" "}
+                        {c.url ? (
+                          <a
+                            href={c.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline underline-offset-2 hover:text-primary"
+                          >
+                            {c.title}
+                          </a>
+                        ) : (
+                          <span>{c.title}</span>
+                        )}{" "}
+                        <span className="font-mono text-[8px] uppercase tracking-widest text-muted-foreground">
+                          {c.source}
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
             </div>
+
           );
         })}
 
