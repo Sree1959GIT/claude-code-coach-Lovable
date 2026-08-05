@@ -165,6 +165,10 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [video, setVideo] = useState<LearnResource | null>(null);
   const [openRefs, setOpenRefs] = useState<number | null>(null);
+  const [citations, setCitations] = useState<
+    Record<number, { n: number; title: string; url: string | null; source: string }[]>
+  >({});
+
 
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -344,6 +348,24 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
         throw new Error((await res.text().catch(() => "")) || `Mentor failed (${res.status})`);
       }
       setStatus("Mentor_speaking");
+
+      // Library citations arrive in a response header (see /api/mentor-stream).
+      const assistantIndex = next.length;
+      try {
+        const raw = res.headers.get("X-Mentor-Citations");
+        if (raw) {
+          const parsed = JSON.parse(decodeURIComponent(raw)) as {
+            n: number;
+            title: string;
+            url: string | null;
+            source: string;
+          }[];
+          if (parsed.length) setCitations((c) => ({ ...c, [assistantIndex]: parsed }));
+        }
+      } catch {
+        /* ignore malformed citation header */
+      }
+
 
       const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
       let buffer = "";
@@ -618,7 +640,37 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
                   ))}
                 </ul>
               )}
+              {!isUser && (citations[i]?.length ?? 0) > 0 && (
+                <div className="mt-2 border-t border-primary/20 pt-2">
+                  <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
+                    Library_sources
+                  </div>
+                  <ol className="space-y-1">
+                    {citations[i]!.map((c) => (
+                      <li key={c.n} className="text-[11px] leading-snug">
+                        <span className="font-mono text-primary">[{c.n}]</span>{" "}
+                        {c.url ? (
+                          <a
+                            href={c.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline underline-offset-2 hover:text-primary"
+                          >
+                            {c.title}
+                          </a>
+                        ) : (
+                          <span>{c.title}</span>
+                        )}{" "}
+                        <span className="font-mono text-[8px] uppercase tracking-widest text-muted-foreground">
+                          {c.source}
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
             </div>
+
           );
         })}
 
