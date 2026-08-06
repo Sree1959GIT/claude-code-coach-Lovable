@@ -607,6 +607,11 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
             ? []
             : matchResources([context.key_concept, context.domain, context.stem, m.content]);
           const expanded = openRefs === i;
+          const msgCitations = isUser ? [] : (citations[i] ?? []);
+          const cited = citedNumbers(m.content);
+          const shownCitations = cited.length
+            ? msgCitations.filter((c) => cited.includes(c.n))
+            : msgCitations;
           return (
             <div
               key={i}
@@ -625,7 +630,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
                 {isUser ? (
                   m.content
                 ) : (
-                  <CitedText content={m.content} citations={citations[i] ?? []} />
+                  <CitedText content={m.content} citations={msgCitations} />
                 )}
               </div>
               {!isUser && (
@@ -688,13 +693,13 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
                   ))}
                 </ul>
               )}
-              {!isUser && (citations[i]?.length ?? 0) > 0 && (
+              {!isUser && shownCitations.length > 0 && (
                 <div className="mt-2 border-t border-primary/20 pt-2">
                   <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
                     Library_sources
                   </div>
                   <ol className="space-y-1">
-                    {citations[i]!.map((c) => (
+                    {shownCitations.map((c) => (
                       <li key={c.n} className="text-[11px] leading-snug">
                         <span className="font-mono text-primary">[{c.n}]</span>{" "}
                         {c.url ? (
