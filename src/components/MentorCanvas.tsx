@@ -33,7 +33,7 @@ type Props = {
 
 type Segment = { text: string; target: HighlightTarget };
 
-type Citation = { n: number; title: string; url: string | null; source: string; similarity: number };
+type Citation = { n: number; title: string; url: string | null; source: string; similarity?: number };
 
 /** Numbers of the library sources actually cited in a response body. */
 function citedNumbers(content: string): number[] {
