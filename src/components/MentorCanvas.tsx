@@ -33,6 +33,48 @@ type Props = {
 
 type Segment = { text: string; target: HighlightTarget };
 
+type Citation = { n: number; title: string; url: string | null; source: string; similarity?: number };
+
+/** Numbers of the library sources actually cited in a response body. */
+function citedNumbers(content: string): number[] {
+  const found = new Set<number>();
+  for (const m of content.matchAll(/\[(\d{1,2})\]/g)) found.add(Number(m[1]));
+  return [...found].sort((a, b) => a - b);
+}
+
+/** Renders assistant text with inline [n] markers turned into source links. */
+function CitedText({ content, citations }: { content: string; citations: Citation[] }) {
+  const parts = content.split(/(\[\d{1,2}\])/g);
+  return (
+    <>
+      {parts.map((part, idx) => {
+        const m = /^\[(\d{1,2})\]$/.exec(part);
+        const cite = m ? citations.find((c) => c.n === Number(m[1])) : undefined;
+        if (!cite) return <span key={idx}>{part}</span>;
+        const inner = (
+          <span className="font-mono text-[10px] align-super text-primary">[{cite.n}]</span>
+        );
+        return cite.url ? (
+          <a
+            key={idx}
+            href={cite.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={cite.title}
+            className="hover:opacity-80"
+          >
+            {inner}
+          </a>
+        ) : (
+          <span key={idx} title={cite.title}>
+            {inner}
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
 const MARKER_RE = /\[\[(scenario|stem|none|brief|opt:[A-Za-z0-9]+)\]\]/;
 
 function parseMarker(token: string): HighlightTarget {
@@ -565,6 +607,11 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
             ? []
             : matchResources([context.key_concept, context.domain, context.stem, m.content]);
           const expanded = openRefs === i;
+          const msgCitations = isUser ? [] : (citations[i] ?? []);
+          const cited = citedNumbers(m.content);
+          const shownCitations = cited.length
+            ? msgCitations.filter((c) => cited.includes(c.n))
+            : msgCitations;
           return (
             <div
               key={i}
@@ -579,7 +626,13 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
               >
                 {isUser ? "You" : "Mentor"}
               </div>
-              <div className="whitespace-pre-wrap">{m.content}</div>
+              <div className="whitespace-pre-wrap">
+                {isUser ? (
+                  m.content
+                ) : (
+                  <CitedText content={m.content} citations={msgCitations} />
+                )}
+              </div>
               {!isUser && (
                 <div className="mt-2 flex flex-wrap items-center gap-3 border-t border-primary/20 pt-2">
                   <button
@@ -640,13 +693,13 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
                   ))}
                 </ul>
               )}
-              {!isUser && (citations[i]?.length ?? 0) > 0 && (
+              {!isUser && shownCitations.length > 0 && (
                 <div className="mt-2 border-t border-primary/20 pt-2">
                   <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
                     Library_sources
                   </div>
                   <ol className="space-y-1">
-                    {citations[i]!.map((c) => (
+                    {shownCitations.map((c) => (
                       <li key={c.n} className="text-[11px] leading-snug">
                         <span className="font-mono text-primary">[{c.n}]</span>{" "}
                         {c.url ? (
