@@ -579,7 +579,13 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
               >
                 {isUser ? "You" : "Mentor"}
               </div>
-              <div className="whitespace-pre-wrap">{m.content}</div>
+              <div className="whitespace-pre-wrap">
+                {isUser ? (
+                  m.content
+                ) : (
+                  <CitedText content={m.content} citations={citations[i] ?? []} />
+                )}
+              </div>
               {!isUser && (
                 <div className="mt-2 flex flex-wrap items-center gap-3 border-t border-primary/20 pt-2">
                   <button
