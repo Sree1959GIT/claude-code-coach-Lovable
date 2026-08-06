@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiMentorStreamRouteImport } from './routes/api/mentor-stream'
+import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as AuthenticatedEstimatorRouteImport } from './routes/_authenticated/estimator'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
@@ -44,6 +45,11 @@ const ApiMentorStreamRoute = ApiMentorStreamRouteImport.update({
   id: '/api/mentor-stream',
   path: '/api/mentor-stream',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedEstimatorRoute = AuthenticatedEstimatorRouteImport.update({
   id: '/estimator',
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/estimator': typeof AuthenticatedEstimatorRoute
+  '/library': typeof AuthenticatedLibraryRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/study/$slug': typeof AuthenticatedStudySlugRoute
   '/study/session': typeof AuthenticatedStudySessionRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/estimator': typeof AuthenticatedEstimatorRoute
+  '/library': typeof AuthenticatedLibraryRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/study/$slug': typeof AuthenticatedStudySlugRoute
   '/study/session': typeof AuthenticatedStudySessionRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/estimator': typeof AuthenticatedEstimatorRoute
+  '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/_authenticated/study/$slug': typeof AuthenticatedStudySlugRoute
   '/_authenticated/study/session': typeof AuthenticatedStudySessionRoute
@@ -124,6 +133,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/dashboard'
     | '/estimator'
+    | '/library'
     | '/api/mentor-stream'
     | '/study/$slug'
     | '/study/session'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/dashboard'
     | '/estimator'
+    | '/library'
     | '/api/mentor-stream'
     | '/study/$slug'
     | '/study/session'
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/_authenticated/analytics'
     | '/_authenticated/dashboard'
     | '/_authenticated/estimator'
+    | '/_authenticated/library'
     | '/api/mentor-stream'
     | '/_authenticated/study/$slug'
     | '/_authenticated/study/session'
@@ -200,6 +212,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMentorStreamRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/library': {
+      id: '/_authenticated/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof AuthenticatedLibraryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/estimator': {
       id: '/_authenticated/estimator'
       path: '/estimator'
@@ -249,6 +268,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEstimatorRoute: typeof AuthenticatedEstimatorRoute
+  AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedStudySlugRoute: typeof AuthenticatedStudySlugRoute
   AuthenticatedStudySessionRoute: typeof AuthenticatedStudySessionRoute
   AuthenticatedStudyIndexRoute: typeof AuthenticatedStudyIndexRoute
@@ -258,6 +278,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEstimatorRoute: AuthenticatedEstimatorRoute,
+  AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedStudySlugRoute: AuthenticatedStudySlugRoute,
   AuthenticatedStudySessionRoute: AuthenticatedStudySessionRoute,
   AuthenticatedStudyIndexRoute: AuthenticatedStudyIndexRoute,
@@ -276,13 +297,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

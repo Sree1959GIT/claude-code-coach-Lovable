@@ -78,3 +78,38 @@ export const seedLibrary = createServerFn({ method: "POST" })
       results,
     };
   });
+
+/** Is the caller a library admin? Safe to call from any signed-in user. */
+export const isLibraryAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (error) throw error;
+    return { admin: Boolean(data) };
+  });
+
+/** Admin listing of ingested documents with their chunk counts. */
+export const listLibraryDocuments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { data, error } = await context.supabase
+      .from("library_documents")
+      .select("id, title, source, url, kind, tags, updated_at, library_chunks(count)")
+      .order("updated_at", { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    return (data ?? []).map((d: any) => ({
+      id: d.id as string,
+      title: d.title as string,
+      source: d.source as string,
+      url: (d.url ?? null) as string | null,
+      kind: d.kind as string,
+      tags: (d.tags ?? []) as string[],
+      updatedAt: d.updated_at as string,
+      chunkCount: (d.library_chunks?.[0]?.count ?? 0) as number,
+    }));
+  });
