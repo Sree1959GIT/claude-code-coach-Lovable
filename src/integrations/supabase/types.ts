@@ -14,6 +14,119 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_runs: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          final_answer: string | null
+          id: string
+          metadata: Json
+          mode: string
+          question: string | null
+          question_id: string | null
+          status: string
+          total_completion_tokens: number
+          total_prompt_tokens: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          final_answer?: string | null
+          id?: string
+          metadata?: Json
+          mode?: string
+          question?: string | null
+          question_id?: string | null
+          status?: string
+          total_completion_tokens?: number
+          total_prompt_tokens?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          final_answer?: string | null
+          id?: string
+          metadata?: Json
+          mode?: string
+          question?: string | null
+          question_id?: string | null
+          status?: string
+          total_completion_tokens?: number
+          total_prompt_tokens?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      agent_steps: {
+        Row: {
+          agent: string
+          completion_tokens: number
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          id: string
+          input: Json | null
+          model: string | null
+          output: Json | null
+          prompt_tokens: number
+          role: string | null
+          run_id: string
+          status: string
+          step_index: number
+          user_id: string
+        }
+        Insert: {
+          agent: string
+          completion_tokens?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          input?: Json | null
+          model?: string | null
+          output?: Json | null
+          prompt_tokens?: number
+          role?: string | null
+          run_id: string
+          status?: string
+          step_index: number
+          user_id: string
+        }
+        Update: {
+          agent?: string
+          completion_tokens?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          input?: Json | null
+          model?: string | null
+          output?: Json | null
+          prompt_tokens?: number
+          role?: string | null
+          run_id?: string
+          status?: string
+          step_index?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_steps_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "agent_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analytics_events: {
         Row: {
           created_at: string
