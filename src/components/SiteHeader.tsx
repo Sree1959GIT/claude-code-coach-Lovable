@@ -58,6 +58,13 @@ export function SiteHeader() {
                 Library
               </Link>
               <Link
+                to="/traces"
+                className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+              >
+                Traces
+              </Link>
+              <Link
                 to="/dashboard"
                 className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
                 activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
