@@ -1,47 +1,17 @@
+/**
+ * Sub-task 7 — Mentor stream wired through the multi-agent orchestrator.
+ * Route plan → memory agent → retrieval agent → explainer or evaluator stream.
+ * Tracing is best-effort and never blocks the response.
+ */
+
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
-
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
-
-const SYSTEM_PROMPT = `You are the SME Voice Mentor for the Claude Code Architect Foundation exam prep.
-
-Role:
-- Help the learner INTERPRET the question in front of them. Never state the correct answer outright before they submit — teach the concept so they can decide.
-- If the learner asks about a specific option they selected, evaluate how apt that option is for the stem: what it gets right, what it misses, and which keyword in the stem decides it. Do not name the correct letter; guide them.
-- Ground explanations in Anthropic Claude Code / Claude Agent SDK terminology.
-- Plain prose only — no markdown, lists, headings or code fences.
-
-OUTPUT FORMAT (required, two parts):
-1) WRITTEN ANSWER: a clear, well-structured explanation the learner will READ (3-6 sentences). Be specific and complete.
-2) Then emit the literal marker [[brief]] on its own, followed by a SPOKEN summary: 2-3 short sentences, conversational and warm, that briefly explains the same point in line with the written answer. This part is spoken aloud, so keep it tight and natural — never read the written answer verbatim.
-
-HIGHLIGHT MARKERS (required inside the SPOKEN part):
-Immediately before each spoken sentence, emit exactly one marker naming what that sentence is about:
-  [[scenario]] when talking about the scenario paragraph
-  [[stem]] when talking about the question stem itself
-  [[opt:A]] / [[opt:B]] / ... when talking about that answer option
-  [[none]] for general talk
-Markers are stripped before display. Never mention markers in your prose.`;
-
-
-function contextBlock(ctx: Record<string, unknown> | undefined) {
-  if (!ctx) return "No question context attached.";
-  const options = (ctx.options as { label: string; text: string }[] | undefined) ?? [];
-  return [
-    "Current question context:",
-    `Domain: ${ctx.domain ?? "(unspecified)"}`,
-    `Key concept: ${ctx.key_concept ?? "(unspecified)"}`,
-    ctx.scenario ? `Scenario: ${ctx.scenario}` : "",
-    `Stem: ${ctx.stem ?? ""}`,
-    "Options:",
-    ...options.map((o) => `  ${o.label}. ${o.text}`),
-    ctx.selectedOption
-      ? `The learner has currently selected option ${ctx.selectedOption}. If they ask about "this option" or "my answer", they mean option ${ctx.selectedOption}.`
-      : "The learner has not selected an option yet.",
-  ]
-    .filter(Boolean)
-    .join("\n");
-}
+import type { Database } from "@/integrations/supabase/types";
+import { planRoute, startRun, logStep } from "@/lib/orchestrator.server";
+import { runMemoryAgent } from "@/lib/agents/memory.agent.server";
+import { runRetrievalAgent } from "@/lib/agents/retrieval.agent.server";
+import { streamExplainer, type QuestionContext } from "@/lib/agents/explainer.agent.server";
+import { streamEvaluator } from "@/lib/agents/evaluator.agent.server";
 
 export const Route = createFileRoute("/api/mentor-stream")({
   server: {
@@ -53,113 +23,121 @@ export const Route = createFileRoute("/api/mentor-stream")({
           return new Response("Unauthorized", { status: 401 });
         }
 
-        const supabaseUrl = process.env.SUPABASE_URL;
-        const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+        const supabaseUrl = process.env["SUPABASE_URL"];
+        const supabaseKey = process.env["SUPABASE_PUBLISHABLE_KEY"];
         if (!supabaseUrl || !supabaseKey) {
           return new Response("Backend not configured", { status: 500 });
         }
-        const supabase = createClient(supabaseUrl, supabaseKey, {
+        const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
           auth: { persistSession: false, autoRefreshToken: false },
+          global: { headers: { Authorization: `Bearer ${token}` } },
         });
         const { data, error } = await supabase.auth.getClaims(token);
-        if (error || !data?.claims?.sub) {
-          return new Response("Unauthorized", { status: 401 });
-        }
+        const userId = data?.claims?.sub as string | undefined;
+        if (error || !userId) return new Response("Unauthorized", { status: 401 });
 
-        const key = process.env.LOVABLE_API_KEY;
-        if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
+        if (!process.env["LOVABLE_API_KEY"]) {
+          return new Response("Missing LOVABLE_API_KEY", { status: 500 });
+        }
 
         const body = (await request.json()) as {
           messages?: { role: "user" | "assistant"; content: string }[];
-          context?: Record<string, unknown>;
+          context?: QuestionContext | null;
         };
         const messages = (body.messages ?? []).slice(-20);
         if (!messages.length) return new Response("No messages", { status: 400 });
 
-        // --- RAG grounding: retrieve library passages for the current turn ---
+        const context = body.context ?? null;
         const lastUser = [...messages].reverse().find((m) => m.role === "user");
-        const retrievalQuery = [
-          lastUser?.content ?? "",
-          (body.context?.stem as string | undefined) ?? "",
-          (body.context?.key_concept as string | undefined) ?? "",
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .slice(0, 900);
+        const turn = lastUser?.content ?? "";
 
-        let sourcesBlock = "";
-        let citations: {
-          n: number;
-          title: string;
-          url: string | null;
-          source: string;
-          similarity: number;
-        }[] = [];
-
-        try {
-          const { retrieveChunks, buildContextBlock } = await import(
-            "@/lib/retrieval.server"
-          );
-          const matches = await retrieveChunks({
-            query: retrievalQuery,
-            matchCount: 5,
-            minSimilarity: 0.2,
-          });
-          if (matches.length) {
-            sourcesBlock = `Library passages retrieved for this turn. Use them as the factual basis for your explanation. Cite them inline as [1], [2] etc. in the WRITTEN ANSWER only — never in the spoken part. If they do not cover the point, rely on your own knowledge and do not invent citations.\n\n${buildContextBlock(matches, 5000)}`;
-            citations = matches.map((m, i) => ({
-              n: i + 1,
-              title: m.title,
-              url: m.url,
-              source: m.source,
-              similarity: Number(m.similarity.toFixed(3)),
-            }));
-          }
-        } catch {
-          // Retrieval is best-effort — the mentor still answers without it.
-        }
-
-        const upstream = await fetch(`${GATEWAY_URL}/chat/completions`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${key}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-3.6-flash",
-            stream: true,
-            messages: [
-              { role: "system", content: SYSTEM_PROMPT },
-              { role: "system", content: contextBlock(body.context) },
-              ...(sourcesBlock ? [{ role: "system", content: sourcesBlock }] : []),
-              ...messages,
-            ],
-          }),
+        // --- 1. Route the turn -------------------------------------------------
+        const plan = planRoute(turn, {
+          selectedOption: context?.selectedOption ?? null,
+          hasQuestion: Boolean(context?.stem),
         });
 
-        if (!upstream.ok || !upstream.body) {
-          const text = await upstream.text().catch(() => "");
-          const message =
-            upstream.status === 429
-              ? "Mentor is rate limited. Try again in a moment."
-              : upstream.status === 402
-                ? "AI credits exhausted. Add credits in Lovable settings."
-                : `Mentor call failed: ${upstream.status} ${text.slice(0, 160)}`;
-          return new Response(message, { status: upstream.status || 500 });
+        const runId = await startRun(supabase, {
+          userId,
+          mode: "mentor",
+          question: turn.slice(0, 2000),
+          metadata: { intent: plan.intent, agents: plan.agents, reason: plan.reason },
+        }).catch(() => null);
+
+        const trace = (stepIndex: number) => ({ db: supabase, runId, userId, stepIndex });
+
+        await logStep(supabase, {
+          runId,
+          userId,
+          stepIndex: 0,
+          agent: "orchestrator",
+          role: "router",
+          input: { turn: turn.slice(0, 500), selectedOption: context?.selectedOption ?? null },
+          output: plan,
+        }).catch(() => {});
+
+        // --- 2. Memory + retrieval (parallel) ---------------------------------
+        const [profile, retrieval] = await Promise.all([
+          runMemoryAgent({
+            db: supabase,
+            userId,
+            intent: plan.intent,
+            currentDomain: context?.domain ?? null,
+            trace: { runId, stepIndex: 1 },
+          }),
+          plan.useRetrieval
+            ? runRetrievalAgent({
+                message: turn,
+                context,
+                intent: plan.intent,
+                trace: trace(2),
+              })
+            : Promise.resolve(null),
+        ]);
+
+        // --- 3. Answering agent ------------------------------------------------
+        const agentArgs = {
+          messages,
+          context,
+          intent: plan.intent,
+          retrieval,
+          profileNote: profile.note || null,
+          trace: trace(3),
+        };
+
+        let stream: ReadableStream<Uint8Array>;
+        try {
+          stream =
+            plan.intent === "evaluate_option"
+              ? await streamEvaluator(agentArgs)
+              : await streamExplainer(agentArgs);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Mentor unavailable";
+          const status = message.includes("rate limited")
+            ? 429
+            : message.includes("credits")
+              ? 402
+              : 500;
+          return new Response(message, { status });
         }
 
-        return new Response(upstream.body, {
+        return new Response(stream, {
           headers: {
             "Content-Type": "text/event-stream",
             "Cache-Control": "no-cache",
             Connection: "keep-alive",
-            // Citations travel in a header so the SSE token stream stays clean.
-            "X-Mentor-Citations": encodeURIComponent(JSON.stringify(citations)),
-            "Access-Control-Expose-Headers": "X-Mentor-Citations",
+            // Metadata travels in headers so the SSE token stream stays clean.
+            "X-Mentor-Citations": encodeURIComponent(
+              JSON.stringify(retrieval?.citations ?? []),
+            ),
+            "X-Mentor-Route": encodeURIComponent(
+              JSON.stringify({ intent: plan.intent, agents: plan.agents, runId }),
+            ),
+            "Access-Control-Expose-Headers": "X-Mentor-Citations, X-Mentor-Route",
           },
         });
-
       },
     },
   },
 });
+
