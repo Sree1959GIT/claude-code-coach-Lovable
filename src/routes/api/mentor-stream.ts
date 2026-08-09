@@ -156,7 +156,16 @@ export const Route = createFileRoute("/api/mentor-stream")({
             : Promise.resolve(null),
         ]);
 
-        // --- 3. Answering agent ------------------------------------------------
+        // --- 3. Resource agent (cheap, deterministic) --------------------------
+        const resourcePick = await runResourceAgent({
+          message: turn,
+          context,
+          intent: plan.intent,
+          retrievalTitles: (retrieval?.matches ?? []).map((m) => m.title),
+          trace: trace(3),
+        });
+
+        // --- 4. Answering agent ------------------------------------------------
         const agentArgs = {
           messages,
           context,
