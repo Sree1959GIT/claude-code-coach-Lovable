@@ -210,6 +210,11 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   const [citations, setCitations] = useState<
     Record<number, { n: number; title: string; url: string | null; source: string }[]>
   >({});
+  // Which agents handled each assistant turn (from X-Mentor-Route).
+  const [routes, setRoutes] = useState<
+    Record<number, { intent: string; agents: string[]; runId: string | null }>
+  >({});
+
 
 
 
