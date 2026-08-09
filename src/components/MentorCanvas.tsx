@@ -210,6 +210,11 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   const [citations, setCitations] = useState<
     Record<number, { n: number; title: string; url: string | null; source: string }[]>
   >({});
+  // Which agents handled each assistant turn (from X-Mentor-Route).
+  const [routes, setRoutes] = useState<
+    Record<number, { intent: string; agents: string[]; runId: string | null }>
+  >({});
+
 
 
 
@@ -407,6 +412,22 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
       } catch {
         /* ignore malformed citation header */
       }
+
+      // Route metadata: which intent was detected and which agents ran.
+      try {
+        const rawRoute = res.headers.get("X-Mentor-Route");
+        if (rawRoute) {
+          const parsed = JSON.parse(decodeURIComponent(rawRoute)) as {
+            intent: string;
+            agents: string[];
+            runId: string | null;
+          };
+          if (parsed?.intent) setRoutes((r) => ({ ...r, [assistantIndex]: parsed }));
+        }
+      } catch {
+        /* ignore malformed route header */
+      }
+
 
 
       const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
@@ -620,12 +641,28 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
               }`}
             >
               <div
-                className={`mb-1 font-mono text-[9px] uppercase tracking-[0.3em] ${
+                className={`mb-1 flex flex-wrap items-center gap-2 font-mono text-[9px] uppercase tracking-[0.3em] ${
                   isUser ? "text-muted-foreground" : "text-primary"
                 }`}
               >
-                {isUser ? "You" : "Mentor"}
+                <span>{isUser ? "You" : "Mentor"}</span>
+                {!isUser && routes[i] && (
+                  <>
+                    <span className="border border-primary/40 px-1 py-px tracking-widest text-primary">
+                      {routes[i].intent.replace(/_/g, " ")}
+                    </span>
+                    {routes[i].agents.map((a) => (
+                      <span
+                        key={a}
+                        className="border border-border px-1 py-px tracking-widest text-muted-foreground"
+                      >
+                        {a}
+                      </span>
+                    ))}
+                  </>
+                )}
               </div>
+
               <div className="whitespace-pre-wrap">
                 {isUser ? (
                   m.content
