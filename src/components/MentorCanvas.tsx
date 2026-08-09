@@ -433,6 +433,17 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
         /* ignore malformed route header */
       }
 
+      // Resource agent picks for this turn.
+      try {
+        const rawRes = res.headers.get("X-Mentor-Resources");
+        if (rawRes) {
+          const parsed = JSON.parse(decodeURIComponent(rawRes)) as LearnResource[];
+          setTurnResources(Array.isArray(parsed) && parsed.length ? parsed : null);
+        }
+      } catch {
+        /* ignore malformed resource header */
+      }
+
 
 
       const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
