@@ -12,6 +12,7 @@ import { runMemoryAgent } from "@/lib/agents/memory.agent.server";
 import { runRetrievalAgent } from "@/lib/agents/retrieval.agent.server";
 import { streamExplainer, type QuestionContext } from "@/lib/agents/explainer.agent.server";
 import { streamEvaluator } from "@/lib/agents/evaluator.agent.server";
+import { runResourceAgent } from "@/lib/agents/resource.agent.server";
 
 /**
  * Passes SSE bytes straight through while accumulating the assistant text, so
@@ -155,14 +156,23 @@ export const Route = createFileRoute("/api/mentor-stream")({
             : Promise.resolve(null),
         ]);
 
-        // --- 3. Answering agent ------------------------------------------------
+        // --- 3. Resource agent (cheap, deterministic) --------------------------
+        const resourcePick = await runResourceAgent({
+          message: turn,
+          context,
+          intent: plan.intent,
+          retrievalTitles: (retrieval?.matches ?? []).map((m) => m.title),
+          trace: trace(3),
+        });
+
+        // --- 4. Answering agent ------------------------------------------------
         const agentArgs = {
           messages,
           context,
           intent: plan.intent,
           retrieval,
           profileNote: profile.note || null,
-          trace: trace(3),
+          trace: trace(4),
         };
 
         const startedAt = Date.now();
@@ -188,7 +198,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
           return new Response(message, { status });
         }
 
-        // --- 4. Tap the stream so the run row closes with the final answer ----
+        // --- 5. Tap the stream so the run row closes with the final answer ----
         const tapped = stream.pipeThrough(makeRunCloser(runId, startedAt));
 
         return new Response(tapped, {
@@ -204,7 +214,11 @@ export const Route = createFileRoute("/api/mentor-stream")({
             "X-Mentor-Route": encodeURIComponent(
               JSON.stringify({ intent: plan.intent, agents: plan.agents, runId }),
             ),
-            "Access-Control-Expose-Headers": "X-Mentor-Citations, X-Mentor-Route",
+            "X-Mentor-Resources": encodeURIComponent(
+              JSON.stringify(resourcePick.resources),
+            ),
+            "Access-Control-Expose-Headers":
+              "X-Mentor-Citations, X-Mentor-Route, X-Mentor-Resources",
           },
         });
       },
