@@ -198,7 +198,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
           return new Response(message, { status });
         }
 
-        // --- 4. Tap the stream so the run row closes with the final answer ----
+        // --- 5. Tap the stream so the run row closes with the final answer ----
         const tapped = stream.pipeThrough(makeRunCloser(runId, startedAt));
 
         return new Response(tapped, {
@@ -214,7 +214,11 @@ export const Route = createFileRoute("/api/mentor-stream")({
             "X-Mentor-Route": encodeURIComponent(
               JSON.stringify({ intent: plan.intent, agents: plan.agents, runId }),
             ),
-            "Access-Control-Expose-Headers": "X-Mentor-Citations, X-Mentor-Route",
+            "X-Mentor-Resources": encodeURIComponent(
+              JSON.stringify(resourcePick.resources),
+            ),
+            "Access-Control-Expose-Headers":
+              "X-Mentor-Citations, X-Mentor-Route, X-Mentor-Resources",
           },
         });
       },
