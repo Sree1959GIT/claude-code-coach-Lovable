@@ -12,6 +12,7 @@ import { runMemoryAgent } from "@/lib/agents/memory.agent.server";
 import { runRetrievalAgent } from "@/lib/agents/retrieval.agent.server";
 import { streamExplainer, type QuestionContext } from "@/lib/agents/explainer.agent.server";
 import { streamEvaluator } from "@/lib/agents/evaluator.agent.server";
+import { runResourceAgent } from "@/lib/agents/resource.agent.server";
 
 /**
  * Passes SSE bytes straight through while accumulating the assistant text, so
