@@ -7,7 +7,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import { planRoute, startRun, logStep } from "@/lib/orchestrator.server";
+import { planRoute, startRun, logStep, finishRun } from "@/lib/orchestrator.server";
 import { runMemoryAgent } from "@/lib/agents/memory.agent.server";
 import { runRetrievalAgent } from "@/lib/agents/retrieval.agent.server";
 import { streamExplainer, type QuestionContext } from "@/lib/agents/explainer.agent.server";
