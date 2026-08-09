@@ -13,6 +13,66 @@ import { runRetrievalAgent } from "@/lib/agents/retrieval.agent.server";
 import { streamExplainer, type QuestionContext } from "@/lib/agents/explainer.agent.server";
 import { streamEvaluator } from "@/lib/agents/evaluator.agent.server";
 
+/**
+ * Passes SSE bytes straight through while accumulating the assistant text, so
+ * the run row can be closed with a final answer, latency and status.
+ */
+function makeRunCloser(runId: string | null, startedAt: number) {
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let answer = "";
+  let failed: string | null = null;
+
+  const consume = (chunk: string) => {
+    buffer += chunk;
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("data:")) continue;
+      const payload = trimmed.slice(5).trim();
+      if (!payload || payload === "[DONE]") continue;
+      try {
+        const json = JSON.parse(payload) as {
+          choices?: { delta?: { content?: string } }[];
+        };
+        answer += json.choices?.[0]?.delta?.content ?? "";
+      } catch {
+        // Non-JSON keepalive frames are ignored.
+      }
+    }
+  };
+
+  const close = async (status: "done" | "error") => {
+    await finishRun({
+      runId,
+      status,
+      finalAnswer: answer.slice(0, 8000) || null,
+      error: failed,
+      durationMs: Date.now() - startedAt,
+    }).catch(() => {});
+  };
+
+  return new TransformStream<Uint8Array, Uint8Array>({
+    transform(chunk, controller) {
+      controller.enqueue(chunk);
+      try {
+        consume(decoder.decode(chunk, { stream: true }));
+      } catch {
+        // Accounting must never break delivery.
+      }
+    },
+    async flush() {
+      await close(failed ? "error" : "done");
+    },
+    async cancel(reason: unknown) {
+      failed = typeof reason === "string" ? reason : "stream cancelled";
+      await close("error");
+    },
+  } as Transformer<Uint8Array, Uint8Array>);
+}
+
+
 export const Route = createFileRoute("/api/mentor-stream")({
   server: {
     handlers: {
