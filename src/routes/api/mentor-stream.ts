@@ -105,6 +105,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
           trace: trace(3),
         };
 
+        const startedAt = Date.now();
         let stream: ReadableStream<Uint8Array>;
         try {
           stream =
@@ -118,10 +119,20 @@ export const Route = createFileRoute("/api/mentor-stream")({
             : message.includes("credits")
               ? 402
               : 500;
+          await finishRun({
+            runId,
+            status: "error",
+            error: message,
+            durationMs: Date.now() - startedAt,
+          }).catch(() => {});
           return new Response(message, { status });
         }
 
-        return new Response(stream, {
+        // --- 4. Tap the stream so the run row closes with the final answer ----
+        const tapped = stream.pipeThrough(makeRunCloser(runId, startedAt));
+
+        return new Response(tapped, {
+
           headers: {
             "Content-Type": "text/event-stream",
             "Cache-Control": "no-cache",
