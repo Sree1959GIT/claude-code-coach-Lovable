@@ -641,12 +641,28 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
               }`}
             >
               <div
-                className={`mb-1 font-mono text-[9px] uppercase tracking-[0.3em] ${
+                className={`mb-1 flex flex-wrap items-center gap-2 font-mono text-[9px] uppercase tracking-[0.3em] ${
                   isUser ? "text-muted-foreground" : "text-primary"
                 }`}
               >
-                {isUser ? "You" : "Mentor"}
+                <span>{isUser ? "You" : "Mentor"}</span>
+                {!isUser && routes[i] && (
+                  <>
+                    <span className="border border-primary/40 px-1 py-px tracking-widest text-primary">
+                      {routes[i].intent.replace(/_/g, " ")}
+                    </span>
+                    {routes[i].agents.map((a) => (
+                      <span
+                        key={a}
+                        className="border border-border px-1 py-px tracking-widest text-muted-foreground"
+                      >
+                        {a}
+                      </span>
+                    ))}
+                  </>
+                )}
               </div>
+
               <div className="whitespace-pre-wrap">
                 {isUser ? (
                   m.content
