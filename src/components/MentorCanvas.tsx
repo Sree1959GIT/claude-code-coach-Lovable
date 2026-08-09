@@ -413,6 +413,22 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
         /* ignore malformed citation header */
       }
 
+      // Route metadata: which intent was detected and which agents ran.
+      try {
+        const rawRoute = res.headers.get("X-Mentor-Route");
+        if (rawRoute) {
+          const parsed = JSON.parse(decodeURIComponent(rawRoute)) as {
+            intent: string;
+            agents: string[];
+            runId: string | null;
+          };
+          if (parsed?.intent) setRoutes((r) => ({ ...r, [assistantIndex]: parsed }));
+        }
+      } catch {
+        /* ignore malformed route header */
+      }
+
+
 
       const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
       let buffer = "";
