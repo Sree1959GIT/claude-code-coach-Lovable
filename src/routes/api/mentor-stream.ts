@@ -172,7 +172,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
           intent: plan.intent,
           retrieval,
           profileNote: profile.note || null,
-          trace: trace(3),
+          trace: trace(4),
         };
 
         const startedAt = Date.now();
