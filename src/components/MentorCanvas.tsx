@@ -214,6 +214,8 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   const [routes, setRoutes] = useState<
     Record<number, { intent: string; agents: string[]; runId: string | null }>
   >({});
+  // Turn-specific resources chosen server-side (from X-Mentor-Resources).
+  const [turnResources, setTurnResources] = useState<LearnResource[] | null>(null);
 
 
 
