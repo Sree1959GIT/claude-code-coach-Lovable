@@ -235,10 +235,13 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   const sttSupported = typeof window !== "undefined" && !!getSpeechRecognition();
   const highlight = useCallback((t: HighlightTarget) => onHighlight?.(t), [onHighlight]);
 
-  const resources = useMemo(
+  const baseResources = useMemo(
     () => matchResources([context.key_concept, context.domain, context.stem]),
     [context.key_concept, context.domain, context.stem],
   );
+  // Server-picked resources for the latest turn win; otherwise fall back to
+  // the question-level match so the panel always has something to watch.
+  const resources = turnResources?.length ? turnResources : baseResources;
 
   useEffect(() => {
     liveRef.current = live;
