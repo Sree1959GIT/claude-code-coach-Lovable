@@ -13,12 +13,26 @@ import { runRetrievalAgent } from "@/lib/agents/retrieval.agent.server";
 import { streamExplainer, type QuestionContext } from "@/lib/agents/explainer.agent.server";
 import { streamEvaluator } from "@/lib/agents/evaluator.agent.server";
 import { runResourceAgent } from "@/lib/agents/resource.agent.server";
+import { runCriticAgent } from "@/lib/agents/critic.agent.server";
+import type { Db, AgentIntent } from "@/lib/orchestrator.server";
 
 /**
  * Passes SSE bytes straight through while accumulating the assistant text, so
- * the run row can be closed with a final answer, latency and status.
+ * the run row can be closed with a final answer, latency and status. Once the
+ * stream completes, the critic agent audits the answer (post-hoc, zero latency).
  */
-function makeRunCloser(runId: string | null, startedAt: number) {
+function makeRunCloser(
+  runId: string | null,
+  startedAt: number,
+  critic: {
+    db: Db;
+    userId: string;
+    stepIndex: number;
+    intent: AgentIntent;
+    retrievedCount: number;
+    answerRevealed: boolean;
+  },
+) {
   const decoder = new TextDecoder();
   let buffer = "";
   let answer = "";
@@ -45,6 +59,13 @@ function makeRunCloser(runId: string | null, startedAt: number) {
   };
 
   const close = async (status: "done" | "error") => {
+    await runCriticAgent({
+      answer,
+      intent: critic.intent,
+      retrievedCount: critic.retrievedCount,
+      answerRevealed: critic.answerRevealed,
+      trace: { db: critic.db, runId, userId: critic.userId, stepIndex: critic.stepIndex },
+    }).catch(() => null);
     await finishRun({
       runId,
       status,
@@ -53,6 +74,7 @@ function makeRunCloser(runId: string | null, startedAt: number) {
       durationMs: Date.now() - startedAt,
     }).catch(() => {});
   };
+
 
   return new TransformStream<Uint8Array, Uint8Array>({
     transform(chunk, controller) {
@@ -198,8 +220,17 @@ export const Route = createFileRoute("/api/mentor-stream")({
           return new Response(message, { status });
         }
 
-        // --- 5. Tap the stream so the run row closes with the final answer ----
-        const tapped = stream.pipeThrough(makeRunCloser(runId, startedAt));
+        // --- 5. Tap the stream: closes the run and runs the critic audit -----
+        const tapped = stream.pipeThrough(
+          makeRunCloser(runId, startedAt, {
+            db: supabase,
+            userId,
+            stepIndex: 5,
+            intent: plan.intent,
+            retrievedCount: retrieval?.matches?.length ?? 0,
+            answerRevealed: false,
+          }),
+        );
 
         return new Response(tapped, {
 
