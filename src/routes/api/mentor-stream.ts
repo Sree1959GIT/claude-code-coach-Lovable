@@ -37,6 +37,8 @@ function makeRunCloser(
   let buffer = "";
   let answer = "";
   let failed: string | null = null;
+  let promptTokens = 0;
+  let completionTokens = 0;
 
   const consume = (chunk: string) => {
     buffer += chunk;
@@ -50,8 +52,13 @@ function makeRunCloser(
       try {
         const json = JSON.parse(payload) as {
           choices?: { delta?: { content?: string } }[];
+          usage?: { prompt_tokens?: number; completion_tokens?: number } | null;
         };
         answer += json.choices?.[0]?.delta?.content ?? "";
+        if (json.usage) {
+          promptTokens = json.usage.prompt_tokens ?? promptTokens;
+          completionTokens = json.usage.completion_tokens ?? completionTokens;
+        }
       } catch {
         // Non-JSON keepalive frames are ignored.
       }
@@ -59,7 +66,7 @@ function makeRunCloser(
   };
 
   const close = async (status: "done" | "error") => {
-    await runCriticAgent({
+    const verdict = await runCriticAgent({
       answer,
       intent: critic.intent,
       retrievedCount: critic.retrievedCount,
@@ -72,8 +79,14 @@ function makeRunCloser(
       finalAnswer: answer.slice(0, 8000) || null,
       error: failed,
       durationMs: Date.now() - startedAt,
+      promptTokens,
+      completionTokens,
+      ...(verdict
+        ? { metadata: { critic: { score: verdict.score, issues: verdict.issues } } }
+        : {}),
     }).catch(() => {});
   };
+
 
 
   return new TransformStream<Uint8Array, Uint8Array>({
