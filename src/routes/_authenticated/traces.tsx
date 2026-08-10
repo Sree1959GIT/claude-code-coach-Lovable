@@ -137,6 +137,23 @@ function RunCard({ run, expanded, onToggle }: { run: AgentRun; expanded: boolean
 
       {expanded ? (
         <div className="border-t border-border">
+          {critic?.issues?.length ? (
+            <div className="border-b border-border bg-muted/30 p-4">
+              <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Critic findings · score {critic.score ?? "—"}
+              </p>
+              <ul className="space-y-1">
+                {critic.issues.map((i, idx) => (
+                  <li
+                    key={`${i.code}-${idx}`}
+                    className={`font-mono text-[11px] ${i.severity === "error" ? "text-destructive" : "text-muted-foreground"}`}
+                  >
+                    [{i.severity}] {i.code} — {i.detail}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           {stepsQ.isLoading ? (
             <p className="p-4 font-mono text-[11px] text-muted-foreground">Loading steps…</p>
           ) : stepsQ.error ? (
@@ -146,6 +163,7 @@ function RunCard({ run, expanded, onToggle }: { run: AgentRun; expanded: boolean
           ) : (
             (stepsQ.data ?? []).map((s) => <StepRow key={s.id} step={s} />)
           )}
+
           {run.final_answer ? (
             <div className="border-t border-border p-4">
               <p className="mb-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
