@@ -59,6 +59,13 @@ function makeRunCloser(
   };
 
   const close = async (status: "done" | "error") => {
+    await runCriticAgent({
+      answer,
+      intent: critic.intent,
+      retrievedCount: critic.retrievedCount,
+      answerRevealed: critic.answerRevealed,
+      trace: { db: critic.db, runId, userId: critic.userId, stepIndex: critic.stepIndex },
+    }).catch(() => null);
     await finishRun({
       runId,
       status,
@@ -67,6 +74,7 @@ function makeRunCloser(
       durationMs: Date.now() - startedAt,
     }).catch(() => {});
   };
+
 
   return new TransformStream<Uint8Array, Uint8Array>({
     transform(chunk, controller) {
