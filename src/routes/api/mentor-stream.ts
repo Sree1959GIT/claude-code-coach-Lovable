@@ -220,8 +220,17 @@ export const Route = createFileRoute("/api/mentor-stream")({
           return new Response(message, { status });
         }
 
-        // --- 5. Tap the stream so the run row closes with the final answer ----
-        const tapped = stream.pipeThrough(makeRunCloser(runId, startedAt));
+        // --- 5. Tap the stream: closes the run and runs the critic audit -----
+        const tapped = stream.pipeThrough(
+          makeRunCloser(runId, startedAt, {
+            db: supabase,
+            userId,
+            stepIndex: 5,
+            intent: plan.intent,
+            retrievedCount: retrieval?.matches?.length ?? 0,
+            answerRevealed: false,
+          }),
+        );
 
         return new Response(tapped, {
 
