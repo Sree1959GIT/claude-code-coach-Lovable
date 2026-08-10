@@ -85,6 +85,7 @@ export async function streamEvaluator(args: EvaluatorArgs): Promise<ReadableStre
     body: JSON.stringify({
       model: EVALUATOR_MODEL,
       stream: true,
+      stream_options: { include_usage: true },
       messages: buildEvaluatorMessages(args),
     }),
   });

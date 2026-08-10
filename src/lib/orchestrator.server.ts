@@ -166,6 +166,10 @@ export async function logStep(
 /**
  * Close a run. `agent_runs` is insert/select-only under RLS for users, so the
  * update runs with the admin client (loaded lazily, server-side only).
+ *
+ * Sub-task 14: token usage reported by the streaming answer is added to the
+ * tokens already recorded on this run's `agent_steps`, so the run row carries
+ * the full cost of the turn.
  */
 export async function finishRun(args: {
   runId: string | null;
@@ -175,10 +179,35 @@ export async function finishRun(args: {
   durationMs?: number;
   promptTokens?: number;
   completionTokens?: number;
+  /** Merged into the run's existing metadata (e.g. the critic verdict). */
+  metadata?: Record<string, unknown>;
 }): Promise<void> {
   if (!args.runId) return;
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    let promptTokens = args.promptTokens ?? 0;
+    let completionTokens = args.completionTokens ?? 0;
+    let metadata: Record<string, unknown> | undefined = args.metadata;
+
+    const { data: run } = await supabaseAdmin
+      .from("agent_runs")
+      .select("metadata")
+      .eq("id", args.runId)
+      .maybeSingle();
+    if (args.metadata) {
+      metadata = { ...((run?.metadata as Record<string, unknown> | null) ?? {}), ...args.metadata };
+    }
+
+    const { data: steps } = await supabaseAdmin
+      .from("agent_steps")
+      .select("prompt_tokens, completion_tokens")
+      .eq("run_id", args.runId);
+    for (const s of steps ?? []) {
+      promptTokens += s.prompt_tokens ?? 0;
+      completionTokens += s.completion_tokens ?? 0;
+    }
+
     await supabaseAdmin
       .from("agent_runs")
       .update({
@@ -186,11 +215,13 @@ export async function finishRun(args: {
         final_answer: args.finalAnswer ?? null,
         error: args.error ?? null,
         duration_ms: args.durationMs ?? null,
-        total_prompt_tokens: args.promptTokens ?? 0,
-        total_completion_tokens: args.completionTokens ?? 0,
+        total_prompt_tokens: promptTokens,
+        total_completion_tokens: completionTokens,
+        ...(metadata ? { metadata: metadata as never } : {}),
       })
       .eq("id", args.runId);
   } catch {
     // Tracing must never break the mentor response.
   }
 }
+

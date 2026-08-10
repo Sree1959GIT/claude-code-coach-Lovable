@@ -78,6 +78,22 @@ function StepRow({ step }: { step: AgentStep }) {
   );
 }
 
+type CriticMeta = {
+  score?: number;
+  issues?: { code: string; severity: "warn" | "error"; detail: string }[];
+};
+
+export function readCritic(run: AgentRun): CriticMeta | null {
+  const meta = (run.metadata as { critic?: CriticMeta } | null) ?? null;
+  return meta?.critic ?? null;
+}
+
+function scoreClass(score: number) {
+  if (score >= 90) return "text-primary";
+  if (score >= 70) return "text-muted-foreground";
+  return "text-destructive";
+}
+
 function RunCard({ run, expanded, onToggle }: { run: AgentRun; expanded: boolean; onToggle: () => void }) {
   const stepsQ = useQuery({
     queryKey: ["agent_steps", run.id],
@@ -86,6 +102,7 @@ function RunCard({ run, expanded, onToggle }: { run: AgentRun; expanded: boolean
   });
 
   const route = (run.metadata as { intent?: string; agents?: string[] } | null) ?? {};
+  const critic = readCritic(run);
 
   return (
     <div className="border border-border bg-card">
@@ -99,6 +116,12 @@ function RunCard({ run, expanded, onToggle }: { run: AgentRun; expanded: boolean
           <span className="font-mono text-[10px] text-muted-foreground">
             {run.total_prompt_tokens}/{run.total_completion_tokens} tok
           </span>
+          {critic?.score != null ? (
+            <span className={`font-mono text-[10px] uppercase ${scoreClass(critic.score)}`}>
+              quality {critic.score}
+              {critic.issues?.length ? ` · ${critic.issues.length} issue${critic.issues.length > 1 ? "s" : ""}` : ""}
+            </span>
+          ) : null}
           <span className="ml-auto font-mono text-[10px] text-muted-foreground">
             {new Date(run.created_at).toLocaleString()}
           </span>
@@ -111,8 +134,26 @@ function RunCard({ run, expanded, onToggle }: { run: AgentRun; expanded: boolean
         ) : null}
       </button>
 
+
       {expanded ? (
         <div className="border-t border-border">
+          {critic?.issues?.length ? (
+            <div className="border-b border-border bg-muted/30 p-4">
+              <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Critic findings · score {critic.score ?? "—"}
+              </p>
+              <ul className="space-y-1">
+                {critic.issues.map((i, idx) => (
+                  <li
+                    key={`${i.code}-${idx}`}
+                    className={`font-mono text-[11px] ${i.severity === "error" ? "text-destructive" : "text-muted-foreground"}`}
+                  >
+                    [{i.severity}] {i.code} — {i.detail}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           {stepsQ.isLoading ? (
             <p className="p-4 font-mono text-[11px] text-muted-foreground">Loading steps…</p>
           ) : stepsQ.error ? (
@@ -122,6 +163,7 @@ function RunCard({ run, expanded, onToggle }: { run: AgentRun; expanded: boolean
           ) : (
             (stepsQ.data ?? []).map((s) => <StepRow key={s.id} step={s} />)
           )}
+
           {run.final_answer ? (
             <div className="border-t border-border p-4">
               <p className="mb-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -145,14 +187,22 @@ function TracesPage() {
   }, []);
 
   const [openId, setOpenId] = useState<string | null>(null);
+  const [flaggedOnly, setFlaggedOnly] = useState(false);
   const runsQ = useQuery({ queryKey: ["agent_runs"], queryFn: () => fetchAgentRuns(40) });
 
-  const runs = runsQ.data ?? [];
-  const errored = runs.filter((r) => r.status === "error").length;
-  const avgMs = runs.length
-    ? Math.round(runs.reduce((s, r) => s + (r.duration_ms ?? 0), 0) / runs.length)
+  const allRuns = runsQ.data ?? [];
+  const errored = allRuns.filter((r) => r.status === "error").length;
+  const avgMs = allRuns.length
+    ? Math.round(allRuns.reduce((s, r) => s + (r.duration_ms ?? 0), 0) / allRuns.length)
     : 0;
-  const tokens = runs.reduce((s, r) => s + r.total_prompt_tokens + r.total_completion_tokens, 0);
+  const tokens = allRuns.reduce((s, r) => s + r.total_prompt_tokens + r.total_completion_tokens, 0);
+  const scored = allRuns.map(readCritic).filter((c): c is NonNullable<typeof c> => c?.score != null);
+  const avgScore = scored.length
+    ? Math.round(scored.reduce((s, c) => s + (c.score ?? 0), 0) / scored.length)
+    : null;
+  const runs = flaggedOnly
+    ? allRuns.filter((r) => (readCritic(r)?.issues?.length ?? 0) > 0)
+    : allRuns;
 
   return (
     <div className="min-h-screen bg-background">
@@ -160,16 +210,17 @@ function TracesPage() {
       <main className="mx-auto max-w-5xl px-6 py-10">
         <h1 className="font-mono text-xl font-bold uppercase tracking-tight">Agent_Traces</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Every mentor turn, with the routing decision, agent path, retrieval hits, latency and token
-          usage. Expand a run to inspect each agent step.
+          Every mentor turn, with the routing decision, agent path, retrieval hits, latency, token
+          usage and the critic's quality verdict. Expand a run to inspect each agent step.
         </p>
 
-        <div className="mt-6 grid grid-cols-2 gap-px border border-border bg-border md:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-px border border-border bg-border md:grid-cols-5">
           {[
-            ["Runs", String(runs.length)],
+            ["Runs", String(allRuns.length)],
             ["Errors", String(errored)],
             ["Avg latency", ms(avgMs)],
             ["Tokens", String(tokens)],
+            ["Avg quality", avgScore == null ? "—" : String(avgScore)],
           ].map(([label, value]) => (
             <div key={label} className="bg-card p-4">
               <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
@@ -178,14 +229,27 @@ function TracesPage() {
           ))}
         </div>
 
-        <div className="mt-8 space-y-3">
+        <button
+          onClick={() => setFlaggedOnly((v) => !v)}
+          className={`mt-6 border px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest ${
+            flaggedOnly
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-border text-muted-foreground hover:bg-muted/40"
+          }`}
+        >
+          Flagged by critic only
+        </button>
+
+        <div className="mt-4 space-y-3">
           {runsQ.isLoading ? (
             <p className="font-mono text-[11px] text-muted-foreground">Loading traces…</p>
           ) : runsQ.error ? (
             <p className="font-mono text-[11px] text-destructive">Could not load traces.</p>
           ) : runs.length === 0 ? (
             <p className="font-mono text-[11px] text-muted-foreground">
-              No agent runs yet — ask the mentor a question from a study session.
+              {flaggedOnly
+                ? "No runs flagged by the critic."
+                : "No agent runs yet — ask the mentor a question from a study session."}
             </p>
           ) : (
             runs.map((r) => (
@@ -202,3 +266,4 @@ function TracesPage() {
     </div>
   );
 }
+

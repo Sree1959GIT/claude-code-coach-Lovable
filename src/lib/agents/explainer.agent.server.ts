@@ -124,6 +124,7 @@ export async function streamExplainer(args: ExplainerArgs): Promise<ReadableStre
     body: JSON.stringify({
       model: EXPLAINER_MODEL,
       stream: true,
+      stream_options: { include_usage: true },
       messages: buildExplainerMessages(args),
     }),
   });
