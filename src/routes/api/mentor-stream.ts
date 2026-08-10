@@ -13,12 +13,26 @@ import { runRetrievalAgent } from "@/lib/agents/retrieval.agent.server";
 import { streamExplainer, type QuestionContext } from "@/lib/agents/explainer.agent.server";
 import { streamEvaluator } from "@/lib/agents/evaluator.agent.server";
 import { runResourceAgent } from "@/lib/agents/resource.agent.server";
+import { runCriticAgent } from "@/lib/agents/critic.agent.server";
+import type { Db, AgentIntent } from "@/lib/orchestrator.server";
 
 /**
  * Passes SSE bytes straight through while accumulating the assistant text, so
- * the run row can be closed with a final answer, latency and status.
+ * the run row can be closed with a final answer, latency and status. Once the
+ * stream completes, the critic agent audits the answer (post-hoc, zero latency).
  */
-function makeRunCloser(runId: string | null, startedAt: number) {
+function makeRunCloser(
+  runId: string | null,
+  startedAt: number,
+  critic: {
+    db: Db;
+    userId: string;
+    stepIndex: number;
+    intent: AgentIntent;
+    retrievedCount: number;
+    answerRevealed: boolean;
+  },
+) {
   const decoder = new TextDecoder();
   let buffer = "";
   let answer = "";
