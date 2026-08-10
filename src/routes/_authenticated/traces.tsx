@@ -78,6 +78,22 @@ function StepRow({ step }: { step: AgentStep }) {
   );
 }
 
+type CriticMeta = {
+  score?: number;
+  issues?: { code: string; severity: "warn" | "error"; detail: string }[];
+};
+
+export function readCritic(run: AgentRun): CriticMeta | null {
+  const meta = (run.metadata as { critic?: CriticMeta } | null) ?? null;
+  return meta?.critic ?? null;
+}
+
+function scoreClass(score: number) {
+  if (score >= 90) return "text-primary";
+  if (score >= 70) return "text-muted-foreground";
+  return "text-destructive";
+}
+
 function RunCard({ run, expanded, onToggle }: { run: AgentRun; expanded: boolean; onToggle: () => void }) {
   const stepsQ = useQuery({
     queryKey: ["agent_steps", run.id],
@@ -86,6 +102,7 @@ function RunCard({ run, expanded, onToggle }: { run: AgentRun; expanded: boolean
   });
 
   const route = (run.metadata as { intent?: string; agents?: string[] } | null) ?? {};
+  const critic = readCritic(run);
 
   return (
     <div className="border border-border bg-card">
@@ -99,6 +116,12 @@ function RunCard({ run, expanded, onToggle }: { run: AgentRun; expanded: boolean
           <span className="font-mono text-[10px] text-muted-foreground">
             {run.total_prompt_tokens}/{run.total_completion_tokens} tok
           </span>
+          {critic?.score != null ? (
+            <span className={`font-mono text-[10px] uppercase ${scoreClass(critic.score)}`}>
+              quality {critic.score}
+              {critic.issues?.length ? ` · ${critic.issues.length} issue${critic.issues.length > 1 ? "s" : ""}` : ""}
+            </span>
+          ) : null}
           <span className="ml-auto font-mono text-[10px] text-muted-foreground">
             {new Date(run.created_at).toLocaleString()}
           </span>
@@ -110,6 +133,7 @@ function RunCard({ run, expanded, onToggle }: { run: AgentRun; expanded: boolean
           </p>
         ) : null}
       </button>
+
 
       {expanded ? (
         <div className="border-t border-border">
