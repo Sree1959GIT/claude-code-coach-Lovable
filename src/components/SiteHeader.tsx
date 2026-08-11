@@ -1,12 +1,15 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useSession } from "@/hooks/useSession";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "./ThemeToggle";
 import { logEvent } from "@/lib/analytics";
 
 export function SiteHeader() {
   const { user } = useSession();
+  const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
+
 
   async function handleSignOut() {
     await logEvent("logout_click");
