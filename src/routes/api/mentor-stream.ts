@@ -14,6 +14,7 @@ import { streamExplainer, type QuestionContext } from "@/lib/agents/explainer.ag
 import { streamEvaluator } from "@/lib/agents/evaluator.agent.server";
 import { runResourceAgent } from "@/lib/agents/resource.agent.server";
 import { runCriticAgent } from "@/lib/agents/critic.agent.server";
+import { textToSseStream, buildFallbackAnswer } from "@/lib/agents/gateway.server";
 import type { Db, AgentIntent } from "@/lib/orchestrator.server";
 
 /**
