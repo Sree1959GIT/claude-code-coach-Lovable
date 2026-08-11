@@ -179,6 +179,8 @@ export const Route = createFileRoute("/api/mentor-stream")({
             userId,
             intent: plan.intent,
             currentDomain: context?.domain ?? null,
+            // Sub-task 15: recall earlier mentor turns, except on filler turns.
+            includeThread: plan.intent !== "smalltalk",
             trace: { runId, stepIndex: 1 },
           }),
           plan.useRetrieval
@@ -190,6 +192,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
               })
             : Promise.resolve(null),
         ]);
+
 
         // --- 3. Resource agent (cheap, deterministic) --------------------------
         const resourcePick = await runResourceAgent({
