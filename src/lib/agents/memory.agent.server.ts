@@ -111,7 +111,17 @@ export async function runMemoryAgent(args: MemoryAgentArgs): Promise<LearnerProf
         .select("due_at, lapses")
         .eq("user_id", args.userId)
         .limit(500),
+      args.includeThread === false
+        ? Promise.resolve({ data: [], error: null })
+        : args.db
+            .from("agent_runs")
+            .select("question, final_answer, metadata, created_at")
+            .eq("user_id", args.userId)
+            .eq("status", "done")
+            .order("created_at", { ascending: false })
+            .limit(4),
     ]);
+
 
     if (attemptsRes.error) throw attemptsRes.error;
 
