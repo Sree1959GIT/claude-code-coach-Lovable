@@ -282,7 +282,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
               JSON.stringify(retrieval?.citations ?? []),
             ),
             "X-Mentor-Route": encodeURIComponent(
-              JSON.stringify({ intent: plan.intent, agents: plan.agents, runId }),
+              JSON.stringify({ intent: plan.intent, agents: plan.agents, runId, degraded }),
             ),
             "X-Mentor-Resources": encodeURIComponent(
               JSON.stringify(resourcePick.resources),
