@@ -74,6 +74,16 @@ export function SiteHeader() {
               >
                 Dashboard
               </Link>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className="font-mono text-[10px] uppercase tracking-widest text-primary hover:text-foreground"
+                  activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+                >
+                  Admin
+                </Link>
+              )}
+
               <button
                 onClick={handleSignOut}
                 className="bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
