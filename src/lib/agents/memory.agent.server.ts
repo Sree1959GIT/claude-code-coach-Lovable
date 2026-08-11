@@ -10,6 +10,8 @@
 import type { AgentIntent, Db } from "../orchestrator.server";
 import { logStep } from "../orchestrator.server";
 
+export type ThreadTurn = { question: string; answer: string; intent: string | null };
+
 export type LearnerProfile = {
   /** Prompt-ready system guidance (empty string when nothing useful is known). */
   note: string;
@@ -19,6 +21,8 @@ export type LearnerProfile = {
   strongDomains: string[];
   dueCount: number;
   lapseHeavy: number;
+  /** Sub-task 15: earlier mentor turns from this learner's thread. */
+  recentTurns: ThreadTurn[];
   error: string | null;
 };
 
@@ -28,8 +32,11 @@ export type MemoryAgentArgs = {
   intent?: AgentIntent;
   /** Domain title of the question currently on screen, if any. */
   currentDomain?: string | null;
+  /** Skip conversation recall (e.g. smalltalk turns). */
+  includeThread?: boolean;
   trace?: { runId: string | null; stepIndex: number };
 };
+
 
 const EMPTY: LearnerProfile = {
   note: "",
