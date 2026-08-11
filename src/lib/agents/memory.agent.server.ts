@@ -225,6 +225,7 @@ export async function runMemoryAgent(args: MemoryAgentArgs): Promise<LearnerProf
       role: "profiler",
       input: { intent: args.intent ?? null, currentDomain: args.currentDomain ?? null },
       output: {
+        recalledTurns: profile.recentTurns.length,
         attempts: profile.attempts,
         accuracy: profile.accuracy,
         weakDomains: profile.weakDomains,
