@@ -9,6 +9,8 @@ import type { AgentIntent, Db } from "../orchestrator.server";
 import { logStep } from "../orchestrator.server";
 import type { RetrievalResult } from "./retrieval.agent.server";
 import { retrievalSystemMessage } from "./retrieval.agent.server";
+import { fetchGatewayStream } from "./gateway.server";
+
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
 export const EXPLAINER_MODEL = "google/gemini-3.6-flash";
