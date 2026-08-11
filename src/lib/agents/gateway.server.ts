@@ -33,25 +33,28 @@ export async function fetchGatewayStream(
   let lastError: Error = new Error(`${args.label ?? "Mentor"} unavailable`);
 
   for (let i = 0; i < attempts; i++) {
+    let res: Response | null = null;
     try {
-      const res = await fetch(args.url, {
+      res = await fetch(args.url, {
         method: "POST",
         headers: { Authorization: `Bearer ${args.apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify(args.body),
       });
-      if (res.ok && res.body) return res.body;
+    } catch (err) {
+      // Network-level failure: always retryable.
+      lastError = err instanceof Error ? err : new Error(String(err));
+    }
 
+    if (res) {
+      if (res.ok && res.body) return res.body;
       const text = await res.text().catch(() => "");
       lastError = gatewayError(res.status, text, args.label);
       if (!RETRYABLE.has(res.status)) throw lastError;
-    } catch (err) {
-      const e = err instanceof Error ? err : new Error(String(err));
-      // A thrown non-retryable gateway error must not be retried.
-      if (e === lastError && !e.message.includes("rate limited")) throw e;
-      lastError = e;
     }
+
     if (i < attempts - 1) await sleep(250 * Math.pow(3, i));
   }
+
   throw lastError;
 }
 
