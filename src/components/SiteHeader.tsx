@@ -1,12 +1,15 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useSession } from "@/hooks/useSession";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "./ThemeToggle";
 import { logEvent } from "@/lib/analytics";
 
 export function SiteHeader() {
   const { user } = useSession();
+  const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
+
 
   async function handleSignOut() {
     await logEvent("logout_click");
@@ -71,6 +74,16 @@ export function SiteHeader() {
               >
                 Dashboard
               </Link>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className="font-mono text-[10px] uppercase tracking-widest text-primary hover:text-foreground"
+                  activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+                >
+                  Admin
+                </Link>
+              )}
+
               <button
                 onClick={handleSignOut}
                 className="bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"

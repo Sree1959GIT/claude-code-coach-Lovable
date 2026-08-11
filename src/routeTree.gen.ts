@@ -19,6 +19,7 @@ import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedEstimatorRouteImport } from './routes/_authenticated/estimator'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedStudyIndexRouteImport } from './routes/_authenticated/study.index'
 import { Route as AuthenticatedStudySessionRouteImport } from './routes/_authenticated/study.session'
 import { Route as AuthenticatedStudySlugRouteImport } from './routes/_authenticated/study.$slug'
@@ -72,6 +73,11 @@ const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedStudyIndexRoute = AuthenticatedStudyIndexRouteImport.update({
   id: '/study/',
   path: '/study/',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/estimator': typeof AuthenticatedEstimatorRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/estimator': typeof AuthenticatedEstimatorRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/estimator': typeof AuthenticatedEstimatorRoute
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/admin'
     | '/analytics'
     | '/dashboard'
     | '/estimator'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/admin'
     | '/analytics'
     | '/dashboard'
     | '/estimator'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/_authenticated/admin'
     | '/_authenticated/analytics'
     | '/_authenticated/dashboard'
     | '/_authenticated/estimator'
@@ -259,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/study/': {
       id: '/_authenticated/study/'
       path: '/study'
@@ -284,6 +303,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEstimatorRoute: typeof AuthenticatedEstimatorRoute
@@ -295,6 +315,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEstimatorRoute: AuthenticatedEstimatorRoute,
@@ -318,13 +339,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
