@@ -14,6 +14,7 @@ import { streamExplainer, type QuestionContext } from "@/lib/agents/explainer.ag
 import { streamEvaluator } from "@/lib/agents/evaluator.agent.server";
 import { runResourceAgent } from "@/lib/agents/resource.agent.server";
 import { runCriticAgent } from "@/lib/agents/critic.agent.server";
+import { textToSseStream, buildFallbackAnswer } from "@/lib/agents/gateway.server";
 import type { Db, AgentIntent } from "@/lib/orchestrator.server";
 
 /**
@@ -179,6 +180,8 @@ export const Route = createFileRoute("/api/mentor-stream")({
             userId,
             intent: plan.intent,
             currentDomain: context?.domain ?? null,
+            // Sub-task 15: recall earlier mentor turns, except on filler turns.
+            includeThread: plan.intent !== "smalltalk",
             trace: { runId, stepIndex: 1 },
           }),
           plan.useRetrieval
@@ -190,6 +193,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
               })
             : Promise.resolve(null),
         ]);
+
 
         // --- 3. Resource agent (cheap, deterministic) --------------------------
         const resourcePick = await runResourceAgent({
@@ -212,6 +216,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
 
         const startedAt = Date.now();
         let stream: ReadableStream<Uint8Array>;
+        let degraded: string | null = null;
         try {
           stream =
             plan.intent === "evaluate_option"
@@ -219,19 +224,40 @@ export const Route = createFileRoute("/api/mentor-stream")({
               : await streamExplainer(agentArgs);
         } catch (err) {
           const message = err instanceof Error ? err.message : "Mentor unavailable";
-          const status = message.includes("rate limited")
-            ? 429
-            : message.includes("credits")
-              ? 402
-              : 500;
-          await finishRun({
+          // Sub-task 16: credits exhausted is unrecoverable — everything else
+          // degrades to a deterministic, model-free answer instead of an error.
+          if (message.includes("credits")) {
+            await finishRun({
+              runId,
+              status: "error",
+              error: message,
+              durationMs: Date.now() - startedAt,
+            }).catch(() => {});
+            return new Response(message, { status: 402 });
+          }
+          degraded = message;
+          await logStep(supabase, {
             runId,
+            userId,
+            stepIndex: 4,
+            agent: "orchestrator",
+            role: "fallback",
+            input: { intent: plan.intent },
+            output: { reason: message },
             status: "error",
             error: message,
-            durationMs: Date.now() - startedAt,
           }).catch(() => {});
-          return new Response(message, { status });
+          stream = textToSseStream(
+            buildFallbackAnswer({
+              reason: message,
+              stem: context?.stem ?? null,
+              keyConcept: context?.key_concept ?? null,
+              selectedOption: context?.selectedOption ?? null,
+              passages: (retrieval?.matches ?? []).map((m) => ({ title: m.title })),
+            }),
+          );
         }
+
 
         // --- 5. Tap the stream: closes the run and runs the critic audit -----
         const tapped = stream.pipeThrough(
@@ -256,7 +282,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
               JSON.stringify(retrieval?.citations ?? []),
             ),
             "X-Mentor-Route": encodeURIComponent(
-              JSON.stringify({ intent: plan.intent, agents: plan.agents, runId }),
+              JSON.stringify({ intent: plan.intent, agents: plan.agents, runId, degraded }),
             ),
             "X-Mentor-Resources": encodeURIComponent(
               JSON.stringify(resourcePick.resources),

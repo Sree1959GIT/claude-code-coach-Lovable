@@ -79,22 +79,20 @@ export async function streamEvaluator(args: EvaluatorArgs): Promise<ReadableStre
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("Missing LOVABLE_API_KEY");
 
-  const upstream = await fetch(`${GATEWAY_URL}/chat/completions`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
+  const { fetchGatewayStream } = await import("./gateway.server");
+  return fetchGatewayStream({
+    url: `${GATEWAY_URL}/chat/completions`,
+    apiKey: key,
+    label: "Mentor",
+    body: {
       model: EVALUATOR_MODEL,
       stream: true,
       stream_options: { include_usage: true },
       messages: buildEvaluatorMessages(args),
-    }),
+    },
   });
-
-  if (!upstream.ok || !upstream.body) {
-    throw gatewayError(upstream.status, await upstream.text().catch(() => ""));
-  }
-  return upstream.body;
 }
+
 
 export type EvaluatorResult = {
   text: string;

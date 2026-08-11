@@ -9,6 +9,8 @@ import type { AgentIntent, Db } from "../orchestrator.server";
 import { logStep } from "../orchestrator.server";
 import type { RetrievalResult } from "./retrieval.agent.server";
 import { retrievalSystemMessage } from "./retrieval.agent.server";
+import { fetchGatewayStream } from "./gateway.server";
+
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
 export const EXPLAINER_MODEL = "google/gemini-3.6-flash";
@@ -118,22 +120,19 @@ export async function streamExplainer(args: ExplainerArgs): Promise<ReadableStre
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("Missing LOVABLE_API_KEY");
 
-  const upstream = await fetch(`${GATEWAY_URL}/chat/completions`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
+  return fetchGatewayStream({
+    url: `${GATEWAY_URL}/chat/completions`,
+    apiKey: key,
+    label: "Mentor",
+    body: {
       model: EXPLAINER_MODEL,
       stream: true,
       stream_options: { include_usage: true },
       messages: buildExplainerMessages(args),
-    }),
+    },
   });
-
-  if (!upstream.ok || !upstream.body) {
-    throw gatewayError(upstream.status, await upstream.text().catch(() => ""));
-  }
-  return upstream.body;
 }
+
 
 export type ExplainerResult = {
   text: string;

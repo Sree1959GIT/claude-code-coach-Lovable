@@ -10,6 +10,8 @@
 import type { AgentIntent, Db } from "../orchestrator.server";
 import { logStep } from "../orchestrator.server";
 
+export type ThreadTurn = { question: string; answer: string; intent: string | null };
+
 export type LearnerProfile = {
   /** Prompt-ready system guidance (empty string when nothing useful is known). */
   note: string;
@@ -19,6 +21,8 @@ export type LearnerProfile = {
   strongDomains: string[];
   dueCount: number;
   lapseHeavy: number;
+  /** Sub-task 15: earlier mentor turns from this learner's thread. */
+  recentTurns: ThreadTurn[];
   error: string | null;
 };
 
@@ -28,8 +32,11 @@ export type MemoryAgentArgs = {
   intent?: AgentIntent;
   /** Domain title of the question currently on screen, if any. */
   currentDomain?: string | null;
+  /** Skip conversation recall (e.g. smalltalk turns). */
+  includeThread?: boolean;
   trace?: { runId: string | null; stepIndex: number };
 };
+
 
 const EMPTY: LearnerProfile = {
   note: "",
@@ -39,6 +46,7 @@ const EMPTY: LearnerProfile = {
   strongDomains: [],
   dueCount: 0,
   lapseHeavy: 0,
+  recentTurns: [],
   error: null,
 };
 
@@ -85,6 +93,28 @@ export function buildProfileNote(
   return parts.join(" ");
 }
 
+/**
+ * Sub-task 15 — render earlier mentor turns as a private system note so the
+ * answering agent can build on what it already said instead of repeating it.
+ */
+export function buildThreadNote(turns: ThreadTurn[]): string {
+  if (!turns.length) return "";
+  const lines = turns
+    .slice(0, 4)
+    .reverse()
+    .map((t, i) => {
+      const q = t.question.replace(/\s+/g, " ").slice(0, 200);
+      const a = t.answer.replace(/\s+/g, " ").slice(0, 320);
+      return `${i + 1}. [${t.intent ?? "turn"}] Learner asked: "${q}" — you answered: "${a}"`;
+    });
+  return [
+    "Conversation memory (private context — never read it aloud or quote it verbatim). Earlier turns with this learner, oldest first:",
+    ...lines,
+    "Build on this: do not repeat an explanation you already gave, refer back naturally when it helps, and go one level deeper if they ask something similar again.",
+  ].join("\n");
+}
+
+
 /** Read learner state and produce a profile note. Never throws. */
 export async function runMemoryAgent(args: MemoryAgentArgs): Promise<LearnerProfile> {
   const started = Date.now();
@@ -92,7 +122,7 @@ export async function runMemoryAgent(args: MemoryAgentArgs): Promise<LearnerProf
 
   try {
     const nowIso = new Date().toISOString();
-    const [attemptsRes, masteryRes] = await Promise.all([
+    const [attemptsRes, masteryRes, runsRes] = await Promise.all([
       args.db
         .from("question_attempts")
         .select("is_correct, questions(domain_id, domains(title))")
@@ -104,7 +134,17 @@ export async function runMemoryAgent(args: MemoryAgentArgs): Promise<LearnerProf
         .select("due_at, lapses")
         .eq("user_id", args.userId)
         .limit(500),
+      args.includeThread === false
+        ? Promise.resolve({ data: [], error: null })
+        : args.db
+            .from("agent_runs")
+            .select("question, final_answer, metadata, created_at")
+            .eq("user_id", args.userId)
+            .eq("status", "done")
+            .order("created_at", { ascending: false })
+            .limit(4),
     ]);
+
 
     if (attemptsRes.error) throw attemptsRes.error;
 
@@ -141,6 +181,20 @@ export async function runMemoryAgent(args: MemoryAgentArgs): Promise<LearnerProf
     const dueCount = mastery.filter((m) => m.due_at !== null && m.due_at <= nowIso).length;
     const lapseHeavy = mastery.filter((m) => (m.lapses ?? 0) >= 3).length;
 
+    type RunRow = {
+      question: string | null;
+      final_answer: string | null;
+      metadata: { intent?: string } | null;
+    };
+    const runRows = (runsRes.error ? [] : ((runsRes.data ?? []) as unknown as RunRow[])).filter(
+      (r) => r.question && r.final_answer,
+    );
+    const recentTurns: ThreadTurn[] = runRows.map((r) => ({
+      question: r.question ?? "",
+      answer: (r.final_answer ?? "").split("[[brief]]")[0]!.trim(),
+      intent: r.metadata?.intent ?? null,
+    }));
+
     const stats = {
       attempts: total,
       accuracy: total ? correct / total : null,
@@ -148,9 +202,13 @@ export async function runMemoryAgent(args: MemoryAgentArgs): Promise<LearnerProf
       strongDomains,
       dueCount,
       lapseHeavy,
+      recentTurns,
     };
 
-    profile = { ...stats, note: buildProfileNote(stats, args.currentDomain), error: null };
+    const threadNote = buildThreadNote(recentTurns);
+    const note = [buildProfileNote(stats, args.currentDomain), threadNote].filter(Boolean).join("\n\n");
+    profile = { ...stats, note, error: null };
+
   } catch (err) {
     profile = {
       ...EMPTY,
@@ -167,6 +225,7 @@ export async function runMemoryAgent(args: MemoryAgentArgs): Promise<LearnerProf
       role: "profiler",
       input: { intent: args.intent ?? null, currentDomain: args.currentDomain ?? null },
       output: {
+        recalledTurns: profile.recentTurns.length,
         attempts: profile.attempts,
         accuracy: profile.accuracy,
         weakDomains: profile.weakDomains,
