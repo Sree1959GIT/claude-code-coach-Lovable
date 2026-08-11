@@ -181,6 +181,20 @@ export async function runMemoryAgent(args: MemoryAgentArgs): Promise<LearnerProf
     const dueCount = mastery.filter((m) => m.due_at !== null && m.due_at <= nowIso).length;
     const lapseHeavy = mastery.filter((m) => (m.lapses ?? 0) >= 3).length;
 
+    type RunRow = {
+      question: string | null;
+      final_answer: string | null;
+      metadata: { intent?: string } | null;
+    };
+    const runRows = (runsRes.error ? [] : ((runsRes.data ?? []) as unknown as RunRow[])).filter(
+      (r) => r.question && r.final_answer,
+    );
+    const recentTurns: ThreadTurn[] = runRows.map((r) => ({
+      question: r.question ?? "",
+      answer: (r.final_answer ?? "").split("[[brief]]")[0]!.trim(),
+      intent: r.metadata?.intent ?? null,
+    }));
+
     const stats = {
       attempts: total,
       accuracy: total ? correct / total : null,
@@ -188,9 +202,13 @@ export async function runMemoryAgent(args: MemoryAgentArgs): Promise<LearnerProf
       strongDomains,
       dueCount,
       lapseHeavy,
+      recentTurns,
     };
 
-    profile = { ...stats, note: buildProfileNote(stats, args.currentDomain), error: null };
+    const threadNote = buildThreadNote(recentTurns);
+    const note = [buildProfileNote(stats, args.currentDomain), threadNote].filter(Boolean).join("\n\n");
+    profile = { ...stats, note, error: null };
+
   } catch (err) {
     profile = {
       ...EMPTY,
