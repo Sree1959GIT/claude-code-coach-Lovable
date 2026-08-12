@@ -153,6 +153,15 @@ function AdminPage() {
                 </div>
               ))}
             </div>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">01 · Learners</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Every account with attempts, accuracy, tracked cards and last activity.
+              </p>
+              <LearnersTable />
+            </section>
+
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 to="/library"
