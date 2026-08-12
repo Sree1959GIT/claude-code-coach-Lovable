@@ -103,6 +103,93 @@ function LearnersTable() {
   );
 }
 
+function ContentPanel() {
+  const fetchContent = useServerFn(listContent);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["admin-content"],
+    queryFn: () => fetchContent(),
+    staleTime: 60_000,
+  });
+
+  if (isLoading) return <p className="mt-4 font-mono text-xs text-muted-foreground">Loading content…</p>;
+  if (error)
+    return (
+      <p className="mt-4 font-mono text-xs text-destructive">Could not load content: {(error as Error).message}</p>
+    );
+
+  const domains = data ?? [];
+
+  return (
+    <div className="mt-4 space-y-px border border-border bg-border">
+      {domains.length === 0 ? (
+        <p className="bg-background p-5 font-mono text-xs text-muted-foreground">No domains published yet.</p>
+      ) : (
+        domains.map((d) => {
+          const open = openId === d.id;
+          return (
+            <div key={d.id} className="bg-background">
+              <button
+                type="button"
+                onClick={() => setOpenId(open ? null : d.id)}
+                className="flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 text-left hover:bg-muted/40"
+              >
+                <span className="font-mono text-xs font-bold uppercase tracking-tight">
+                  {d.title}
+                  <span className="ml-2 text-[10px] font-normal text-muted-foreground">/{d.slug}</span>
+                </span>
+                <span className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <span>{d.questionCount} q</span>
+                  <span>weight {d.weight}%</span>
+                  <span>{d.attemptCount} attempts</span>
+                  <span>{d.accuracy === null ? "no data" : `${d.accuracy}% acc`}</span>
+                  {d.issues > 0 && <span className="text-destructive">{d.issues} issues</span>}
+                  <span>{open ? "−" : "+"}</span>
+                </span>
+              </button>
+
+              {open && (
+                <div className="border-t border-border px-4 py-3">
+                  {d.questions.length === 0 ? (
+                    <p className="font-mono text-[11px] text-muted-foreground">No questions in this domain.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {d.questions.map((q) => {
+                        const bad = !q.hasCorrect || q.optionCount < 2 || !q.hasExplanation;
+                        return (
+                          <li key={q.id} className="border border-border/60 p-3">
+                            <p className="font-mono text-[11px] leading-relaxed">{q.stem}</p>
+                            <div className="mt-2 flex flex-wrap gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                              <span>{q.difficulty}</span>
+                              <span>{q.optionCount} options</span>
+                              <span>{q.attempts} attempts</span>
+                              <span>{q.accuracy === null ? "no data" : `${q.accuracy}% acc`}</span>
+                              {bad && (
+                                <span className="text-destructive">
+                                  {!q.hasCorrect
+                                    ? "no single correct option"
+                                    : q.optionCount < 2
+                                      ? "too few options"
+                                      : "missing explanation"}
+                                </span>
+                              )}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
+
 function AdminPage() {
   const { isAdmin, loading } = useIsAdmin();
 
