@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { logEvent } from "@/lib/analytics";
-import { listLearners } from "@/lib/admin.functions";
+import { listLearners, listContent } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
