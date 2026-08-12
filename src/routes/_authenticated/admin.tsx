@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { logEvent } from "@/lib/analytics";
-import { listLearners } from "@/lib/admin.functions";
+import { listLearners, listContent } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 const SECTIONS: { code: string; title: string; body: string; status: "live" | "planned" }[] = [
   { code: "01", title: "Learners", body: "Attempts, mastery and last-active per account.", status: "live" },
-  { code: "02", title: "Content", body: "Domains and questions with publish state.", status: "planned" },
+  { code: "02", title: "Content", body: "Domains and questions with option health.", status: "live" },
   { code: "03", title: "Review queue", body: "Approve or reject drafted questions.", status: "planned" },
   { code: "04", title: "Scheduled jobs", body: "Library re-index runs and their history.", status: "planned" },
   { code: "05", title: "Agent evals", body: "Golden-set replay scored by the critic.", status: "planned" },
@@ -103,6 +103,93 @@ function LearnersTable() {
   );
 }
 
+function ContentPanel() {
+  const fetchContent = useServerFn(listContent);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["admin-content"],
+    queryFn: () => fetchContent(),
+    staleTime: 60_000,
+  });
+
+  if (isLoading) return <p className="mt-4 font-mono text-xs text-muted-foreground">Loading content…</p>;
+  if (error)
+    return (
+      <p className="mt-4 font-mono text-xs text-destructive">Could not load content: {(error as Error).message}</p>
+    );
+
+  const domains = data ?? [];
+
+  return (
+    <div className="mt-4 space-y-px border border-border bg-border">
+      {domains.length === 0 ? (
+        <p className="bg-background p-5 font-mono text-xs text-muted-foreground">No domains published yet.</p>
+      ) : (
+        domains.map((d) => {
+          const open = openId === d.id;
+          return (
+            <div key={d.id} className="bg-background">
+              <button
+                type="button"
+                onClick={() => setOpenId(open ? null : d.id)}
+                className="flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 text-left hover:bg-muted/40"
+              >
+                <span className="font-mono text-xs font-bold uppercase tracking-tight">
+                  {d.title}
+                  <span className="ml-2 text-[10px] font-normal text-muted-foreground">/{d.slug}</span>
+                </span>
+                <span className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <span>{d.questionCount} q</span>
+                  <span>weight {d.weight}%</span>
+                  <span>{d.attemptCount} attempts</span>
+                  <span>{d.accuracy === null ? "no data" : `${d.accuracy}% acc`}</span>
+                  {d.issues > 0 && <span className="text-destructive">{d.issues} issues</span>}
+                  <span>{open ? "−" : "+"}</span>
+                </span>
+              </button>
+
+              {open && (
+                <div className="border-t border-border px-4 py-3">
+                  {d.questions.length === 0 ? (
+                    <p className="font-mono text-[11px] text-muted-foreground">No questions in this domain.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {d.questions.map((q) => {
+                        const bad = !q.hasCorrect || q.optionCount < 2 || !q.hasExplanation;
+                        return (
+                          <li key={q.id} className="border border-border/60 p-3">
+                            <p className="font-mono text-[11px] leading-relaxed">{q.stem}</p>
+                            <div className="mt-2 flex flex-wrap gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                              <span>{q.difficulty}</span>
+                              <span>{q.optionCount} options</span>
+                              <span>{q.attempts} attempts</span>
+                              <span>{q.accuracy === null ? "no data" : `${q.accuracy}% acc`}</span>
+                              {bad && (
+                                <span className="text-destructive">
+                                  {!q.hasCorrect
+                                    ? "no single correct option"
+                                    : q.optionCount < 2
+                                      ? "too few options"
+                                      : "missing explanation"}
+                                </span>
+                              )}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
+
 function AdminPage() {
   const { isAdmin, loading } = useIsAdmin();
 
@@ -160,6 +247,14 @@ function AdminPage() {
                 Every account with attempts, accuracy, tracked cards and last activity.
               </p>
               <LearnersTable />
+            </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">02 · Content</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Domains and their questions, with option health and live difficulty from real attempts.
+              </p>
+              <ContentPanel />
             </section>
 
             <div className="mt-8 flex flex-wrap gap-3">

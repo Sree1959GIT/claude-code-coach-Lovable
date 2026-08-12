@@ -84,3 +84,99 @@ export const listLearners = createServerFn({ method: "GET" })
       })
       .sort((a, b) => (b.lastActiveAt ?? b.joinedAt).localeCompare(a.lastActiveAt ?? a.joinedAt));
   });
+
+export type ContentDomain = {
+  id: string;
+  slug: string;
+  title: string;
+  weight: number;
+  sortOrder: number;
+  questionCount: number;
+  attemptCount: number;
+  accuracy: number | null;
+  issues: number;
+  questions: {
+    id: string;
+    stem: string;
+    difficulty: string;
+    optionCount: number;
+    hasCorrect: boolean;
+    hasExplanation: boolean;
+    attempts: number;
+    accuracy: number | null;
+  }[];
+};
+
+export const listContent = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<ContentDomain[]> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const [domainsRes, questionsRes, optionsRes, attemptsRes] = await Promise.all([
+      supabaseAdmin.from("domains").select("id, slug, title, weight, sort_order").order("sort_order"),
+      supabaseAdmin.from("questions").select("id, domain_id, stem, difficulty, sort_order").order("sort_order"),
+      supabaseAdmin.from("question_options").select("question_id, is_correct, explanation"),
+      supabaseAdmin.from("question_attempts").select("question_id, is_correct"),
+    ]);
+    for (const r of [domainsRes, questionsRes, optionsRes, attemptsRes]) {
+      if (r.error) throw r.error;
+    }
+
+    const optsBy = new Map<string, { count: number; correct: number; explained: number }>();
+    for (const o of optionsRes.data ?? []) {
+      const s = optsBy.get(o.question_id) ?? { count: 0, correct: 0, explained: 0 };
+      s.count += 1;
+      if (o.is_correct) s.correct += 1;
+      if (o.explanation && o.explanation.trim()) s.explained += 1;
+      optsBy.set(o.question_id, s);
+    }
+
+    const attBy = new Map<string, { n: number; ok: number }>();
+    for (const a of attemptsRes.data ?? []) {
+      const s = attBy.get(a.question_id) ?? { n: 0, ok: 0 };
+      s.n += 1;
+      if (a.is_correct) s.ok += 1;
+      attBy.set(a.question_id, s);
+    }
+
+    return (domainsRes.data ?? []).map((d) => {
+      const qs = (questionsRes.data ?? []).filter((q) => q.domain_id === d.id);
+      let attemptCount = 0;
+      let correctCount = 0;
+      let issues = 0;
+
+      const questions = qs.map((q) => {
+        const o = optsBy.get(q.id) ?? { count: 0, correct: 0, explained: 0 };
+        const a = attBy.get(q.id) ?? { n: 0, ok: 0 };
+        attemptCount += a.n;
+        correctCount += a.ok;
+        const hasCorrect = o.correct === 1;
+        const hasExplanation = o.explained > 0;
+        if (!hasCorrect || o.count < 2 || !hasExplanation) issues += 1;
+        return {
+          id: q.id,
+          stem: q.stem,
+          difficulty: q.difficulty,
+          optionCount: o.count,
+          hasCorrect,
+          hasExplanation,
+          attempts: a.n,
+          accuracy: a.n ? Math.round((a.ok / a.n) * 100) : null,
+        };
+      });
+
+      return {
+        id: d.id,
+        slug: d.slug,
+        title: d.title,
+        weight: Number(d.weight),
+        sortOrder: d.sort_order,
+        questionCount: qs.length,
+        attemptCount,
+        accuracy: attemptCount ? Math.round((correctCount / attemptCount) * 100) : null,
+        issues,
+        questions,
+      };
+    });
+  });
