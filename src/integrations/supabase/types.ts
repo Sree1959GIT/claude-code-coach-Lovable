@@ -157,6 +157,53 @@ export type Database = {
         }
         Relationships: []
       }
+      content_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          question_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source: string
+          status: string
+          submitted_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          question_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string
+          status?: string
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          question_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string
+          status?: string
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_reviews_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: true
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       domains: {
         Row: {
           created_at: string
