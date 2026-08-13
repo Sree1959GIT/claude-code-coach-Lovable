@@ -6,6 +6,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { logEvent } from "@/lib/analytics";
 import { listLearners, listContent } from "@/lib/admin.functions";
+import { QuestionEditor } from "@/components/admin/QuestionEditor";
+
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
@@ -106,6 +108,7 @@ function LearnersTable() {
 function ContentPanel() {
   const fetchContent = useServerFn(listContent);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [editor, setEditor] = useState<{ domainId: string; questionId?: string } | null>(null);
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-content"],
     queryFn: () => fetchContent(),
@@ -119,75 +122,103 @@ function ContentPanel() {
     );
 
   const domains = data ?? [];
+  const domainOptions = domains.map((d) => ({ id: d.id, title: d.title }));
 
   return (
-    <div className="mt-4 space-y-px border border-border bg-border">
-      {domains.length === 0 ? (
-        <p className="bg-background p-5 font-mono text-xs text-muted-foreground">No domains published yet.</p>
-      ) : (
-        domains.map((d) => {
-          const open = openId === d.id;
-          return (
-            <div key={d.id} className="bg-background">
-              <button
-                type="button"
-                onClick={() => setOpenId(open ? null : d.id)}
-                className="flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 text-left hover:bg-muted/40"
-              >
-                <span className="font-mono text-xs font-bold uppercase tracking-tight">
-                  {d.title}
-                  <span className="ml-2 text-[10px] font-normal text-muted-foreground">/{d.slug}</span>
-                </span>
-                <span className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                  <span>{d.questionCount} q</span>
-                  <span>weight {d.weight}%</span>
-                  <span>{d.attemptCount} attempts</span>
-                  <span>{d.accuracy === null ? "no data" : `${d.accuracy}% acc`}</span>
-                  {d.issues > 0 && <span className="text-destructive">{d.issues} issues</span>}
-                  <span>{open ? "−" : "+"}</span>
-                </span>
-              </button>
-
-              {open && (
-                <div className="border-t border-border px-4 py-3">
-                  {d.questions.length === 0 ? (
-                    <p className="font-mono text-[11px] text-muted-foreground">No questions in this domain.</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {d.questions.map((q) => {
-                        const bad = !q.hasCorrect || q.optionCount < 2 || !q.hasExplanation;
-                        return (
-                          <li key={q.id} className="border border-border/60 p-3">
-                            <p className="font-mono text-[11px] leading-relaxed">{q.stem}</p>
-                            <div className="mt-2 flex flex-wrap gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                              <span>{q.difficulty}</span>
-                              <span>{q.optionCount} options</span>
-                              <span>{q.attempts} attempts</span>
-                              <span>{q.accuracy === null ? "no data" : `${q.accuracy}% acc`}</span>
-                              {bad && (
-                                <span className="text-destructive">
-                                  {!q.hasCorrect
-                                    ? "no single correct option"
-                                    : q.optionCount < 2
-                                      ? "too few options"
-                                      : "missing explanation"}
-                                </span>
-                              )}
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })
+    <>
+      {editor && (
+        <QuestionEditor
+          domains={domainOptions}
+          defaultDomainId={editor.domainId}
+          questionId={editor.questionId}
+          onClose={() => setEditor(null)}
+        />
       )}
-    </div>
+      <div className="mt-4 space-y-px border border-border bg-border">
+        {domains.length === 0 ? (
+          <p className="bg-background p-5 font-mono text-xs text-muted-foreground">No domains published yet.</p>
+        ) : (
+          domains.map((d) => {
+            const open = openId === d.id;
+            return (
+              <div key={d.id} className="bg-background">
+                <button
+                  type="button"
+                  onClick={() => setOpenId(open ? null : d.id)}
+                  className="flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 text-left hover:bg-muted/40"
+                >
+                  <span className="font-mono text-xs font-bold uppercase tracking-tight">
+                    {d.title}
+                    <span className="ml-2 text-[10px] font-normal text-muted-foreground">/{d.slug}</span>
+                  </span>
+                  <span className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    <span>{d.questionCount} q</span>
+                    <span>weight {d.weight}%</span>
+                    <span>{d.attemptCount} attempts</span>
+                    <span>{d.accuracy === null ? "no data" : `${d.accuracy}% acc`}</span>
+                    {d.issues > 0 && <span className="text-destructive">{d.issues} issues</span>}
+                    <span>{open ? "−" : "+"}</span>
+                  </span>
+                </button>
+
+                {open && (
+                  <div className="border-t border-border px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => setEditor({ domainId: d.id })}
+                      className="mb-3 bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
+                    >
+                      New_Question
+                    </button>
+                    {d.questions.length === 0 ? (
+                      <p className="font-mono text-[11px] text-muted-foreground">No questions in this domain.</p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {d.questions.map((q) => {
+                          const bad = !q.hasCorrect || q.optionCount < 2 || !q.hasExplanation;
+                          return (
+                            <li key={q.id} className="border border-border/60 p-3">
+                              <div className="flex items-start justify-between gap-3">
+                                <p className="font-mono text-[11px] leading-relaxed">{q.stem}</p>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditor({ domainId: d.id, questionId: q.id })}
+                                  className="shrink-0 border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-widest hover:bg-muted"
+                                >
+                                  Edit
+                                </button>
+                              </div>
+                              <div className="mt-2 flex flex-wrap gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                                <span>{q.difficulty}</span>
+                                <span>{q.optionCount} options</span>
+                                <span>{q.attempts} attempts</span>
+                                <span>{q.accuracy === null ? "no data" : `${q.accuracy}% acc`}</span>
+                                {bad && (
+                                  <span className="text-destructive">
+                                    {!q.hasCorrect
+                                      ? "no single correct option"
+                                      : q.optionCount < 2
+                                        ? "too few options"
+                                        : "missing explanation"}
+                                  </span>
+                                )}
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+    </>
   );
 }
+
 
 
 function AdminPage() {
