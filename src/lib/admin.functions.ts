@@ -180,3 +180,136 @@ export const listContent = createServerFn({ method: "GET" })
       };
     });
   });
+
+/**
+ * Stage 6b sub-task 4 — question authoring.
+ * Writes go through the service-role client because questions/options are
+ * read-only through the Data API; the caller is verified as admin first.
+ */
+
+export type QuestionDraftOption = {
+  id?: string;
+  label: string;
+  text: string;
+  isCorrect: boolean;
+  explanation: string | null;
+};
+
+export type QuestionDraft = {
+  id?: string;
+  domainId: string;
+  scenario: string | null;
+  stem: string;
+  keyConcept: string | null;
+  difficulty: string;
+  options: QuestionDraftOption[];
+};
+
+function validateDraft(input: QuestionDraft): QuestionDraft {
+  if (!input.domainId) throw new Error("Pick a domain.");
+  if (!input.stem?.trim()) throw new Error("The question stem is required.");
+  const options = (input.options ?? []).filter((o) => o.text?.trim());
+  if (options.length < 2) throw new Error("Add at least two answer options.");
+  if (options.filter((o) => o.isCorrect).length !== 1) throw new Error("Mark exactly one correct option.");
+  return { ...input, options };
+}
+
+export const saveQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: QuestionDraft) => validateDraft(input))
+  .handler(async ({ data, context }): Promise<{ id: string }> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const row = {
+      domain_id: data.domainId,
+      scenario: data.scenario?.trim() || null,
+      stem: data.stem.trim(),
+      key_concept: data.keyConcept?.trim() || null,
+      difficulty: data.difficulty,
+    };
+
+    let questionId = data.id;
+    if (questionId) {
+      const { error } = await supabaseAdmin.from("questions").update(row).eq("id", questionId);
+      if (error) throw error;
+      const { error: delErr } = await supabaseAdmin.from("question_options").delete().eq("question_id", questionId);
+      if (delErr) throw delErr;
+    } else {
+      const { data: inserted, error } = await supabaseAdmin
+        .from("questions")
+        .insert(row)
+        .select("id")
+        .single();
+      if (error) throw error;
+      questionId = inserted.id;
+    }
+
+    const { error: optErr } = await supabaseAdmin.from("question_options").insert(
+      data.options.map((o, i) => ({
+        question_id: questionId!,
+        label: o.label?.trim() || String.fromCharCode(65 + i),
+        text: o.text.trim(),
+        is_correct: o.isCorrect,
+        explanation: o.explanation?.trim() || null,
+        sort_order: i,
+      })),
+    );
+    if (optErr) throw optErr;
+
+    return { id: questionId! };
+  });
+
+export const deleteQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: aErr } = await supabaseAdmin.from("question_attempts").delete().eq("question_id", data.id);
+    if (aErr) throw aErr;
+    const { error: mErr } = await supabaseAdmin.from("user_mastery").delete().eq("question_id", data.id);
+    if (mErr) throw mErr;
+    const { error: oErr } = await supabaseAdmin.from("question_options").delete().eq("question_id", data.id);
+    if (oErr) throw oErr;
+    const { error } = await supabaseAdmin.from("questions").delete().eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const getQuestion = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data, context }): Promise<QuestionDraft> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: q, error: qErr }, { data: opts, error: oErr }] = await Promise.all([
+      supabaseAdmin
+        .from("questions")
+        .select("id, domain_id, scenario, stem, key_concept, difficulty")
+        .eq("id", data.id)
+        .single(),
+      supabaseAdmin
+        .from("question_options")
+        .select("id, label, text, is_correct, explanation, sort_order")
+        .eq("question_id", data.id)
+        .order("sort_order"),
+    ]);
+    if (qErr) throw qErr;
+    if (oErr) throw oErr;
+    return {
+      id: q.id,
+      domainId: q.domain_id,
+      scenario: q.scenario,
+      stem: q.stem,
+      keyConcept: q.key_concept,
+      difficulty: q.difficulty,
+      options: (opts ?? []).map((o) => ({
+        id: o.id,
+        label: o.label,
+        text: o.text,
+        isCorrect: o.is_correct,
+        explanation: o.explanation,
+      })),
+    };
+  });
