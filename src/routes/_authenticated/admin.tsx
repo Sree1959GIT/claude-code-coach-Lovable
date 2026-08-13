@@ -6,6 +6,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { logEvent } from "@/lib/analytics";
 import { listLearners, listContent } from "@/lib/admin.functions";
+import { QuestionEditor } from "@/components/admin/QuestionEditor";
+
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
