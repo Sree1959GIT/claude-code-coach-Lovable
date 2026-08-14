@@ -313,3 +313,136 @@ export const getQuestion = createServerFn({ method: "GET" })
       })),
     };
   });
+
+/**
+ * Stage 6b sub-task 6 — review queue.
+ * Admin-only listing plus approve / reject resolution for drafted questions.
+ */
+
+export type ReviewItem = {
+  id: string;
+  questionId: string;
+  status: string;
+  source: string;
+  notes: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
+  stem: string;
+  domainTitle: string;
+  optionCount: number;
+  hasCorrect: boolean;
+  hasExplanation: boolean;
+};
+
+export const listReviews = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<ReviewItem[]> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: reviews, error } = await supabaseAdmin
+      .from("content_reviews")
+      .select("id, question_id, status, source, notes, created_at, reviewed_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    const rows = reviews ?? [];
+    if (rows.length === 0) return [];
+
+    const questionIds = [...new Set(rows.map((r) => r.question_id))];
+    const [questionsRes, optionsRes, domainsRes] = await Promise.all([
+      supabaseAdmin.from("questions").select("id, stem, domain_id").in("id", questionIds),
+      supabaseAdmin.from("question_options").select("question_id, is_correct, explanation").in("question_id", questionIds),
+      supabaseAdmin.from("domains").select("id, title"),
+    ]);
+    for (const r of [questionsRes, optionsRes, domainsRes]) {
+      if (r.error) throw r.error;
+    }
+
+    const domainTitle = new Map((domainsRes.data ?? []).map((d) => [d.id, d.title as string]));
+    const questionById = new Map((questionsRes.data ?? []).map((q) => [q.id, q]));
+    const optsBy = new Map<string, { count: number; correct: number; explained: number }>();
+    for (const o of optionsRes.data ?? []) {
+      const s = optsBy.get(o.question_id) ?? { count: 0, correct: 0, explained: 0 };
+      s.count += 1;
+      if (o.is_correct) s.correct += 1;
+      if (o.explanation && o.explanation.trim()) s.explained += 1;
+      optsBy.set(o.question_id, s);
+    }
+
+    return rows.map((r) => {
+      const q = questionById.get(r.question_id);
+      const o = optsBy.get(r.question_id) ?? { count: 0, correct: 0, explained: 0 };
+      return {
+        id: r.id,
+        questionId: r.question_id,
+        status: r.status,
+        source: r.source,
+        notes: r.notes,
+        createdAt: r.created_at,
+        reviewedAt: r.reviewed_at,
+        stem: q?.stem ?? "(question deleted)",
+        domainTitle: (q && domainTitle.get(q.domain_id)) ?? "—",
+        optionCount: o.count,
+        hasCorrect: o.correct === 1,
+        hasExplanation: o.explained > 0,
+      };
+    });
+  });
+
+export const submitForReview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { questionId: string; notes?: string | null }) => {
+    if (!input.questionId) throw new Error("Missing question.");
+    return input;
+  })
+  .handler(async ({ data, context }): Promise<{ id: string }> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: existing, error: exErr } = await supabaseAdmin
+      .from("content_reviews")
+      .select("id")
+      .eq("question_id", data.questionId)
+      .eq("status", "pending")
+      .maybeSingle();
+    if (exErr) throw exErr;
+    if (existing) return { id: existing.id };
+
+    const { data: inserted, error } = await supabaseAdmin
+      .from("content_reviews")
+      .insert({
+        question_id: data.questionId,
+        status: "pending",
+        source: "admin",
+        submitted_by: context.userId,
+        notes: data.notes?.trim() || null,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    return { id: inserted.id };
+  });
+
+export const resolveReview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string; status: "approved" | "rejected"; notes?: string | null }) => {
+    if (!input.id) throw new Error("Missing review.");
+    if (input.status !== "approved" && input.status !== "rejected") throw new Error("Invalid decision.");
+    return input;
+  })
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("content_reviews")
+      .update({
+        status: data.status,
+        reviewed_by: context.userId,
+        reviewed_at: new Date().toISOString(),
+        ...(data.notes?.trim() ? { notes: data.notes.trim() } : {}),
+      })
+      .eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
