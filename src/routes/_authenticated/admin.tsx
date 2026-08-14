@@ -114,13 +114,25 @@ function LearnersTable() {
 
 function ContentPanel() {
   const fetchContent = useServerFn(listContent);
+  const sendToReview = useServerFn(submitForReview);
+  const queryClient = useQueryClient();
   const [openId, setOpenId] = useState<string | null>(null);
   const [editor, setEditor] = useState<{ domainId: string; questionId?: string } | null>(null);
+  const [queuedIds, setQueuedIds] = useState<string[]>([]);
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-content"],
     queryFn: () => fetchContent(),
     staleTime: 60_000,
   });
+
+  const queueReview = useMutation({
+    mutationFn: (questionId: string) => sendToReview({ data: { questionId } }),
+    onSuccess: (_res, questionId) => {
+      setQueuedIds((prev) => (prev.includes(questionId) ? prev : [...prev, questionId]));
+      void queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
+    },
+  });
+
 
   if (isLoading) return <p className="mt-4 font-mono text-xs text-muted-foreground">Loading content…</p>;
   if (error)
