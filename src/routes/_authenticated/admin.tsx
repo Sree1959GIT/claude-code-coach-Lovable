@@ -187,14 +187,25 @@ function ContentPanel() {
                             <li key={q.id} className="border border-border/60 p-3">
                               <div className="flex items-start justify-between gap-3">
                                 <p className="font-mono text-[11px] leading-relaxed">{q.stem}</p>
-                                <button
-                                  type="button"
-                                  onClick={() => setEditor({ domainId: d.id, questionId: q.id })}
-                                  className="shrink-0 border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-widest hover:bg-muted"
-                                >
-                                  Edit
-                                </button>
+                                <div className="flex shrink-0 gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => queueReview.mutate(q.id)}
+                                    disabled={queueReview.isPending}
+                                    className="border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-widest hover:bg-muted disabled:opacity-50"
+                                  >
+                                    {queuedIds.includes(q.id) ? "Queued" : "Send_To_Review"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditor({ domainId: d.id, questionId: q.id })}
+                                    className="border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-widest hover:bg-muted"
+                                  >
+                                    Edit
+                                  </button>
+                                </div>
                               </div>
+
                               <div className="mt-2 flex flex-wrap gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                                 <span>{q.difficulty}</span>
                                 <span>{q.optionCount} options</span>
