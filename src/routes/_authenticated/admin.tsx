@@ -445,6 +445,16 @@ function AdminPage() {
               <ContentPanel />
             </section>
 
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">03 · Review_Queue</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Drafted or flagged questions awaiting a human decision. Approve or reject with an optional note.
+              </p>
+              <ReviewQueue />
+            </section>
+
+
+
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 to="/library"
