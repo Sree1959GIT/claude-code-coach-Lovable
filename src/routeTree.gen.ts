@@ -23,6 +23,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedStudyIndexRouteImport } from './routes/_authenticated/study.index'
 import { Route as AuthenticatedStudySessionRouteImport } from './routes/_authenticated/study.session'
 import { Route as AuthenticatedStudySlugRouteImport } from './routes/_authenticated/study.$slug'
+import { Route as ApiPublicCronRefreshLibraryRouteImport } from './routes/api/public/cron/refresh-library'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -94,6 +95,12 @@ const AuthenticatedStudySlugRoute = AuthenticatedStudySlugRouteImport.update({
   path: '/study/$slug',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicCronRefreshLibraryRoute =
+  ApiPublicCronRefreshLibraryRouteImport.update({
+    id: '/api/public/cron/refresh-library',
+    path: '/api/public/cron/refresh-library',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/study/$slug': typeof AuthenticatedStudySlugRoute
   '/study/session': typeof AuthenticatedStudySessionRoute
   '/study/': typeof AuthenticatedStudyIndexRoute
+  '/api/public/cron/refresh-library': typeof ApiPublicCronRefreshLibraryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -124,6 +132,7 @@ export interface FileRoutesByTo {
   '/study/$slug': typeof AuthenticatedStudySlugRoute
   '/study/session': typeof AuthenticatedStudySessionRoute
   '/study': typeof AuthenticatedStudyIndexRoute
+  '/api/public/cron/refresh-library': typeof ApiPublicCronRefreshLibraryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -141,6 +150,7 @@ export interface FileRoutesById {
   '/_authenticated/study/$slug': typeof AuthenticatedStudySlugRoute
   '/_authenticated/study/session': typeof AuthenticatedStudySessionRoute
   '/_authenticated/study/': typeof AuthenticatedStudyIndexRoute
+  '/api/public/cron/refresh-library': typeof ApiPublicCronRefreshLibraryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/study/$slug'
     | '/study/session'
     | '/study/'
+    | '/api/public/cron/refresh-library'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/study/$slug'
     | '/study/session'
     | '/study'
+    | '/api/public/cron/refresh-library'
   id:
     | '__root__'
     | '/'
@@ -189,6 +201,7 @@ export interface FileRouteTypes {
     | '/_authenticated/study/$slug'
     | '/_authenticated/study/session'
     | '/_authenticated/study/'
+    | '/api/public/cron/refresh-library'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -197,6 +210,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiMentorStreamRoute: typeof ApiMentorStreamRoute
+  ApiPublicCronRefreshLibraryRoute: typeof ApiPublicCronRefreshLibraryRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -299,6 +313,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudySlugRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/cron/refresh-library': {
+      id: '/api/public/cron/refresh-library'
+      path: '/api/public/cron/refresh-library'
+      fullPath: '/api/public/cron/refresh-library'
+      preLoaderRoute: typeof ApiPublicCronRefreshLibraryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -335,6 +356,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiMentorStreamRoute: ApiMentorStreamRoute,
+  ApiPublicCronRefreshLibraryRoute: ApiPublicCronRefreshLibraryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
