@@ -249,6 +249,133 @@ function ContentPanel() {
   );
 }
 
+const REVIEW_FILTERS = ["pending", "approved", "rejected", "all"] as const;
+
+function ReviewQueue() {
+  const fetchReviews = useServerFn(listReviews);
+  const decide = useServerFn(resolveReview);
+  const queryClient = useQueryClient();
+  const [filter, setFilter] = useState<(typeof REVIEW_FILTERS)[number]>("pending");
+  const [notes, setNotes] = useState<Record<string, string>>({});
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["admin-reviews"],
+    queryFn: () => fetchReviews(),
+    staleTime: 30_000,
+  });
+
+  const resolve = useMutation({
+    mutationFn: (vars: { id: string; status: "approved" | "rejected"; notes?: string | null }) =>
+      decide({ data: vars }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-content"] });
+    },
+  });
+
+  if (isLoading) return <p className="mt-4 font-mono text-xs text-muted-foreground">Loading review queue…</p>;
+  if (error)
+    return <p className="mt-4 font-mono text-xs text-destructive">Could not load reviews: {(error as Error).message}</p>;
+
+  const all = data ?? [];
+  const rows = filter === "all" ? all : all.filter((r) => r.status === filter);
+  const pendingCount = all.filter((r) => r.status === "pending").length;
+
+  return (
+    <div className="mt-4">
+      <div className="flex flex-wrap gap-2">
+        {REVIEW_FILTERS.map((f) => (
+          <button
+            key={f}
+            type="button"
+            onClick={() => setFilter(f)}
+            className={`border px-2 py-1 font-mono text-[10px] uppercase tracking-widest ${
+              filter === f ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-muted"
+            }`}
+          >
+            {f}
+            {f === "pending" && pendingCount > 0 ? ` (${pendingCount})` : ""}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-4 space-y-px border border-border bg-border">
+        {rows.length === 0 ? (
+          <p className="bg-background p-5 font-mono text-xs text-muted-foreground">
+            Nothing in this bucket. Send a question from the Content panel to start a review.
+          </p>
+        ) : (
+          rows.map((r) => {
+            const bad = !r.hasCorrect || r.optionCount < 2 || !r.hasExplanation;
+            const pending = r.status === "pending";
+            return (
+              <div key={r.id} className="bg-background p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <span>
+                    {r.domainTitle} · {r.source}
+                  </span>
+                  <span
+                    className={
+                      r.status === "approved"
+                        ? "text-primary"
+                        : r.status === "rejected"
+                          ? "text-destructive"
+                          : undefined
+                    }
+                  >
+                    {r.status} · {fmt(r.reviewedAt ?? r.createdAt)}
+                  </span>
+                </div>
+                <p className="mt-2 font-mono text-[11px] leading-relaxed">{r.stem}</p>
+                <div className="mt-2 flex flex-wrap gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <span>{r.optionCount} options</span>
+                  {bad && (
+                    <span className="text-destructive">
+                      {!r.hasCorrect ? "no single correct option" : !r.hasExplanation ? "missing explanation" : "too few options"}
+                    </span>
+                  )}
+                </div>
+                {r.notes && !pending && (
+                  <p className="mt-2 font-mono text-[10px] text-muted-foreground">Notes: {r.notes}</p>
+                )}
+
+                {pending && (
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <input
+                      value={notes[r.id] ?? ""}
+                      onChange={(e) => setNotes((prev) => ({ ...prev, [r.id]: e.target.value }))}
+                      placeholder="Reviewer note (optional)"
+                      className="min-w-[220px] flex-1 border border-border bg-background px-2 py-1 font-mono text-[11px]"
+                    />
+                    <button
+                      type="button"
+                      disabled={resolve.isPending}
+                      onClick={() => resolve.mutate({ id: r.id, status: "approved", notes: notes[r.id] ?? null })}
+                      className="bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      disabled={resolve.isPending}
+                      onClick={() => resolve.mutate({ id: r.id, status: "rejected", notes: notes[r.id] ?? null })}
+                      className="border border-destructive px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-destructive disabled:opacity-50"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+      {resolve.error && (
+        <p className="mt-2 font-mono text-[11px] text-destructive">{(resolve.error as Error).message}</p>
+      )}
+    </div>
+  );
+}
 
 
 function AdminPage() {
