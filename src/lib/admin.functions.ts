@@ -446,3 +446,52 @@ export const resolveReview = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+/**
+ * Stage 6b sub-task 9 — job run history.
+ */
+
+export type JobRun = {
+  id: string;
+  jobName: string;
+  status: string;
+  summary: string | null;
+  itemsProcessed: number;
+  itemsRepaired: number;
+  error: string | null;
+  durationMs: number | null;
+  createdAt: string;
+};
+
+export const listJobRuns = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<JobRun[]> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("job_runs")
+      .select("id, job_name, status, summary, items_processed, items_repaired, error, duration_ms, created_at")
+      .order("created_at", { ascending: false })
+      .limit(25);
+    if (error) throw error;
+    return (data ?? []).map((r) => ({
+      id: r.id,
+      jobName: r.job_name,
+      status: r.status,
+      summary: r.summary,
+      itemsProcessed: r.items_processed,
+      itemsRepaired: r.items_repaired,
+      error: r.error,
+      durationMs: r.duration_ms,
+      createdAt: r.created_at,
+    }));
+  });
+
+export const runLibraryJobNow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ ok: boolean; summary: string }> => {
+    await assertAdmin(context);
+    const { runLibraryRefresh } = await import("@/lib/jobs.server");
+    const result = await runLibraryRefresh("refresh-library-manual");
+    return { ok: result.ok, summary: result.summary ?? "" };
+  });
