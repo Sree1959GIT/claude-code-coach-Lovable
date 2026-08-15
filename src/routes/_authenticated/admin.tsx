@@ -11,7 +11,10 @@ import {
   listReviews,
   resolveReview,
   submitForReview,
+  listJobRuns,
+  runLibraryJobNow,
 } from "@/lib/admin.functions";
+
 import { QuestionEditor } from "@/components/admin/QuestionEditor";
 
 
@@ -38,7 +41,7 @@ const SECTIONS: { code: string; title: string; body: string; status: "live" | "p
   { code: "01", title: "Learners", body: "Attempts, mastery and last-active per account.", status: "live" },
   { code: "02", title: "Content", body: "Domains and questions with option health.", status: "live" },
   { code: "03", title: "Review queue", body: "Approve or reject drafted questions.", status: "live" },
-  { code: "04", title: "Scheduled jobs", body: "Library re-index runs and their history.", status: "planned" },
+  { code: "04", title: "Scheduled jobs", body: "Library re-index runs and their history.", status: "live" },
   { code: "05", title: "Agent evals", body: "Golden-set replay scored by the critic.", status: "planned" },
 ];
 
@@ -378,6 +381,98 @@ function ReviewQueue() {
 }
 
 
+function JobsPanel() {
+  const fetchRuns = useServerFn(listJobRuns);
+  const runNow = useServerFn(runLibraryJobNow);
+  const queryClient = useQueryClient();
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["admin-job-runs"],
+    queryFn: () => fetchRuns(),
+    staleTime: 30_000,
+  });
+
+  const trigger = useMutation({
+    mutationFn: () => runNow({ data: undefined }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["admin-job-runs"] }),
+  });
+
+  const rows = data ?? [];
+
+  return (
+    <div className="mt-4">
+      <button
+        type="button"
+        onClick={() => trigger.mutate()}
+        disabled={trigger.isPending}
+        className="bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50"
+      >
+        {trigger.isPending ? "Running…" : "Run_Refresh_Now"}
+      </button>
+      {trigger.data && (
+        <span className="ml-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          repaired {trigger.data.repaired} · missing {trigger.data.missing}
+        </span>
+      )}
+      {trigger.error && (
+        <p className="mt-2 font-mono text-[11px] text-destructive">{(trigger.error as Error).message}</p>
+      )}
+
+      {isLoading ? (
+        <p className="mt-4 font-mono text-xs text-muted-foreground">Loading job history…</p>
+      ) : error ? (
+        <p className="mt-4 font-mono text-xs text-destructive">Could not load jobs: {(error as Error).message}</p>
+      ) : (
+        <div className="mt-4 overflow-x-auto border border-border">
+          <table className="w-full min-w-[680px] border-collapse font-mono text-[11px]">
+            <thead>
+              <tr className="border-b border-border bg-muted/40 text-left uppercase tracking-widest text-[10px] text-muted-foreground">
+                <th className="px-3 py-2">Job</th>
+                <th className="px-3 py-2">Status</th>
+                <th className="px-3 py-2">Summary</th>
+                <th className="px-3 py-2 text-right">Processed</th>
+                <th className="px-3 py-2 text-right">Repaired</th>
+                <th className="px-3 py-2 text-right">Duration</th>
+                <th className="px-3 py-2">When</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">
+                    No job runs recorded yet.
+                  </td>
+                </tr>
+              ) : (
+                rows.map((r) => (
+                  <tr key={r.id} className="border-b border-border/60 last:border-0">
+                    <td className="px-3 py-2 font-bold">{r.jobName}</td>
+                    <td
+                      className={`px-3 py-2 uppercase tracking-widest text-[10px] ${
+                        r.status === "ok" ? "text-primary" : "text-destructive"
+                      }`}
+                    >
+                      {r.status}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">{r.error ?? r.summary ?? "—"}</td>
+                    <td className="px-3 py-2 text-right">{r.itemsProcessed}</td>
+                    <td className="px-3 py-2 text-right">{r.itemsRepaired}</td>
+                    <td className="px-3 py-2 text-right">{r.durationMs === null ? "—" : `${r.durationMs} ms`}</td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {new Date(r.createdAt).toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 function AdminPage() {
   const { isAdmin, loading } = useIsAdmin();
 
@@ -451,6 +546,14 @@ function AdminPage() {
                 Drafted or flagged questions awaiting a human decision. Approve or reject with an optional note.
               </p>
               <ReviewQueue />
+            </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">04 · Scheduled_Jobs</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Library re-index history from the cron endpoint, plus a manual trigger.
+              </p>
+              <JobsPanel />
             </section>
 
 
