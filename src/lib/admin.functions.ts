@@ -489,9 +489,9 @@ export const listJobRuns = createServerFn({ method: "GET" })
 
 export const runLibraryJobNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<{ ok: boolean; summary: string }> => {
+  .handler(async ({ context }): Promise<{ ok: boolean; repaired: number; missing: number }> => {
     await assertAdmin(context);
     const { runLibraryRefresh } = await import("@/lib/jobs.server");
     const result = await runLibraryRefresh("refresh-library-manual");
-    return { ok: result.ok, summary: result.summary ?? "" };
+    return { ok: result.ok, repaired: result.repaired, missing: result.chunksMissingEmbedding };
   });
