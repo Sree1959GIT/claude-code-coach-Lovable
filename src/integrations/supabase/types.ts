@@ -234,6 +234,45 @@ export type Database = {
         }
         Relationships: []
       }
+      job_runs: {
+        Row: {
+          created_at: string
+          details: Json
+          duration_ms: number | null
+          error: string | null
+          id: string
+          items_processed: number
+          items_repaired: number
+          job_name: string
+          status: string
+          summary: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          items_processed?: number
+          items_repaired?: number
+          job_name: string
+          status?: string
+          summary?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          items_processed?: number
+          items_repaired?: number
+          job_name?: string
+          status?: string
+          summary?: string | null
+        }
+        Relationships: []
+      }
       library_chunks: {
         Row: {
           chunk_index: number
