@@ -14,6 +14,182 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_eval_results: {
+        Row: {
+          agents: string[]
+          answer: string | null
+          completion_tokens: number
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          eval_id: string | null
+          eval_run_id: string
+          id: string
+          intent: string | null
+          issues: string[]
+          missing_points: string[]
+          name: string
+          passed: boolean
+          prompt_tokens: number
+          score: number
+        }
+        Insert: {
+          agents?: string[]
+          answer?: string | null
+          completion_tokens?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          eval_id?: string | null
+          eval_run_id: string
+          id?: string
+          intent?: string | null
+          issues?: string[]
+          missing_points?: string[]
+          name: string
+          passed?: boolean
+          prompt_tokens?: number
+          score?: number
+        }
+        Update: {
+          agents?: string[]
+          answer?: string | null
+          completion_tokens?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          eval_id?: string | null
+          eval_run_id?: string
+          id?: string
+          intent?: string | null
+          issues?: string[]
+          missing_points?: string[]
+          name?: string
+          passed?: boolean
+          prompt_tokens?: number
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_eval_results_eval_id_fkey"
+            columns: ["eval_id"]
+            isOneToOne: false
+            referencedRelation: "agent_evals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_eval_results_eval_run_id_fkey"
+            columns: ["eval_run_id"]
+            isOneToOne: false
+            referencedRelation: "agent_eval_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_eval_runs: {
+        Row: {
+          avg_score: number
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          failed: number
+          id: string
+          label: string
+          passed: number
+          status: string
+          total: number
+          triggered_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          avg_score?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          failed?: number
+          id?: string
+          label?: string
+          passed?: number
+          status?: string
+          total?: number
+          triggered_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avg_score?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          failed?: number
+          id?: string
+          label?: string
+          passed?: number
+          status?: string
+          total?: number
+          triggered_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      agent_evals: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expected_agents: string[]
+          expected_intent: string | null
+          expected_points: string[]
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          prompt: string
+          question_id: string | null
+          selected_option_label: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expected_agents?: string[]
+          expected_intent?: string | null
+          expected_points?: string[]
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          prompt: string
+          question_id?: string | null
+          selected_option_label?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expected_agents?: string[]
+          expected_intent?: string | null
+          expected_points?: string[]
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          prompt?: string
+          question_id?: string | null
+          selected_option_label?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_evals_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_runs: {
         Row: {
           created_at: string
