@@ -13,7 +13,11 @@ import {
   submitForReview,
   listJobRuns,
   runLibraryJobNow,
+  listEvalRuns,
+  listEvalResults,
+  runEvalsNow,
 } from "@/lib/admin.functions";
+
 
 import { QuestionEditor } from "@/components/admin/QuestionEditor";
 
@@ -42,7 +46,7 @@ const SECTIONS: { code: string; title: string; body: string; status: "live" | "p
   { code: "02", title: "Content", body: "Domains and questions with option health.", status: "live" },
   { code: "03", title: "Review queue", body: "Approve or reject drafted questions.", status: "live" },
   { code: "04", title: "Scheduled jobs", body: "Library re-index runs and their history.", status: "live" },
-  { code: "05", title: "Agent evals", body: "Golden-set replay scored by the critic.", status: "planned" },
+  { code: "05", title: "Agent evals", body: "Golden-set replay scored by the critic.", status: "live" },
 ];
 
 function fmt(ts: string | null) {
@@ -472,6 +476,169 @@ function JobsPanel() {
   );
 }
 
+function EvalsPanel() {
+  const fetchRuns = useServerFn(listEvalRuns);
+  const fetchResults = useServerFn(listEvalResults);
+  const runNow = useServerFn(runEvalsNow);
+  const queryClient = useQueryClient();
+  const [openRun, setOpenRun] = useState<string | null>(null);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["admin-eval-runs"],
+    queryFn: () => fetchRuns(),
+    staleTime: 30_000,
+  });
+
+  const results = useQuery({
+    queryKey: ["admin-eval-results", openRun],
+    queryFn: () => fetchResults({ data: { runId: openRun! } }),
+    enabled: Boolean(openRun),
+  });
+
+  const trigger = useMutation({
+    mutationFn: () => runNow({ data: undefined }),
+    onSuccess: (r) => {
+      setOpenRun(r.runId);
+      void queryClient.invalidateQueries({ queryKey: ["admin-eval-runs"] });
+    },
+  });
+
+  const runs = data ?? [];
+
+  return (
+    <div className="mt-4">
+      <button
+        type="button"
+        onClick={() => trigger.mutate()}
+        disabled={trigger.isPending}
+        className="bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50"
+      >
+        {trigger.isPending ? "Replaying golden set…" : "Run_Evals_Now"}
+      </button>
+      {trigger.data && (
+        <span className="ml-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          {trigger.data.passed}/{trigger.data.total} passed · avg {trigger.data.avgScore}
+        </span>
+      )}
+      {trigger.error && (
+        <p className="mt-2 font-mono text-[11px] text-destructive">{(trigger.error as Error).message}</p>
+      )}
+
+      {isLoading ? (
+        <p className="mt-4 font-mono text-xs text-muted-foreground">Loading eval history…</p>
+      ) : error ? (
+        <p className="mt-4 font-mono text-xs text-destructive">Could not load evals: {(error as Error).message}</p>
+      ) : (
+        <div className="mt-4 overflow-x-auto border border-border">
+          <table className="w-full min-w-[680px] border-collapse font-mono text-[11px]">
+            <thead>
+              <tr className="border-b border-border bg-muted/40 text-left uppercase tracking-widest text-[10px] text-muted-foreground">
+                <th className="px-3 py-2">Batch</th>
+                <th className="px-3 py-2">Status</th>
+                <th className="px-3 py-2 text-right">Total</th>
+                <th className="px-3 py-2 text-right">Passed</th>
+                <th className="px-3 py-2 text-right">Failed</th>
+                <th className="px-3 py-2 text-right">Avg score</th>
+                <th className="px-3 py-2">When</th>
+                <th className="px-3 py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {runs.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">
+                    No eval batches yet. Run the golden set to create one.
+                  </td>
+                </tr>
+              ) : (
+                runs.map((r) => (
+                  <tr key={r.id} className="border-b border-border/60 last:border-0 align-top">
+                    <td className="px-3 py-2 font-bold">{r.label}</td>
+                    <td
+                      className={`px-3 py-2 uppercase tracking-widest text-[10px] ${
+                        r.status === "done" ? "text-primary" : "text-muted-foreground"
+                      }`}
+                    >
+                      {r.status}
+                    </td>
+                    <td className="px-3 py-2 text-right">{r.total}</td>
+                    <td className="px-3 py-2 text-right text-primary">{r.passed}</td>
+                    <td className={`px-3 py-2 text-right ${r.failed ? "text-destructive" : ""}`}>{r.failed}</td>
+                    <td className="px-3 py-2 text-right">{r.avgScore}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{new Date(r.createdAt).toLocaleString()}</td>
+                    <td className="px-3 py-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => setOpenRun(openRun === r.id ? null : r.id)}
+                        className="border border-border px-2 py-1 text-[10px] font-bold uppercase tracking-widest hover:bg-muted"
+                      >
+                        {openRun === r.id ? "Hide" : "Details"}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {openRun && (
+        <div className="mt-4 border border-border p-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Case_Results</p>
+          {results.isLoading ? (
+            <p className="mt-3 font-mono text-xs text-muted-foreground">Loading cases…</p>
+          ) : results.error ? (
+            <p className="mt-3 font-mono text-xs text-destructive">{(results.error as Error).message}</p>
+          ) : (results.data ?? []).length === 0 ? (
+            <p className="mt-3 font-mono text-xs text-muted-foreground">This batch recorded no cases.</p>
+          ) : (
+            <ul className="mt-3 space-y-3">
+              {(results.data ?? []).map((c) => (
+                <li key={c.id} className="border border-border/60 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-mono text-xs font-bold">{c.name}</span>
+                    <span
+                      className={`font-mono text-[10px] font-bold uppercase tracking-widest ${
+                        c.passed ? "text-primary" : "text-destructive"
+                      }`}
+                    >
+                      {c.passed ? "pass" : "fail"} · {c.score}
+                    </span>
+                  </div>
+                  <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    {c.intent ?? "—"} · {c.agents.join(" → ") || "—"} ·{" "}
+                    {c.durationMs === null ? "—" : `${c.durationMs} ms`}
+                  </p>
+                  {c.issues.length > 0 && (
+                    <ul className="mt-2 space-y-1">
+                      {c.issues.map((i, idx) => (
+                        <li key={idx} className="font-mono text-[11px] text-destructive">
+                          · {i}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {c.missingPoints.length > 0 && (
+                    <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+                      Missing points: {c.missingPoints.join("; ")}
+                    </p>
+                  )}
+                  {c.answer && (
+                    <p className="mt-2 line-clamp-4 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                      {c.answer}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 function AdminPage() {
   const { isAdmin, loading } = useIsAdmin();
@@ -555,6 +722,16 @@ function AdminPage() {
               </p>
               <JobsPanel />
             </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">05 · Agent_Evals</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Replay the golden prompt set through the live agent path and score each answer with the critic.
+              </p>
+              <EvalsPanel />
+            </section>
+
+
 
 
 
