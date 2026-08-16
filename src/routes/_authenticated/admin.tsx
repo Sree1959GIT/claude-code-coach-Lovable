@@ -46,7 +46,7 @@ const SECTIONS: { code: string; title: string; body: string; status: "live" | "p
   { code: "02", title: "Content", body: "Domains and questions with option health.", status: "live" },
   { code: "03", title: "Review queue", body: "Approve or reject drafted questions.", status: "live" },
   { code: "04", title: "Scheduled jobs", body: "Library re-index runs and their history.", status: "live" },
-  { code: "05", title: "Agent evals", body: "Golden-set replay scored by the critic.", status: "planned" },
+  { code: "05", title: "Agent evals", body: "Golden-set replay scored by the critic.", status: "live" },
 ];
 
 function fmt(ts: string | null) {
