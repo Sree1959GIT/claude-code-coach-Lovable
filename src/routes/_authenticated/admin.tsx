@@ -729,6 +729,8 @@ function AdminPage() {
                 Replay the golden prompt set through the live agent path and score each answer with the critic.
               </p>
               <EvalsPanel />
+            </section>
+
 
 
 
