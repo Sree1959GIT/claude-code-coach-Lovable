@@ -723,6 +723,14 @@ function AdminPage() {
               <JobsPanel />
             </section>
 
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">05 · Agent_Evals</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Replay the golden prompt set through the live agent path and score each answer with the critic.
+              </p>
+              <EvalsPanel />
+
+
 
 
             <div className="mt-8 flex flex-wrap gap-3">
