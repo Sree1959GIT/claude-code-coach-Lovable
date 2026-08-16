@@ -495,3 +495,105 @@ export const runLibraryJobNow = createServerFn({ method: "POST" })
     const result = await runLibraryRefresh("refresh-library-manual");
     return { ok: result.ok, repaired: result.repaired, missing: result.chunksMissingEmbedding };
   });
+
+/**
+ * Stage 6b sub-task 11 — agent eval harness runner.
+ */
+
+export type EvalRunSummary = {
+  id: string;
+  label: string;
+  status: string;
+  total: number;
+  passed: number;
+  failed: number;
+  avgScore: number;
+  durationMs: number | null;
+  error: string | null;
+  createdAt: string;
+};
+
+export type EvalResultRow = {
+  id: string;
+  name: string;
+  intent: string | null;
+  agents: string[];
+  score: number;
+  passed: boolean;
+  issues: string[];
+  missingPoints: string[];
+  durationMs: number | null;
+  error: string | null;
+  answer: string | null;
+};
+
+export const listEvalRuns = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<EvalRunSummary[]> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("agent_eval_runs")
+      .select("id, label, status, total, passed, failed, avg_score, duration_ms, error, created_at")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (error) throw error;
+    return (data ?? []).map((r) => ({
+      id: r.id,
+      label: r.label,
+      status: r.status,
+      total: r.total,
+      passed: r.passed,
+      failed: r.failed,
+      avgScore: Number(r.avg_score),
+      durationMs: r.duration_ms,
+      error: r.error,
+      createdAt: r.created_at,
+    }));
+  });
+
+export const listEvalResults = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { runId: string }) => {
+    if (!input.runId) throw new Error("Missing run.");
+    return input;
+  })
+  .handler(async ({ data, context }): Promise<EvalResultRow[]> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("agent_eval_results")
+      .select("id, name, intent, agents, score, passed, issues, missing_points, duration_ms, error, answer")
+      .eq("eval_run_id", data.runId)
+      .order("score");
+    if (error) throw error;
+    return (rows ?? []).map((r) => ({
+      id: r.id,
+      name: r.name,
+      intent: r.intent,
+      agents: r.agents ?? [],
+      score: Number(r.score),
+      passed: r.passed,
+      issues: r.issues ?? [],
+      missingPoints: r.missing_points ?? [],
+      durationMs: r.duration_ms,
+      error: r.error,
+      answer: r.answer,
+    }));
+  });
+
+export const runEvalsNow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ runId: string | null; total: number; passed: number; failed: number; avgScore: number }> => {
+    await assertAdmin(context);
+    const { runEvalBatch } = await import("@/lib/evals.server");
+    const batch = await runEvalBatch("manual");
+    if (batch.error) throw new Error(batch.error);
+    return {
+      runId: batch.runId,
+      total: batch.total,
+      passed: batch.passed,
+      failed: batch.failed,
+      avgScore: batch.avgScore,
+    };
+  });
