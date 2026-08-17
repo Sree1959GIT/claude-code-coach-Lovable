@@ -48,6 +48,18 @@ function AnalyticsPage() {
   const attemptsQ = useQuery({ queryKey: ["my_attempts"], queryFn: fetchMyAttempts });
   const progressQ = useQuery({ queryKey: ["my_progress"], queryFn: fetchMyDomainProgress });
   const masteryQ = useQuery({ queryKey: ["mastery"], queryFn: () => getMasteryFn() });
+  const getReadinessFn = useServerFn(getReadiness);
+  const readinessQ = useQuery({ queryKey: ["readiness"], queryFn: () => getReadinessFn() });
+
+  const passEstimate = useMemo(() => {
+    const report = readinessQ.data;
+    if (!report) return null;
+    const attempts = (attemptsQ.data ?? []).map((a) => ({
+      question_id: a.question_id,
+      is_correct: a.is_correct,
+    }));
+    return computePassEstimate(report, attempts);
+  }, [readinessQ.data, attemptsQ.data]);
 
   const totals = useMemo(() => {
     const attempts = attemptsQ.data ?? [];
