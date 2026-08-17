@@ -43,6 +43,9 @@ function Dashboard() {
   const lapsed = mastery.filter((m) => m.status === "lapsed").length;
   const total = mastery.length;
 
+  const getReadinessFn = useServerFn(getReadiness);
+  const readinessQ = useQuery({ queryKey: ["readiness"], queryFn: () => getReadinessFn() });
+  const readiness = readinessQ.data;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
