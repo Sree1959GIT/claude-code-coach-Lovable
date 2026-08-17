@@ -156,6 +156,72 @@ function AnalyticsPage() {
           <Stat k="Cards" v={String(masteryQ.data?.length ?? 0)} />
         </div>
 
+        {/* Predicted pass */}
+        <section className="mb-8 border border-border bg-card p-6">
+          <div className="mb-4 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+            Predicted_Pass
+          </div>
+          {readinessQ.isLoading || !passEstimate || !readinessQ.data ? (
+            <div className="font-mono text-xs text-muted-foreground">
+              {readinessQ.isLoading ? "Modelling your score…" : "Not enough signal yet."}
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-[240px_1fr]">
+              <div>
+                <div className="font-mono text-5xl font-bold tabular-nums">
+                  {passEstimate.passProbability}%
+                </div>
+                <div className="mt-1 font-mono text-[10px] uppercase tracking-widest text-primary">
+                  {passEstimate.label} to pass
+                </div>
+                <div className="mt-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Readiness band: {READINESS_BAND_LABEL[readinessQ.data.band]} ·{" "}
+                  {readinessQ.data.score}
+                </div>
+                <div className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Confidence {passEstimate.confidence}% · {passEstimate.sampleSize} attempts
+                </div>
+              </div>
+              <div>
+                <div className="mb-2 flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <span>
+                    Projected score {passEstimate.predicted} ({passEstimate.low}–
+                    {passEstimate.high})
+                  </span>
+                  <span>Pass mark {PASS_MARK}</span>
+                </div>
+                {/* Confidence band on a 0-100 scale */}
+                <div className="relative h-6 w-full bg-muted">
+                  <div
+                    className="absolute top-0 h-6 bg-primary/25"
+                    style={{
+                      left: `${passEstimate.low}%`,
+                      width: `${Math.max(1, passEstimate.high - passEstimate.low)}%`,
+                    }}
+                  />
+                  <div
+                    className="absolute top-0 h-6 w-0.5 bg-primary"
+                    style={{ left: `${passEstimate.predicted}%` }}
+                  />
+                  <div
+                    className="absolute top-0 h-6 w-px bg-foreground/60"
+                    style={{ left: `${PASS_MARK}%` }}
+                  />
+                </div>
+                <div className="mt-2 flex justify-between font-mono text-[10px] text-muted-foreground">
+                  <span>0</span>
+                  <span>50</span>
+                  <span>100</span>
+                </div>
+                <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                  Blends blueprint-weighted accuracy with your readiness score. The band narrows as
+                  you attempt more questions and cover more of the item bank.
+                </p>
+              </div>
+            </div>
+          )}
+        </section>
+
         <div className="grid gap-6 lg:grid-cols-2">
           <Panel title="Attempts_Last_14_Days">
             <ResponsiveContainer width="100%" height={240}>
