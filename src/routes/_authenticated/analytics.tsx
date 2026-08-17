@@ -24,6 +24,8 @@ import {
 } from "@/lib/study";
 import { useServerFn } from "@tanstack/react-start";
 import { getMasteryOverview } from "@/lib/study.functions";
+import { getReadiness } from "@/lib/readiness.functions";
+import { computePassEstimate, PASS_MARK, READINESS_BAND_LABEL } from "@/lib/readiness";
 
 export const Route = createFileRoute("/_authenticated/analytics")({
   component: AnalyticsPage,
