@@ -211,3 +211,86 @@ export const READINESS_BAND_LABEL: Record<ReadinessReport["band"], string> = {
   approaching: "Approaching",
   "exam-ready": "Exam ready",
 };
+
+/* ------------------------------------------------------------------ *
+ * Stage 7 sub-task 3 — predicted pass estimate with confidence band.
+ * ------------------------------------------------------------------ */
+
+/** Passing mark for the certification, as a percentage. */
+export const PASS_MARK = 70;
+
+export type PassEstimate = {
+  /** Predicted exam score, 0-100. */
+  predicted: number;
+  /** Wilson-style confidence band around the prediction. */
+  low: number;
+  high: number;
+  /** Probability of clearing PASS_MARK, 0-100. */
+  passProbability: number;
+  /** How much evidence backs the estimate, 0-100. */
+  confidence: number;
+  sampleSize: number;
+  label: "Unlikely" | "Borderline" | "Likely" | "Very likely";
+};
+
+/**
+ * Blends observed blueprint-weighted accuracy with the readiness score.
+ * With few attempts the estimate leans on readiness and widens the band.
+ */
+export function computePassEstimate(
+  report: ReadinessReport,
+  attempts: { question_id: string; is_correct: boolean }[],
+  questionDomain?: Map<string, string>,
+): PassEstimate {
+  const n = attempts.length;
+
+  // Blueprint-weighted accuracy when we can map attempts to domains.
+  let observed: number | null = null;
+  if (n > 0) {
+    if (questionDomain) {
+      let num = 0;
+      let den = 0;
+      for (const d of report.domains) {
+        const rows = attempts.filter((a) => questionDomain.get(a.question_id) === d.domainId);
+        if (!rows.length) continue;
+        const acc = rows.filter((a) => a.is_correct).length / rows.length;
+        num += acc * d.weight;
+        den += d.weight;
+      }
+      observed = den ? (num / den) * 100 : null;
+    }
+    if (observed === null) {
+      observed = (attempts.filter((a) => a.is_correct).length / n) * 100;
+    }
+  }
+
+  // Evidence weight: ~65 attempts (one full exam) is treated as solid evidence.
+  const evidence = clamp01(n / 65);
+  const predicted = Math.round(
+    observed === null ? report.score : observed * evidence + report.score * (1 - evidence),
+  );
+
+  // Band: wide when the sample is small, tightened by coverage.
+  const spread = Math.round(
+    6 + 26 * (1 - evidence) * (1 - 0.4 * clamp01(report.coverage / 100)),
+  );
+  const low = Math.max(0, predicted - spread);
+  const high = Math.min(100, predicted + spread);
+
+  // Logistic around the pass mark, scaled by the band width.
+  const z = (predicted - PASS_MARK) / Math.max(4, spread / 1.6);
+  const passProbability = Math.round(100 / (1 + Math.exp(-z)));
+
+  const confidence = pct(evidence * 0.7 + clamp01(report.coverage / 100) * 0.3);
+
+  const label: PassEstimate["label"] =
+    passProbability >= 80
+      ? "Very likely"
+      : passProbability >= 55
+        ? "Likely"
+        : passProbability >= 35
+          ? "Borderline"
+          : "Unlikely";
+
+  return { predicted, low, high, passProbability, confidence, sampleSize: n, label };
+}
