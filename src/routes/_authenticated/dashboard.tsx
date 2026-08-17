@@ -7,6 +7,8 @@ import { useSession } from "@/hooks/useSession";
 import { logEvent } from "@/lib/analytics";
 import { useServerFn } from "@tanstack/react-start";
 import { getMasteryOverview } from "@/lib/study.functions";
+import { getReadiness } from "@/lib/readiness.functions";
+import { READINESS_BAND_LABEL } from "@/lib/readiness";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
