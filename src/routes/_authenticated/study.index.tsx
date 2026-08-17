@@ -100,6 +100,30 @@ function StudyHub() {
           />
         </section>
 
+        {/* Full mock exam */}
+        <section className="mb-10 animate-enter">
+          <Link
+            to="/mock-exam"
+            className="group flex flex-col gap-3 border border-primary/60 bg-card p-5 transition-colors hover:border-primary sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+                {"// Exam Simulation"}
+              </div>
+              <h2 className="mt-1 font-mono text-sm font-bold uppercase tracking-wide">
+                Full mock exam · 65 Q / 90 min
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Blueprint-weighted sampling with a 70% pass mark and a live countdown.
+              </p>
+            </div>
+            <span className="flex items-center gap-2 border border-primary bg-primary px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground">
+              <Play className="h-3 w-3" /> Review blueprint
+            </span>
+          </Link>
+        </section>
+
+
         {/* Domain practice */}
         <section className="animate-enter" style={{ animationDelay: "100ms" }}>
           <div className="mb-4 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
