@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Brain, Clock, Dumbbell, LayoutGrid, TrendingUp } from "lucide-react";
+import { Brain, Clock, Dumbbell, LayoutGrid, Target, TrendingUp } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useSession } from "@/hooks/useSession";
 import { logEvent } from "@/lib/analytics";
