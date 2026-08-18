@@ -9,6 +9,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getMasteryOverview } from "@/lib/study.functions";
 import { getReadiness } from "@/lib/readiness.functions";
 import { READINESS_BAND_LABEL } from "@/lib/readiness";
+import { StudyPlanCard } from "@/components/StudyPlanCard";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
