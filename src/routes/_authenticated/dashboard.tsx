@@ -145,6 +145,8 @@ function Dashboard() {
           )}
         </section>
 
+        <StudyPlanCard readiness={readiness} />
+
         <div className="grid gap-4 md:grid-cols-3">
           <Link
             to="/study"
