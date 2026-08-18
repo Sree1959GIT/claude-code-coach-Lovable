@@ -349,3 +349,172 @@ export const getSession = createServerFn({ method: "GET" })
     } as SessionDetail;
   });
 
+
+/**
+ * Stage 7 sub-task 5 — post-exam score report.
+ * Blueprint-weighted breakdown of one finished session plus a remediation plan.
+ */
+
+export type ReportDomain = {
+  domainId: string;
+  slug: string;
+  title: string;
+  weight: number;
+  total: number;
+  correct: number;
+  accuracy: number;
+  avgTimeMs: number;
+};
+
+export type ReportQuestion = {
+  id: string;
+  stem: string;
+  domainTitle: string;
+  domainSlug: string;
+  difficulty: string;
+  isCorrect: boolean;
+  timeMs: number;
+  selectedLabel: string | null;
+  correctLabel: string | null;
+  explanation: string | null;
+};
+
+export type SessionReport = {
+  sessionId: string;
+  mode: string;
+  startedAt: string;
+  endedAt: string | null;
+  timeLimitMs: number | null;
+  answered: number;
+  planned: number;
+  correct: number;
+  accuracy: number;
+  weightedScore: number;
+  passed: boolean;
+  passMark: number;
+  totalTimeMs: number;
+  domains: ReportDomain[];
+  missed: ReportQuestion[];
+};
+
+export const getSessionReport = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ sessionId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }): Promise<SessionReport> => {
+    const { supabase, userId } = context;
+    const PASS = 0.7;
+
+    const { data: session, error } = await supabase
+      .from("practice_sessions")
+      .select("*")
+      .eq("id", data.sessionId)
+      .eq("user_id", userId)
+      .single();
+    if (error || !session) throw new Error("Session not found");
+
+    const ids =
+      (session.metadata as { question_ids?: string[] } | null)?.question_ids ?? [];
+    if (ids.length === 0) throw new Error("Session has no questions");
+
+    const [questionsRes, attemptsRes, domains] = await Promise.all([
+      supabase
+        .from("questions")
+        .select("id, domain_id, stem, difficulty, options:question_options(id, label, is_correct, explanation)")
+        .in("id", ids),
+      supabase
+        .from("question_attempts")
+        .select("question_id, selected_option_id, is_correct, time_ms, created_at")
+        .eq("user_id", userId)
+        .in("question_id", ids)
+        .gte("created_at", session.started_at)
+        .order("created_at"),
+      fetchDomains(),
+    ]);
+    if (questionsRes.error) throw questionsRes.error;
+    if (attemptsRes.error) throw attemptsRes.error;
+
+    const domainById = new Map(domains.map((d) => [d.id, d]));
+    const questionById = new Map((questionsRes.data ?? []).map((q: any) => [q.id, q]));
+
+    // Last attempt per question inside this session window.
+    const attemptByQuestion = new Map<string, any>();
+    for (const a of attemptsRes.data ?? []) attemptByQuestion.set(a.question_id, a);
+
+    const perDomain = new Map<string, { total: number; correct: number; time: number }>();
+    const missed: ReportQuestion[] = [];
+    let correct = 0;
+    let totalTimeMs = 0;
+
+    for (const id of ids) {
+      const attempt = attemptByQuestion.get(id);
+      if (!attempt) continue;
+      const q = questionById.get(id);
+      const domainId = q?.domain_id ?? "";
+      const bucket = perDomain.get(domainId) ?? { total: 0, correct: 0, time: 0 };
+      bucket.total += 1;
+      bucket.time += attempt.time_ms ?? 0;
+      totalTimeMs += attempt.time_ms ?? 0;
+      if (attempt.is_correct) {
+        bucket.correct += 1;
+        correct += 1;
+      } else if (q) {
+        const opts = (q.options ?? []) as any[];
+        const correctOpt = opts.find((o) => o.is_correct);
+        const selected = opts.find((o) => o.id === attempt.selected_option_id);
+        missed.push({
+          id,
+          stem: q.stem,
+          domainTitle: domainById.get(domainId)?.title ?? "—",
+          domainSlug: domainById.get(domainId)?.slug ?? "",
+          difficulty: q.difficulty,
+          isCorrect: false,
+          timeMs: attempt.time_ms ?? 0,
+          selectedLabel: selected?.label ?? null,
+          correctLabel: correctOpt?.label ?? null,
+          explanation: correctOpt?.explanation ?? null,
+        });
+      }
+      perDomain.set(domainId, bucket);
+    }
+
+    const reportDomains: ReportDomain[] = domains
+      .filter((d) => perDomain.has(d.id))
+      .map((d) => {
+        const b = perDomain.get(d.id)!;
+        return {
+          domainId: d.id,
+          slug: d.slug,
+          title: d.title,
+          weight: Number(d.weight),
+          total: b.total,
+          correct: b.correct,
+          accuracy: b.total ? b.correct / b.total : 0,
+          avgTimeMs: b.total ? Math.round(b.time / b.total) : 0,
+        };
+      });
+
+    const weightSum = reportDomains.reduce((s, d) => s + d.weight, 0);
+    const weightedScore = weightSum
+      ? reportDomains.reduce((s, d) => s + d.weight * d.accuracy, 0) / weightSum
+      : 0;
+
+    const answered = reportDomains.reduce((s, d) => s + d.total, 0);
+
+    return {
+      sessionId: session.id,
+      mode: session.mode,
+      startedAt: session.started_at,
+      endedAt: session.ended_at,
+      timeLimitMs: session.time_limit_ms,
+      answered,
+      planned: ids.length,
+      correct,
+      accuracy: answered ? correct / answered : 0,
+      weightedScore,
+      passed: weightedScore >= PASS,
+      passMark: PASS,
+      totalTimeMs,
+      domains: reportDomains,
+      missed,
+    };
+  });
