@@ -23,6 +23,7 @@ import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedStudyIndexRouteImport } from './routes/_authenticated/study.index'
 import { Route as AuthenticatedStudySessionRouteImport } from './routes/_authenticated/study.session'
+import { Route as AuthenticatedStudyReportRouteImport } from './routes/_authenticated/study.report'
 import { Route as AuthenticatedStudySlugRouteImport } from './routes/_authenticated/study.$slug'
 import { Route as ApiPublicCronRefreshLibraryRouteImport } from './routes/api/public/cron/refresh-library'
 
@@ -96,6 +97,12 @@ const AuthenticatedStudySessionRoute =
     path: '/study/session',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedStudyReportRoute =
+  AuthenticatedStudyReportRouteImport.update({
+    id: '/study/report',
+    path: '/study/report',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedStudySlugRoute = AuthenticatedStudySlugRouteImport.update({
   id: '/study/$slug',
   path: '/study/$slug',
@@ -121,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/traces': typeof AuthenticatedTracesRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/study/$slug': typeof AuthenticatedStudySlugRoute
+  '/study/report': typeof AuthenticatedStudyReportRoute
   '/study/session': typeof AuthenticatedStudySessionRoute
   '/study/': typeof AuthenticatedStudyIndexRoute
   '/api/public/cron/refresh-library': typeof ApiPublicCronRefreshLibraryRoute
@@ -138,6 +146,7 @@ export interface FileRoutesByTo {
   '/traces': typeof AuthenticatedTracesRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/study/$slug': typeof AuthenticatedStudySlugRoute
+  '/study/report': typeof AuthenticatedStudyReportRoute
   '/study/session': typeof AuthenticatedStudySessionRoute
   '/study': typeof AuthenticatedStudyIndexRoute
   '/api/public/cron/refresh-library': typeof ApiPublicCronRefreshLibraryRoute
@@ -157,6 +166,7 @@ export interface FileRoutesById {
   '/_authenticated/traces': typeof AuthenticatedTracesRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/_authenticated/study/$slug': typeof AuthenticatedStudySlugRoute
+  '/_authenticated/study/report': typeof AuthenticatedStudyReportRoute
   '/_authenticated/study/session': typeof AuthenticatedStudySessionRoute
   '/_authenticated/study/': typeof AuthenticatedStudyIndexRoute
   '/api/public/cron/refresh-library': typeof ApiPublicCronRefreshLibraryRoute
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/traces'
     | '/api/mentor-stream'
     | '/study/$slug'
+    | '/study/report'
     | '/study/session'
     | '/study/'
     | '/api/public/cron/refresh-library'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/traces'
     | '/api/mentor-stream'
     | '/study/$slug'
+    | '/study/report'
     | '/study/session'
     | '/study'
     | '/api/public/cron/refresh-library'
@@ -211,6 +223,7 @@ export interface FileRouteTypes {
     | '/_authenticated/traces'
     | '/api/mentor-stream'
     | '/_authenticated/study/$slug'
+    | '/_authenticated/study/report'
     | '/_authenticated/study/session'
     | '/_authenticated/study/'
     | '/api/public/cron/refresh-library'
@@ -325,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudySessionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/study/report': {
+      id: '/_authenticated/study/report'
+      path: '/study/report'
+      fullPath: '/study/report'
+      preLoaderRoute: typeof AuthenticatedStudyReportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/study/$slug': {
       id: '/_authenticated/study/$slug'
       path: '/study/$slug'
@@ -351,6 +371,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMockExamRoute: typeof AuthenticatedMockExamRoute
   AuthenticatedTracesRoute: typeof AuthenticatedTracesRoute
   AuthenticatedStudySlugRoute: typeof AuthenticatedStudySlugRoute
+  AuthenticatedStudyReportRoute: typeof AuthenticatedStudyReportRoute
   AuthenticatedStudySessionRoute: typeof AuthenticatedStudySessionRoute
   AuthenticatedStudyIndexRoute: typeof AuthenticatedStudyIndexRoute
 }
@@ -364,6 +385,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMockExamRoute: AuthenticatedMockExamRoute,
   AuthenticatedTracesRoute: AuthenticatedTracesRoute,
   AuthenticatedStudySlugRoute: AuthenticatedStudySlugRoute,
+  AuthenticatedStudyReportRoute: AuthenticatedStudyReportRoute,
   AuthenticatedStudySessionRoute: AuthenticatedStudySessionRoute,
   AuthenticatedStudyIndexRoute: AuthenticatedStudyIndexRoute,
 }
