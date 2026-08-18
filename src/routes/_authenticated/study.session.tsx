@@ -321,8 +321,16 @@ function SessionRunner() {
                   Retry_Same
                 </button>
                 <button
-                  onClick={() => navigate({ to: "/analytics" })}
+                  onClick={() =>
+                    navigate({ to: "/study/report", search: { sessionId } })
+                  }
                   className="bg-primary px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
+                >
+                  Score_Report
+                </button>
+                <button
+                  onClick={() => navigate({ to: "/analytics" })}
+                  className="border border-border bg-background px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-secondary"
                 >
                   View_Analytics
                 </button>
