@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Brain, Clock, Dumbbell, LayoutGrid, Target, TrendingUp } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -10,6 +10,9 @@ import { getMasteryOverview } from "@/lib/study.functions";
 import { getReadiness } from "@/lib/readiness.functions";
 import { READINESS_BAND_LABEL } from "@/lib/readiness";
 import { StudyPlanCard } from "@/components/StudyPlanCard";
+import { DailyGoalCard } from "@/components/DailyGoalCard";
+import { buildStudyPlan } from "@/lib/study-plan";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -47,6 +50,19 @@ function Dashboard() {
   const getReadinessFn = useServerFn(getReadiness);
   const readinessQ = useQuery({ queryKey: ["readiness"], queryFn: () => getReadinessFn() });
   const readiness = readinessQ.data;
+
+  const [examDate, setExamDate] = useState<string>("");
+  useEffect(() => {
+    const sync = () => setExamDate(localStorage.getItem("ccaf.exam_date") ?? "");
+    sync();
+    const id = window.setInterval(sync, 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  const suggestedGoal = useMemo(
+    () => (readiness && examDate ? buildStudyPlan(readiness, examDate).dailyQuestions : 10),
+    [readiness, examDate],
+  );
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -146,6 +162,9 @@ function Dashboard() {
         </section>
 
         <StudyPlanCard readiness={readiness} />
+
+        <DailyGoalCard suggestedGoal={suggestedGoal} />
+
 
         <div className="grid gap-4 md:grid-cols-3">
           <Link
