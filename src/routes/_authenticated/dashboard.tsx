@@ -163,6 +163,9 @@ function Dashboard() {
 
         <StudyPlanCard readiness={readiness} />
 
+        <DailyGoalCard suggestedGoal={suggestedGoal} />
+
+
         <div className="grid gap-4 md:grid-cols-3">
           <Link
             to="/study"
