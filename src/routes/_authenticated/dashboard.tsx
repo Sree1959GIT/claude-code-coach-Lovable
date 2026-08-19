@@ -51,6 +51,19 @@ function Dashboard() {
   const readinessQ = useQuery({ queryKey: ["readiness"], queryFn: () => getReadinessFn() });
   const readiness = readinessQ.data;
 
+  const [examDate, setExamDate] = useState<string>("");
+  useEffect(() => {
+    const sync = () => setExamDate(localStorage.getItem("ccaf.exam_date") ?? "");
+    sync();
+    const id = window.setInterval(sync, 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  const suggestedGoal = useMemo(
+    () => (readiness && examDate ? buildStudyPlan(readiness, examDate).dailyQuestions : 10),
+    [readiness, examDate],
+  );
+
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
