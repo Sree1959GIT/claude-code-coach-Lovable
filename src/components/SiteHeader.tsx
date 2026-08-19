@@ -47,6 +47,13 @@ export function SiteHeader() {
                 Mock_Exam
               </Link>
               <Link
+                to="/mistakes"
+                className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+              >
+                Mistakes
+              </Link>
+              <Link
                 to="/analytics"
                 className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
                 activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}

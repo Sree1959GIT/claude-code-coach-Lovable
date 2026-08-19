@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiMentorStreamRouteImport } from './routes/api/mentor-stream'
 import { Route as AuthenticatedTracesRouteImport } from './routes/_authenticated/traces'
 import { Route as AuthenticatedMockExamRouteImport } from './routes/_authenticated/mock-exam'
+import { Route as AuthenticatedMistakesRouteImport } from './routes/_authenticated/mistakes'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as AuthenticatedEstimatorRouteImport } from './routes/_authenticated/estimator'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -59,6 +60,11 @@ const AuthenticatedTracesRoute = AuthenticatedTracesRouteImport.update({
 const AuthenticatedMockExamRoute = AuthenticatedMockExamRouteImport.update({
   id: '/mock-exam',
   path: '/mock-exam',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMistakesRoute = AuthenticatedMistakesRouteImport.update({
+  id: '/mistakes',
+  path: '/mistakes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/estimator': typeof AuthenticatedEstimatorRoute
   '/library': typeof AuthenticatedLibraryRoute
+  '/mistakes': typeof AuthenticatedMistakesRoute
   '/mock-exam': typeof AuthenticatedMockExamRoute
   '/traces': typeof AuthenticatedTracesRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/estimator': typeof AuthenticatedEstimatorRoute
   '/library': typeof AuthenticatedLibraryRoute
+  '/mistakes': typeof AuthenticatedMistakesRoute
   '/mock-exam': typeof AuthenticatedMockExamRoute
   '/traces': typeof AuthenticatedTracesRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
@@ -162,6 +170,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/estimator': typeof AuthenticatedEstimatorRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
+  '/_authenticated/mistakes': typeof AuthenticatedMistakesRoute
   '/_authenticated/mock-exam': typeof AuthenticatedMockExamRoute
   '/_authenticated/traces': typeof AuthenticatedTracesRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/estimator'
     | '/library'
+    | '/mistakes'
     | '/mock-exam'
     | '/traces'
     | '/api/mentor-stream'
@@ -200,6 +210,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/estimator'
     | '/library'
+    | '/mistakes'
     | '/mock-exam'
     | '/traces'
     | '/api/mentor-stream'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/estimator'
     | '/_authenticated/library'
+    | '/_authenticated/mistakes'
     | '/_authenticated/mock-exam'
     | '/_authenticated/traces'
     | '/api/mentor-stream'
@@ -287,6 +299,13 @@ declare module '@tanstack/react-router' {
       path: '/mock-exam'
       fullPath: '/mock-exam'
       preLoaderRoute: typeof AuthenticatedMockExamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/mistakes': {
+      id: '/_authenticated/mistakes'
+      path: '/mistakes'
+      fullPath: '/mistakes'
+      preLoaderRoute: typeof AuthenticatedMistakesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/library': {
@@ -368,6 +387,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEstimatorRoute: typeof AuthenticatedEstimatorRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
+  AuthenticatedMistakesRoute: typeof AuthenticatedMistakesRoute
   AuthenticatedMockExamRoute: typeof AuthenticatedMockExamRoute
   AuthenticatedTracesRoute: typeof AuthenticatedTracesRoute
   AuthenticatedStudySlugRoute: typeof AuthenticatedStudySlugRoute
@@ -382,6 +402,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEstimatorRoute: AuthenticatedEstimatorRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
+  AuthenticatedMistakesRoute: AuthenticatedMistakesRoute,
   AuthenticatedMockExamRoute: AuthenticatedMockExamRoute,
   AuthenticatedTracesRoute: AuthenticatedTracesRoute,
   AuthenticatedStudySlugRoute: AuthenticatedStudySlugRoute,
