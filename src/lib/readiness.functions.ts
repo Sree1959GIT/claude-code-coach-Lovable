@@ -7,6 +7,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { computeReadiness, type ReadinessReport } from "./readiness";
+import { computeReadinessTrend, type ReadinessTrendPoint } from "./readiness-trend";
 
 export const getReadiness = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -39,5 +40,38 @@ export const getReadiness = createServerFn({ method: "GET" })
       questions: questionsRes.data ?? [],
       mastery: masteryRes.data ?? [],
       attempts: attemptsRes.data ?? [],
+    });
+  });
+
+/**
+ * Stage 7 sub-task 8 — readiness trend (last N days) from the caller's attempts.
+ */
+export const getReadinessTrend = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<ReadinessTrendPoint[]> => {
+    const { supabase, userId } = context;
+    const since = new Date();
+    since.setDate(since.getDate() - 45);
+
+    const [domainsRes, questionsRes, attemptsRes] = await Promise.all([
+      supabase.from("domains").select("id, slug, title, weight").order("sort_order"),
+      supabase.from("questions").select("id, domain_id"),
+      supabase
+        .from("question_attempts")
+        .select("question_id, is_correct, created_at")
+        .eq("user_id", userId)
+        .gte("created_at", since.toISOString())
+        .order("created_at", { ascending: true })
+        .limit(5000),
+    ]);
+
+    const err = domainsRes.error || questionsRes.error || attemptsRes.error;
+    if (err) throw err;
+
+    return computeReadinessTrend({
+      domains: domainsRes.data ?? [],
+      questions: questionsRes.data ?? [],
+      attempts: attemptsRes.data ?? [],
+      days: 30,
     });
   });
