@@ -24,7 +24,7 @@ import {
 } from "@/lib/study";
 import { useServerFn } from "@tanstack/react-start";
 import { getMasteryOverview } from "@/lib/study.functions";
-import { getReadiness } from "@/lib/readiness.functions";
+import { getReadiness, getReadinessTrend } from "@/lib/readiness.functions";
 import { computePassEstimate, PASS_MARK, READINESS_BAND_LABEL } from "@/lib/readiness";
 
 export const Route = createFileRoute("/_authenticated/analytics")({
@@ -50,6 +50,17 @@ function AnalyticsPage() {
   const masteryQ = useQuery({ queryKey: ["mastery"], queryFn: () => getMasteryFn() });
   const getReadinessFn = useServerFn(getReadiness);
   const readinessQ = useQuery({ queryKey: ["readiness"], queryFn: () => getReadinessFn() });
+  const getTrendFn = useServerFn(getReadinessTrend);
+  const trendQ = useQuery({ queryKey: ["readiness_trend"], queryFn: () => getTrendFn() });
+  const trend = useMemo(
+    () => (trendQ.data ?? []).map((p) => ({ ...p, day: p.date.slice(5) })),
+    [trendQ.data],
+  );
+  const trendDelta = useMemo(() => {
+    const d = trendQ.data ?? [];
+    if (d.length < 2) return null;
+    return d[d.length - 1].score - d[0].score;
+  }, [trendQ.data]);
 
   const passEstimate = useMemo(() => {
     const report = readinessQ.data;
@@ -219,6 +230,44 @@ function AnalyticsPage() {
                 </p>
               </div>
             </div>
+          )}
+        </section>
+
+        {/* Readiness trend */}
+        <section className="mb-8 border border-border bg-card p-6">
+          <div className="mb-4 flex flex-wrap items-baseline gap-3">
+            <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+              Readiness_Trend_30d
+            </div>
+            {trendDelta !== null ? (
+              <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                {trendDelta >= 0 ? "+" : ""}
+                {trendDelta} pts over the window
+              </div>
+            ) : null}
+          </div>
+          {trendQ.isLoading ? (
+            <div className="font-mono text-xs text-muted-foreground">Replaying your history…</div>
+          ) : trend.length === 0 ? (
+            <div className="font-mono text-xs text-muted-foreground">No attempts yet.</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={240}>
+              <LineChart data={trend}>
+                <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
+                <XAxis dataKey="day" stroke="var(--color-muted-foreground)" fontSize={10} minTickGap={20} />
+                <YAxis domain={[0, 100]} stroke="var(--color-muted-foreground)" fontSize={10} />
+                <Tooltip
+                  contentStyle={{
+                    background: "var(--color-card)",
+                    border: "1px solid var(--color-border)",
+                    fontSize: 11,
+                  }}
+                />
+                <Line type="monotone" dataKey="score" name="Readiness" stroke="var(--color-primary)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="mastery" name="Mastery" stroke="var(--color-muted-foreground)" strokeWidth={1.5} dot={false} />
+                <Line type="monotone" dataKey="coverage" name="Coverage" stroke="var(--color-muted-foreground)" strokeWidth={1} strokeDasharray="4 3" dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
           )}
         </section>
 
