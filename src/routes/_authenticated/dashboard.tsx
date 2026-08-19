@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Brain, Clock, Dumbbell, LayoutGrid, Target, TrendingUp } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -10,6 +10,9 @@ import { getMasteryOverview } from "@/lib/study.functions";
 import { getReadiness } from "@/lib/readiness.functions";
 import { READINESS_BAND_LABEL } from "@/lib/readiness";
 import { StudyPlanCard } from "@/components/StudyPlanCard";
+import { DailyGoalCard } from "@/components/DailyGoalCard";
+import { buildStudyPlan } from "@/lib/study-plan";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
