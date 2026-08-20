@@ -47,6 +47,36 @@ function MistakesPage() {
 
   const [filter, setFilter] = useState<Filter>("open");
   const [domain, setDomain] = useState<string>("all");
+  const [retestCount, setRetestCount] = useState(10);
+  const [starting, setStarting] = useState(false);
+  const navigate = useNavigate();
+  const startRetest = useServerFn(startMistakeRetest);
+
+  async function launchRetest() {
+    setStarting(true);
+    try {
+      const res = await startRetest({
+        data: {
+          targetCount: retestCount,
+          ...(domain !== "all" ? { domainSlug: domain } : {}),
+        },
+      });
+      if (!res.sessionId) {
+        toast.info("No open mistakes to re-test in this scope.");
+        return;
+      }
+      logEvent("session_started", { mode: "retest", count: res.count });
+      await navigate({
+        to: "/study/session",
+        search: { sessionId: res.sessionId },
+      });
+    } catch (e) {
+      toast.error(`Could not start re-test: ${(e as Error).message}`);
+    } finally {
+      setStarting(false);
+    }
+  }
+
 
   const bank = bankQ.data;
   const domains = useMemo(() => {
