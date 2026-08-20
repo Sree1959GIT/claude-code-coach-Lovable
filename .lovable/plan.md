@@ -1,11 +1,11 @@
 # Remaining Roadmap — 2-credit Sub-tasks
 
-Each sub-task below is scoped to roughly 2 build credits and can be implemented and verified on its own. Stages 1–6b are complete; Stage 7 is complete through sub-task 9 (readiness model, readiness card, pass estimate, mock exam, score report, study plan, daily goals & streaks, readiness trend, mistake bank).
+Each sub-task below is scoped to roughly 2 build credits and can be implemented and verified on its own. Stages 1–6b are complete; Stage 7 is complete through sub-task 11 (readiness model, readiness card, pass estimate, mock exam, score report, study plan, daily goals & streaks, readiness trend, mistake bank).
 
 ## Stage 7 — Exam Readiness (finish)
 
 - 7.10 Mistake re-test mode: launch a session built only from open mistake-bank items, and mark items recovered on a correct re-answer.
-- 7.11 Exam-day checklist card: countdown, readiness gate, environment/ID checklist, link to the booking page.
+- 7.11 Exam-day checklist card — DONE (countdown, readiness gate, persisted 8-item checklist, booking link).
 - 7.12 Session history page: list past practice and mock sessions with score, mode, duration and a link to each score report.
 - 7.13 Shareable/printable score report: print-friendly layout plus a copy-summary action.
 - 7.14 Domain confidence self-rating: per-domain 1–5 self-rating stored per user, blended as a small factor into the readiness display.

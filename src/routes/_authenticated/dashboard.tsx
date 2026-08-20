@@ -11,6 +11,7 @@ import { getReadiness } from "@/lib/readiness.functions";
 import { READINESS_BAND_LABEL } from "@/lib/readiness";
 import { StudyPlanCard } from "@/components/StudyPlanCard";
 import { DailyGoalCard } from "@/components/DailyGoalCard";
+import { ExamDayCard } from "@/components/ExamDayCard";
 import { buildStudyPlan } from "@/lib/study-plan";
 
 
@@ -164,6 +165,8 @@ function Dashboard() {
         <StudyPlanCard readiness={readiness} />
 
         <DailyGoalCard suggestedGoal={suggestedGoal} />
+
+        <ExamDayCard readiness={readiness} />
 
 
         <div className="grid gap-4 md:grid-cols-3">
