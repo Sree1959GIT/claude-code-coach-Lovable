@@ -135,6 +135,39 @@ function MistakesPage() {
               />
             </section>
 
+            <section className="mb-6 flex flex-wrap items-center gap-3 border border-primary/40 bg-primary/5 p-4">
+              <div className="min-w-0 flex-1">
+                <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+                  Re-test_Mode
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Practice only your open mistakes
+                  {domain !== "all"
+                    ? ` in ${domains.find((d) => d.slug === domain)?.title ?? "this domain"}`
+                    : ""}
+                  , most-missed first. Answer one correctly and it moves to recovered.
+                </p>
+              </div>
+              <select
+                value={retestCount}
+                onChange={(e) => setRetestCount(Number(e.target.value))}
+                className="border border-border bg-background px-2 py-1.5 font-mono text-[10px] uppercase tracking-widest"
+              >
+                {[5, 10, 20, 30].map((n) => (
+                  <option key={n} value={n}>
+                    {n} questions
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={launchRetest}
+                disabled={starting || bank.openCount === 0}
+                className="bg-primary px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-40"
+              >
+                {starting ? "Starting…" : "Start_Re-test →"}
+              </button>
+            </section>
+
             <div className="mb-4 flex flex-wrap items-center gap-2">
               {(["open", "recovered", "all"] as Filter[]).map((f) => (
                 <button
