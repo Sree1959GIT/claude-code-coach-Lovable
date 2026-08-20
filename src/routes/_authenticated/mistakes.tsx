@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { CheckCircle2, RotateCcw, XCircle } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { getMistakeBank } from "@/lib/mistakes.functions";
+import { getMistakeBank, startMistakeRetest } from "@/lib/mistakes.functions";
+import { logEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/mistakes")({
   component: MistakesPage,
