@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { CheckCircle2, RotateCcw, XCircle } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { getMistakeBank } from "@/lib/mistakes.functions";
+import { getMistakeBank, startMistakeRetest } from "@/lib/mistakes.functions";
+import { logEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/mistakes")({
   component: MistakesPage,
@@ -45,6 +47,36 @@ function MistakesPage() {
 
   const [filter, setFilter] = useState<Filter>("open");
   const [domain, setDomain] = useState<string>("all");
+  const [retestCount, setRetestCount] = useState(10);
+  const [starting, setStarting] = useState(false);
+  const navigate = useNavigate();
+  const startRetest = useServerFn(startMistakeRetest);
+
+  async function launchRetest() {
+    setStarting(true);
+    try {
+      const res = await startRetest({
+        data: {
+          targetCount: retestCount,
+          ...(domain !== "all" ? { domainSlug: domain } : {}),
+        },
+      });
+      if (!res.sessionId) {
+        toast.info("No open mistakes to re-test in this scope.");
+        return;
+      }
+      logEvent("session_started", { mode: "retest", count: res.count });
+      await navigate({
+        to: "/study/session",
+        search: { sessionId: res.sessionId },
+      });
+    } catch (e) {
+      toast.error(`Could not start re-test: ${(e as Error).message}`);
+    } finally {
+      setStarting(false);
+    }
+  }
+
 
   const bank = bankQ.data;
   const domains = useMemo(() => {
@@ -101,6 +133,39 @@ function MistakesPage() {
                 label="Total misses"
                 value={String(bank.totalMisses)}
               />
+            </section>
+
+            <section className="mb-6 flex flex-wrap items-center gap-3 border border-primary/40 bg-primary/5 p-4">
+              <div className="min-w-0 flex-1">
+                <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+                  Re-test_Mode
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Practice only your open mistakes
+                  {domain !== "all"
+                    ? ` in ${domains.find((d) => d.slug === domain)?.title ?? "this domain"}`
+                    : ""}
+                  , most-missed first. Answer one correctly and it moves to recovered.
+                </p>
+              </div>
+              <select
+                value={retestCount}
+                onChange={(e) => setRetestCount(Number(e.target.value))}
+                className="border border-border bg-background px-2 py-1.5 font-mono text-[10px] uppercase tracking-widest"
+              >
+                {[5, 10, 20, 30].map((n) => (
+                  <option key={n} value={n}>
+                    {n} questions
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={launchRetest}
+                disabled={starting || bank.openCount === 0}
+                className="bg-primary px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-40"
+              >
+                {starting ? "Starting…" : "Start_Re-test →"}
+              </button>
             </section>
 
             <div className="mb-4 flex flex-wrap items-center gap-2">

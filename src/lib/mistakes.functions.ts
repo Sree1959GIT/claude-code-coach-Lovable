@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchDomains } from "./study";
 
@@ -106,4 +107,80 @@ export const getMistakeBank = createServerFn({ method: "GET" })
       openCount: items.filter((i) => !i.lastAttemptCorrect).length,
       recoveredCount: items.filter((i) => i.lastAttemptCorrect).length,
     };
+  });
+
+/**
+ * Stage 7 sub-task 10 — mistake re-test.
+ * Builds a session from the user's open mistake-bank items only.
+ */
+export const startMistakeRetest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        targetCount: z.number().int().min(1).max(60).default(10),
+        domainSlug: z.string().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: attempts, error } = await supabase
+      .from("question_attempts")
+      .select("question_id, is_correct, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+
+    const rows = attempts ?? [];
+    const lastByQuestion = new Map<string, boolean>();
+    const missCount = new Map<string, number>();
+    for (const a of rows) {
+      lastByQuestion.set(a.question_id, !!a.is_correct);
+      if (!a.is_correct)
+        missCount.set(a.question_id, (missCount.get(a.question_id) ?? 0) + 1);
+    }
+
+    let openIds = Array.from(missCount.keys()).filter(
+      (id) => lastByQuestion.get(id) === false,
+    );
+
+    if (data.domainSlug) {
+      const domains = await fetchDomains();
+      const domain = domains.find((d) => d.slug === data.domainSlug);
+      if (domain) {
+        const { data: scoped, error: sErr } = await supabase
+          .from("questions")
+          .select("id")
+          .eq("domain_id", domain.id)
+          .in("id", openIds);
+        if (sErr) throw sErr;
+        const allowed = new Set((scoped ?? []).map((q) => q.id));
+        openIds = openIds.filter((id) => allowed.has(id));
+      }
+    }
+
+    openIds.sort((a, b) => (missCount.get(b) ?? 0) - (missCount.get(a) ?? 0));
+    const selected = openIds.slice(0, data.targetCount);
+
+    if (selected.length === 0) {
+      return { sessionId: null as string | null, count: 0 };
+    }
+
+    const { data: session, error: insErr } = await supabase
+      .from("practice_sessions")
+      .insert({
+        user_id: userId,
+        mode: "retest",
+        domain_id: null,
+        target_count: selected.length,
+        time_limit_ms: null,
+        metadata: { question_ids: selected },
+      })
+      .select()
+      .single();
+    if (insErr) throw insErr;
+
+    return { sessionId: session.id as string, count: selected.length };
   });
