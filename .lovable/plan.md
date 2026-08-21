@@ -6,7 +6,7 @@ Each sub-task below is scoped to roughly 2 build credits and can be implemented 
 
 - 7.10 Mistake re-test mode: launch a session built only from open mistake-bank items, and mark items recovered on a correct re-answer.
 - 7.11 Exam-day checklist card — DONE (countdown, readiness gate, persisted 8-item checklist, booking link).
-- 7.12 Session history page: list past practice and mock sessions with score, mode, duration and a link to each score report.
+- 7.12 Session history page — DONE (/history: filters by mode, score, duration, report links).
 - 7.13 Shareable/printable score report: print-friendly layout plus a copy-summary action.
 - 7.14 Domain confidence self-rating: per-domain 1–5 self-rating stored per user, blended as a small factor into the readiness display.
 
