@@ -132,3 +132,21 @@
   border-radius: 2px;
 }
 
+
+@media print {
+  [data-print-hide] {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+  section,
+  li {
+    break-inside: avoid;
+  }
+}
