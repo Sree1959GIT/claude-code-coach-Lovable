@@ -1,7 +1,8 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CheckCircle2, Clock, Target, XCircle } from "lucide-react";
+import { CheckCircle2, ClipboardCopy, Clock, Printer, Target, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getSessionReport } from "@/lib/study.functions";
 
@@ -46,6 +47,33 @@ function formatDuration(ms: number) {
   return m > 0 ? `${m}m ${String(s % 60).padStart(2, "0")}s` : `${s}s`;
 }
 
+function buildSummary(r: {
+  mode: string;
+  startedAt: string;
+  answered: number;
+  planned: number;
+  correct: number;
+  weightedScore: number;
+  passMark: number;
+  passed: boolean;
+  totalTimeMs: number;
+  domains: { title: string; accuracy: number; correct: number; total: number }[];
+  missed: { id: string }[];
+}) {
+  const lines = [
+    `Claude Architect Prep — ${r.mode} session score report`,
+    new Date(r.startedAt).toLocaleString(),
+    `Weighted score: ${pct(r.weightedScore)} (pass mark ${pct(r.passMark)}) — ${r.passed ? "PASS" : "BELOW PASS"}`,
+    `Raw: ${r.correct}/${r.answered} of ${r.planned} planned · time ${formatDuration(r.totalTimeMs)}`,
+    "",
+    "Domains:",
+    ...r.domains.map((d) => `- ${d.title}: ${d.correct}/${d.total} (${pct(d.accuracy)})`),
+    "",
+    `Missed items: ${r.missed.length}`,
+  ];
+  return lines.join("\n");
+}
+
 function ReportPage() {
   const { sessionId } = Route.useSearch();
   const fetchReport = useServerFn(getSessionReport);
@@ -63,7 +91,9 @@ function ReportPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <SiteHeader />
+      <div data-print-hide>
+        <SiteHeader />
+      </div>
       <main className="mx-auto w-full max-w-4xl px-4 py-8">
         {!sessionId && (
           <div className="border border-destructive/40 bg-destructive/10 p-6 font-mono text-xs">
@@ -86,6 +116,28 @@ function ReportPage() {
 
         {r && (
           <>
+            <div className="mb-6 flex flex-wrap gap-3" data-print-hide>
+              <button
+                onClick={() => window.print()}
+                className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-secondary"
+              >
+                <Printer className="h-3 w-3" /> Print_Report
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(buildSummary(r));
+                    toast.success("Summary copied to clipboard");
+                  } catch {
+                    toast.error("Clipboard unavailable");
+                  }
+                }}
+                className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-secondary"
+              >
+                <ClipboardCopy className="h-3 w-3" /> Copy_Summary
+              </button>
+            </div>
+
             <header className="mb-8 animate-enter">
               <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
                 {"// Score Report"}
@@ -246,7 +298,7 @@ function ReportPage() {
               </section>
             )}
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3" data-print-hide>
               <Link
                 to="/mock-exam"
                 className="bg-primary px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
