@@ -734,6 +734,17 @@ function AdminPage() {
               <EvalsPanel />
             </section>
 
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">06 · Bulk_Import</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Paste or upload CSV/JSON questions, validate them against the blueprint domains with a dry run, then
+                commit. Duplicate stems are flagged and skipped by default.
+              </p>
+              <BulkImportPanel />
+            </section>
+
+
+
 
 
 
