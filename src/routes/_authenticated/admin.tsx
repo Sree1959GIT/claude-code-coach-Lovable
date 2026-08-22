@@ -20,6 +20,7 @@ import {
 
 
 import { QuestionEditor } from "@/components/admin/QuestionEditor";
+import { BulkImportPanel } from "@/components/admin/BulkImportPanel";
 
 
 
