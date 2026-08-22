@@ -20,6 +20,7 @@ import {
 
 
 import { QuestionEditor } from "@/components/admin/QuestionEditor";
+import { BulkImportPanel } from "@/components/admin/BulkImportPanel";
 
 
 
@@ -47,7 +48,9 @@ const SECTIONS: { code: string; title: string; body: string; status: "live" | "p
   { code: "03", title: "Review queue", body: "Approve or reject drafted questions.", status: "live" },
   { code: "04", title: "Scheduled jobs", body: "Library re-index runs and their history.", status: "live" },
   { code: "05", title: "Agent evals", body: "Golden-set replay scored by the critic.", status: "live" },
+  { code: "06", title: "Bulk import", body: "CSV/JSON question upload with dry-run preview.", status: "live" },
 ];
+
 
 function fmt(ts: string | null) {
   if (!ts) return "—";
@@ -730,6 +733,17 @@ function AdminPage() {
               </p>
               <EvalsPanel />
             </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">06 · Bulk_Import</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Paste or upload CSV/JSON questions, validate them against the blueprint domains with a dry run, then
+                commit. Duplicate stems are flagged and skipped by default.
+              </p>
+              <BulkImportPanel />
+            </section>
+
+
 
 
 
