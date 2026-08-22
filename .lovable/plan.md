@@ -12,7 +12,7 @@ Each sub-task below is scoped to roughly 2 build credits and can be implemented 
 
 ## Stage 8 — Content Scale-up
 
-- 8.1 Bulk question import: admin CSV/JSON upload with schema validation and a dry-run preview.
+- 8.1 Bulk question import — DONE (admin CSV/JSON paste or upload, schema validation, dry-run preview, duplicate skip).
 - 8.2 AI question generator (draft): generate blueprint-aligned draft questions from library chunks into the review queue.
 - 8.3 Duplicate/near-duplicate detector for questions using embeddings, surfaced in Content health.
 - 8.4 Distractor quality audit: flag options never chosen or always chosen, and options missing explanations.
