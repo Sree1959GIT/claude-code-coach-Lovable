@@ -8,7 +8,7 @@ Each sub-task below is scoped to roughly 2 build credits and can be implemented 
 - 7.11 Exam-day checklist card — DONE (countdown, readiness gate, persisted 8-item checklist, booking link).
 - 7.12 Session history page — DONE (/history: filters by mode, score, duration, report links).
 - 7.13 Shareable/printable score report — DONE (print layout + copy-summary).
-- 7.14 Domain confidence self-rating: per-domain 1–5 self-rating stored per user, blended as a small factor into the readiness display.
+- 7.14 Domain confidence self-rating — DONE (per-domain 1–5 rating persisted per user, blended into an adjusted readiness score on the dashboard).
 
 ## Stage 8 — Content Scale-up
 

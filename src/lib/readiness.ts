@@ -294,3 +294,66 @@ export function computePassEstimate(
 
   return { predicted, low, high, passProbability, confidence, sampleSize: n, label };
 }
+
+/* ------------------------------------------------------------------ *
+ * Stage 7 sub-task 14 — domain confidence self-rating blend.
+ * ------------------------------------------------------------------ */
+
+/** How much a 1-5 self-rating can move the displayed readiness score. */
+export const CONFIDENCE_BLEND = 0.08;
+
+export type ConfidenceAdjusted = {
+  /** Blueprint-weighted self-rated confidence, 0-100 (null when unrated). */
+  confidence: number | null;
+  /** Readiness score after blending in confidence, 0-100. */
+  adjustedScore: number;
+  /** adjustedScore - report.score, signed points. */
+  delta: number;
+  band: ReadinessReport["band"];
+  ratedDomains: number;
+};
+
+/** Maps a 1-5 rating to a 0-100 confidence value. */
+export const ratingToPct = (rating: number) => ((clamp01((rating - 1) / 4)) * 100);
+
+export function applyConfidence(
+  report: ReadinessReport,
+  ratings: { domain_id: string; rating: number }[],
+): ConfidenceAdjusted {
+  const byDomain = new Map(ratings.map((r) => [r.domain_id, Number(r.rating)]));
+
+  let num = 0;
+  let den = 0;
+  let rated = 0;
+  for (const d of report.domains) {
+    const r = byDomain.get(d.domainId);
+    if (!r) continue;
+    rated += 1;
+    num += ratingToPct(r) * d.weight;
+    den += d.weight;
+  }
+
+  if (!den) {
+    return {
+      confidence: null,
+      adjustedScore: report.score,
+      delta: 0,
+      band: report.band,
+      ratedDomains: 0,
+    };
+  }
+
+  const confidence = Math.round(num / den);
+  // Only the rated share of the blueprint gets nudged.
+  const share = den / (report.domains.reduce((s, d) => s + d.weight, 0) || 1);
+  const factor = CONFIDENCE_BLEND * clamp01(share);
+  const adjustedScore = Math.round(report.score * (1 - factor) + confidence * factor);
+
+  return {
+    confidence,
+    adjustedScore,
+    delta: adjustedScore - report.score,
+    band: bandFor(adjustedScore),
+    ratedDomains: rated,
+  };
+}
