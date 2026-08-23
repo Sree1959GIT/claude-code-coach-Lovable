@@ -674,6 +674,41 @@ export type Database = {
           },
         ]
       }
+      question_embeddings: {
+        Row: {
+          content_hash: string
+          created_at: string
+          embedding: string
+          model: string
+          question_id: string
+          updated_at: string
+        }
+        Insert: {
+          content_hash: string
+          created_at?: string
+          embedding: string
+          model: string
+          question_id: string
+          updated_at?: string
+        }
+        Update: {
+          content_hash?: string
+          created_at?: string
+          embedding?: string
+          model?: string
+          question_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_embeddings_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: true
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       question_options: {
         Row: {
           explanation: string | null
