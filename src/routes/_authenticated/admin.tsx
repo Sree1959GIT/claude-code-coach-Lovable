@@ -21,6 +21,7 @@ import {
 
 import { QuestionEditor } from "@/components/admin/QuestionEditor";
 import { BulkImportPanel } from "@/components/admin/BulkImportPanel";
+import { AiGeneratePanel } from "@/components/admin/AiGeneratePanel";
 
 
 
@@ -741,6 +742,15 @@ function AdminPage() {
                 commit. Duplicate stems are flagged and skipped by default.
               </p>
               <BulkImportPanel />
+            </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">07 · AI_Question_Generator</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Draft blueprint-aligned questions grounded in retrieved library chunks. Preview first, then queue them
+                into the review queue for a human decision.
+              </p>
+              <AiGeneratePanel />
             </section>
 
 
