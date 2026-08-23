@@ -51,7 +51,9 @@ const SECTIONS: { code: string; title: string; body: string; status: "live" | "p
   { code: "04", title: "Scheduled jobs", body: "Library re-index runs and their history.", status: "live" },
   { code: "05", title: "Agent evals", body: "Golden-set replay scored by the critic.", status: "live" },
   { code: "06", title: "Bulk import", body: "CSV/JSON question upload with dry-run preview.", status: "live" },
+  { code: "07", title: "Duplicates", body: "Embedding-based near-duplicate question detection.", status: "live" },
 ];
+
 
 
 function fmt(ts: string | null) {
