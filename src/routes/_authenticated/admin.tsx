@@ -22,6 +22,7 @@ import {
 import { QuestionEditor } from "@/components/admin/QuestionEditor";
 import { BulkImportPanel } from "@/components/admin/BulkImportPanel";
 import { AiGeneratePanel } from "@/components/admin/AiGeneratePanel";
+import { DuplicatePanel } from "@/components/admin/DuplicatePanel";
 
 
 
@@ -50,7 +51,9 @@ const SECTIONS: { code: string; title: string; body: string; status: "live" | "p
   { code: "04", title: "Scheduled jobs", body: "Library re-index runs and their history.", status: "live" },
   { code: "05", title: "Agent evals", body: "Golden-set replay scored by the critic.", status: "live" },
   { code: "06", title: "Bulk import", body: "CSV/JSON question upload with dry-run preview.", status: "live" },
+  { code: "07", title: "Duplicates", body: "Embedding-based near-duplicate question detection.", status: "live" },
 ];
+
 
 
 function fmt(ts: string | null) {
@@ -752,6 +755,16 @@ function AdminPage() {
               </p>
               <AiGeneratePanel />
             </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">08 · Duplicate_Detector</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Embeds every question (scenario + stem + options) and flags near-duplicate pairs above the chosen
+                cosine-similarity threshold. Vectors are cached and only re-embedded when the text changes.
+              </p>
+              <DuplicatePanel />
+            </section>
+
 
 
 
