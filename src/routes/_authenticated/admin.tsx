@@ -754,6 +754,16 @@ function AdminPage() {
               <AiGeneratePanel />
             </section>
 
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">08 · Duplicate_Detector</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Embeds every question (scenario + stem + options) and flags near-duplicate pairs above the chosen
+                cosine-similarity threshold. Vectors are cached and only re-embedded when the text changes.
+              </p>
+              <DuplicatePanel />
+            </section>
+
+
 
 
 
