@@ -22,6 +22,7 @@ import {
 import { QuestionEditor } from "@/components/admin/QuestionEditor";
 import { BulkImportPanel } from "@/components/admin/BulkImportPanel";
 import { AiGeneratePanel } from "@/components/admin/AiGeneratePanel";
+import { DuplicatePanel } from "@/components/admin/DuplicatePanel";
 
 
 
