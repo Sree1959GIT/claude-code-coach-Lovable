@@ -23,6 +23,7 @@ import { QuestionEditor } from "@/components/admin/QuestionEditor";
 import { BulkImportPanel } from "@/components/admin/BulkImportPanel";
 import { AiGeneratePanel } from "@/components/admin/AiGeneratePanel";
 import { DuplicatePanel } from "@/components/admin/DuplicatePanel";
+import { DistractorPanel } from "@/components/admin/DistractorPanel";
 
 
 
@@ -52,6 +53,7 @@ const SECTIONS: { code: string; title: string; body: string; status: "live" | "p
   { code: "05", title: "Agent evals", body: "Golden-set replay scored by the critic.", status: "live" },
   { code: "06", title: "Bulk import", body: "CSV/JSON question upload with dry-run preview.", status: "live" },
   { code: "07", title: "Duplicates", body: "Embedding-based near-duplicate question detection.", status: "live" },
+  { code: "08", title: "Distractors", body: "Option-level audit of pick rates and missing explanations.", status: "live" },
 ];
 
 
@@ -763,6 +765,15 @@ function AdminPage() {
                 cosine-similarity threshold. Vectors are cached and only re-embedded when the text changes.
               </p>
               <DuplicatePanel />
+            </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">09 · Distractor_Audit</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Flags distractors that no learner ever picks, distractors chosen more often than the threshold, and any
+                option missing an explanation.
+              </p>
+              <DistractorPanel />
             </section>
 
 
