@@ -24,6 +24,7 @@ import { BulkImportPanel } from "@/components/admin/BulkImportPanel";
 import { AiGeneratePanel } from "@/components/admin/AiGeneratePanel";
 import { DuplicatePanel } from "@/components/admin/DuplicatePanel";
 import { DistractorPanel } from "@/components/admin/DistractorPanel";
+import { EnrichPanel } from "@/components/admin/EnrichPanel";
 
 
 
@@ -54,6 +55,7 @@ const SECTIONS: { code: string; title: string; body: string; status: "live" | "p
   { code: "06", title: "Bulk import", body: "CSV/JSON question upload with dry-run preview.", status: "live" },
   { code: "07", title: "Duplicates", body: "Embedding-based near-duplicate question detection.", status: "live" },
   { code: "08", title: "Distractors", body: "Option-level audit of pick rates and missing explanations.", status: "live" },
+  { code: "09", title: "Explanations", body: "Grounded explanation drafts for options that have none.", status: "live" },
 ];
 
 
@@ -774,6 +776,15 @@ function AdminPage() {
                 option missing an explanation.
               </p>
               <DistractorPanel />
+            </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">10 · Explanation_Enrichment</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Drafts grounded, cited explanations for options that are missing one. Review the drafts first, then
+                approve to write them back onto the options.
+              </p>
+              <EnrichPanel />
             </section>
 
 
