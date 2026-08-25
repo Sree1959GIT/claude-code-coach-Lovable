@@ -781,12 +781,21 @@ function AdminPage() {
             </section>
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">10 · Explanation_Enrichment</h2>
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">09 · Explanation_Enrichment</h2>
               <p className="mt-1 font-mono text-[11px] text-muted-foreground">
                 Drafts grounded, cited explanations for options that are missing one. Review the drafts first, then
                 approve to write them back onto the options.
               </p>
               <EnrichPanel />
+            </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">10 · Citation_Coverage</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Percentage of questions per domain that have at least one linked library chunk. Refresh links to
+                recompute semantic citations against the current library.
+              </p>
+              <CitationPanel />
             </section>
 
 
