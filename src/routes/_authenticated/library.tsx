@@ -50,6 +50,8 @@ function LibraryPage() {
   const runSeed = useServerFn(seedLibrary);
   const runIngest = useServerFn(ingestDocument);
   const runSearch = useServerFn(searchLibrary);
+  const runPreset = useServerFn(ingestPreset);
+
 
   const [admin, setAdmin] = useState<boolean | null>(null);
   const [docs, setDocs] = useState<Doc[]>([]);
