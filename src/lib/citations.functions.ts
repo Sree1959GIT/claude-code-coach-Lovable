@@ -52,6 +52,9 @@ export const refreshQuestionCitations = createServerFn({ method: "POST" })
     let links = 0;
     let skipped = 0;
 
+    // Cast for tables added in this migration before the generated types refresh.
+    const adminClient = supabaseAdmin as any;
+
     for (const q of rows) {
       const query = [q.scenario, q.stem, q.key_concept].filter(Boolean).join("\n\n");
       if (!query.trim()) {
@@ -85,13 +88,10 @@ export const refreshQuestionCitations = createServerFn({ method: "POST" })
         continue;
       }
 
-      const { error: delErr } = await supabaseAdmin
-        .from("question_citations")
-        .delete()
-        .eq("question_id", q.id);
+      const { error: delErr } = await adminClient.from("question_citations").delete().eq("question_id", q.id);
       if (delErr) throw delErr;
 
-      const { error: insErr } = await supabaseAdmin.from("question_citations").insert(
+      const { error: insErr } = await adminClient.from("question_citations").insert(
         top.map((m) => ({
           question_id: q.id,
           chunk_id: m.chunk_id,
@@ -123,7 +123,7 @@ export const getCitationCoverage = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data, error } = await supabaseAdmin.rpc("get_citation_coverage");
+    const { data, error } = await (supabaseAdmin as any).rpc("get_citation_coverage");
     if (error) throw error;
 
     return (data ?? []).map((r: any) => ({
@@ -134,3 +134,4 @@ export const getCitationCoverage = createServerFn({ method: "GET" })
       coveragePct: Number(r.coverage_pct),
     }));
   });
+
