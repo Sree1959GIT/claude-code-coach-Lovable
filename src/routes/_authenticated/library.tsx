@@ -8,8 +8,11 @@ import {
   listLibraryDocuments,
   seedLibrary,
   ingestDocument,
+  ingestPreset,
 } from "@/lib/library.functions";
+import { INGEST_PRESETS } from "@/lib/library-presets";
 import { searchLibrary } from "@/lib/retrieval.functions";
+
 
 export const Route = createFileRoute("/_authenticated/library")({
   component: LibraryPage,
@@ -47,6 +50,8 @@ function LibraryPage() {
   const runSeed = useServerFn(seedLibrary);
   const runIngest = useServerFn(ingestDocument);
   const runSearch = useServerFn(searchLibrary);
+  const runPreset = useServerFn(ingestPreset);
+
 
   const [admin, setAdmin] = useState<boolean | null>(null);
   const [docs, setDocs] = useState<Doc[]>([]);
@@ -101,6 +106,24 @@ function LibraryPage() {
       setBusy(null);
     }
   }
+
+  async function handlePreset(presetId: string, force: boolean) {
+    setBusy(`preset:${presetId}`);
+    setStatus(null);
+    try {
+      const r = await runPreset({ data: { presetId, force } });
+      setStatus(
+        `${r.label} — ${r.ingested} ingested, ${r.skipped} unchanged, ${r.failed} failed, ${r.totalChunks} chunks.`,
+      );
+      await refresh();
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Preset ingestion failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+
 
   async function handleIngest(e: React.FormEvent) {
     e.preventDefault();
@@ -208,6 +231,44 @@ function LibraryPage() {
                 </button>
               </div>
             </section>
+
+            <section className="border border-border p-5">
+              <p className={label}>Source presets</p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Additional docs sets and changelogs. Ingest adds only what changed;
+                re-index re-embeds every document in the preset.
+              </p>
+              <ul className="mt-3 divide-y divide-border border border-border">
+                {INGEST_PRESETS.map((p) => (
+                  <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 p-3">
+                    <div className="min-w-[16rem] flex-1">
+                      <p className="font-mono text-xs font-bold">{p.label}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{p.description}</p>
+                      <p className={`${label} mt-1`}>
+                        {p.docs.length} docs · {p.tags.join(", ")}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        className={btn}
+                        disabled={busy !== null}
+                        onClick={() => handlePreset(p.id, false)}
+                      >
+                        {busy === `preset:${p.id}` ? "Working…" : "Ingest"}
+                      </button>
+                      <button
+                        className="border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest disabled:opacity-50"
+                        disabled={busy !== null}
+                        onClick={() => handlePreset(p.id, true)}
+                      >
+                        Re-index
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
 
             <section className="border border-border p-5">
               <p className={label}>Ingest a document</p>

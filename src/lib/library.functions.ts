@@ -79,6 +79,58 @@ export const seedLibrary = createServerFn({ method: "POST" })
     };
   });
 
+/** Ingest (or re-index) one named preset from `library-presets`. */
+export const ingestPreset = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ presetId: z.string().min(1), force: z.boolean().default(false) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { ingestOne } = await import("./ingest.server");
+    const { INGEST_PRESETS } = await import("./library-presets");
+
+    const preset = INGEST_PRESETS.find((p) => p.id === data.presetId);
+    if (!preset) throw new Error("Unknown preset");
+
+    const results: {
+      title: string;
+      chunkCount: number;
+      skipped: boolean;
+      error?: string;
+    }[] = [];
+
+    for (const doc of preset.docs) {
+      try {
+        const r = await ingestOne({
+          ...doc,
+          tags: Array.from(new Set([...(doc.tags ?? []), ...preset.tags])),
+          force: data.force,
+        });
+        results.push({ title: doc.title, chunkCount: r.chunkCount, skipped: r.skipped });
+      } catch (err) {
+        results.push({
+          title: doc.title,
+          chunkCount: 0,
+          skipped: false,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+
+    return {
+      presetId: preset.id,
+      label: preset.label,
+      documents: results.length,
+      ingested: results.filter((r) => !r.skipped && !r.error).length,
+      skipped: results.filter((r) => r.skipped).length,
+      failed: results.filter((r) => r.error).length,
+      totalChunks: results.reduce((n, r) => n + r.chunkCount, 0),
+      results,
+    };
+  });
+
+
 /** Is the caller a library admin? Safe to call from any signed-in user. */
 export const isLibraryAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
