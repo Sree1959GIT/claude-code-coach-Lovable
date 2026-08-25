@@ -107,6 +107,24 @@ function LibraryPage() {
     }
   }
 
+  async function handlePreset(presetId: string, force: boolean) {
+    setBusy(`preset:${presetId}`);
+    setStatus(null);
+    try {
+      const r = await runPreset({ data: { presetId, force } });
+      setStatus(
+        `${r.label} — ${r.ingested} ingested, ${r.skipped} unchanged, ${r.failed} failed, ${r.totalChunks} chunks.`,
+      );
+      await refresh();
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Preset ingestion failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+
+
   async function handleIngest(e: React.FormEvent) {
     e.preventDefault();
     setBusy("ingest");
