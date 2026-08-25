@@ -25,6 +25,7 @@ import { AiGeneratePanel } from "@/components/admin/AiGeneratePanel";
 import { DuplicatePanel } from "@/components/admin/DuplicatePanel";
 import { DistractorPanel } from "@/components/admin/DistractorPanel";
 import { EnrichPanel } from "@/components/admin/EnrichPanel";
+import { CitationPanel } from "@/components/admin/CitationPanel";
 
 
 
