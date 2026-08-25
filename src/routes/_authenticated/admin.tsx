@@ -57,6 +57,7 @@ const SECTIONS: { code: string; title: string; body: string; status: "live" | "p
   { code: "07", title: "Duplicates", body: "Embedding-based near-duplicate question detection.", status: "live" },
   { code: "08", title: "Distractors", body: "Option-level audit of pick rates and missing explanations.", status: "live" },
   { code: "09", title: "Explanations", body: "Grounded explanation drafts for options that have none.", status: "live" },
+  { code: "10", title: "Citation coverage", body: "Per-domain share of questions linked to at least one library chunk.", status: "live" },
 ];
 
 
