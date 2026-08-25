@@ -8,8 +8,11 @@ import {
   listLibraryDocuments,
   seedLibrary,
   ingestDocument,
+  ingestPreset,
 } from "@/lib/library.functions";
+import { INGEST_PRESETS } from "@/lib/library-presets";
 import { searchLibrary } from "@/lib/retrieval.functions";
+
 
 export const Route = createFileRoute("/_authenticated/library")({
   component: LibraryPage,
