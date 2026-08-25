@@ -25,6 +25,7 @@ import { AiGeneratePanel } from "@/components/admin/AiGeneratePanel";
 import { DuplicatePanel } from "@/components/admin/DuplicatePanel";
 import { DistractorPanel } from "@/components/admin/DistractorPanel";
 import { EnrichPanel } from "@/components/admin/EnrichPanel";
+import { CitationPanel } from "@/components/admin/CitationPanel";
 
 
 
@@ -56,6 +57,7 @@ const SECTIONS: { code: string; title: string; body: string; status: "live" | "p
   { code: "07", title: "Duplicates", body: "Embedding-based near-duplicate question detection.", status: "live" },
   { code: "08", title: "Distractors", body: "Option-level audit of pick rates and missing explanations.", status: "live" },
   { code: "09", title: "Explanations", body: "Grounded explanation drafts for options that have none.", status: "live" },
+  { code: "10", title: "Citation coverage", body: "Per-domain share of questions linked to at least one library chunk.", status: "live" },
 ];
 
 
@@ -779,12 +781,21 @@ function AdminPage() {
             </section>
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">10 · Explanation_Enrichment</h2>
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">09 · Explanation_Enrichment</h2>
               <p className="mt-1 font-mono text-[11px] text-muted-foreground">
                 Drafts grounded, cited explanations for options that are missing one. Review the drafts first, then
                 approve to write them back onto the options.
               </p>
               <EnrichPanel />
+            </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">10 · Citation_Coverage</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Percentage of questions per domain that have at least one linked library chunk. Refresh links to
+                recompute semantic citations against the current library.
+              </p>
+              <CitationPanel />
             </section>
 
 

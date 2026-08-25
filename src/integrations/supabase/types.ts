@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -674,6 +674,58 @@ export type Database = {
           },
         ]
       }
+      question_citations: {
+        Row: {
+          chunk_id: string
+          created_at: string
+          document_id: string
+          id: string
+          question_id: string
+          similarity: number
+          source: string
+        }
+        Insert: {
+          chunk_id: string
+          created_at?: string
+          document_id: string
+          id?: string
+          question_id: string
+          similarity: number
+          source?: string
+        }
+        Update: {
+          chunk_id?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+          question_id?: string
+          similarity?: number
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_citations_chunk_id_fkey"
+            columns: ["chunk_id"]
+            isOneToOne: false
+            referencedRelation: "library_chunks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_citations_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "library_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_citations_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       question_embeddings: {
         Row: {
           content_hash: string
@@ -870,6 +922,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_citation_coverage: {
+        Args: never
+        Returns: {
+          cited_questions: number
+          coverage_pct: number
+          domain_id: string
+          domain_title: string
+          total_questions: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
