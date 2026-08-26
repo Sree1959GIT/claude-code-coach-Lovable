@@ -333,6 +333,62 @@ export type Database = {
         }
         Relationships: []
       }
+      authoring_sources: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          domain_id: string | null
+          enabled: boolean
+          host: string
+          id: string
+          label: string
+          last_checked_at: string | null
+          last_status: string | null
+          notes: string | null
+          subject: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          domain_id?: string | null
+          enabled?: boolean
+          host: string
+          id?: string
+          label: string
+          last_checked_at?: string | null
+          last_status?: string | null
+          notes?: string | null
+          subject?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          domain_id?: string | null
+          enabled?: boolean
+          host?: string
+          id?: string
+          label?: string
+          last_checked_at?: string | null
+          last_status?: string | null
+          notes?: string | null
+          subject?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "authoring_sources_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "domains"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_reviews: {
         Row: {
           created_at: string
@@ -726,6 +782,79 @@ export type Database = {
           },
         ]
       }
+      question_drafts: {
+        Row: {
+          base_question_id: string | null
+          citations: Json
+          created_at: string
+          created_by: string | null
+          domain_id: string | null
+          id: string
+          iteration: number
+          payload: Json
+          rationale: string | null
+          review_notes: string | null
+          review_score: number | null
+          run_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          base_question_id?: string | null
+          citations?: Json
+          created_at?: string
+          created_by?: string | null
+          domain_id?: string | null
+          id?: string
+          iteration?: number
+          payload: Json
+          rationale?: string | null
+          review_notes?: string | null
+          review_score?: number | null
+          run_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          base_question_id?: string | null
+          citations?: Json
+          created_at?: string
+          created_by?: string | null
+          domain_id?: string | null
+          id?: string
+          iteration?: number
+          payload?: Json
+          rationale?: string | null
+          review_notes?: string | null
+          review_score?: number | null
+          run_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_drafts_base_question_id_fkey"
+            columns: ["base_question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_drafts_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "domains"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_drafts_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "agent_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       question_embeddings: {
         Row: {
           content_hash: string
@@ -801,6 +930,7 @@ export type Database = {
       }
       questions: {
         Row: {
+          author_id: string | null
           calibrated_at: string | null
           calibrated_difficulty: string | null
           calibration_accuracy: number | null
@@ -810,11 +940,15 @@ export type Database = {
           domain_id: string
           id: string
           key_concept: string | null
+          origin: string
+          published_at: string | null
           scenario: string | null
           sort_order: number
+          status: string
           stem: string
         }
         Insert: {
+          author_id?: string | null
           calibrated_at?: string | null
           calibrated_difficulty?: string | null
           calibration_accuracy?: number | null
@@ -824,11 +958,15 @@ export type Database = {
           domain_id: string
           id?: string
           key_concept?: string | null
+          origin?: string
+          published_at?: string | null
           scenario?: string | null
           sort_order?: number
+          status?: string
           stem: string
         }
         Update: {
+          author_id?: string | null
           calibrated_at?: string | null
           calibrated_difficulty?: string | null
           calibration_accuracy?: number | null
@@ -838,8 +976,11 @@ export type Database = {
           domain_id?: string
           id?: string
           key_concept?: string | null
+          origin?: string
+          published_at?: string | null
           scenario?: string | null
           sort_order?: number
+          status?: string
           stem?: string
         }
         Relationships: [
