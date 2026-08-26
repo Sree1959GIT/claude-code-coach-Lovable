@@ -39,6 +39,15 @@ export type SetContext = {
   usedDistractors: string[];
 };
 
+/** B7 — an existing question used to seed the loop in edit mode. */
+export type BaseQuestion = {
+  scenario: string | null;
+  stem: string;
+  keyConcept: string | null;
+  difficulty: string;
+  options: DraftOption[];
+};
+
 export type AuthoringArgs = {
   domainTitle: string;
   domainSlug: string;
@@ -49,9 +58,39 @@ export type AuthoringArgs = {
   /** Whitelisted hosts an admin configured; research never leaves these. */
   allowedSources: { label: string; host: string; url: string | null }[];
   setContext: SetContext;
+  /** Edit mode: revise this live question instead of authoring a new one. */
+  baseQuestion?: BaseQuestion | null;
+  revisionNotes?: string | null;
 };
 
 export const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+
+/** B7 — field-level diff between the live question and a proposed revision. */
+export type FieldDiff = { field: string; before: string; after: string };
+
+export function diffQuestion(base: BaseQuestion, proposed: BaseQuestion): FieldDiff[] {
+  const out: FieldDiff[] = [];
+  const cmp = (field: string, before: unknown, after: unknown) => {
+    const b = before == null ? "" : String(before);
+    const a = after == null ? "" : String(after);
+    if (norm(b) !== norm(a)) out.push({ field, before: b, after: a });
+  };
+  cmp("scenario", base.scenario, proposed.scenario);
+  cmp("stem", base.stem, proposed.stem);
+  cmp("keyConcept", base.keyConcept, proposed.keyConcept);
+  cmp("difficulty", base.difficulty, proposed.difficulty);
+
+  const labels = [...new Set([...base.options.map((o) => o.label), ...proposed.options.map((o) => o.label)])].sort();
+  for (const label of labels) {
+    const b = base.options.find((o) => o.label === label);
+    const p = proposed.options.find((o) => o.label === label);
+    cmp(`option ${label} text`, b?.text ?? "(none)", p?.text ?? "(removed)");
+    cmp(`option ${label} correct`, b ? String(b.isCorrect) : "(none)", p ? String(p.isCorrect) : "(removed)");
+    cmp(`option ${label} explanation`, b?.explanation ?? "", p?.explanation ?? "");
+  }
+  return out;
+}
+
 
 /* ------------------------------ gateway ------------------------------ */
 
@@ -143,7 +182,17 @@ function setterPrompt(args: AuthoringArgs, ev: Evidence): string {
     `Domain: ${args.domainTitle} (${args.domainSlug})`,
     args.domainDescription ? `Domain description: ${args.domainDescription}` : "",
     args.topicHint ? `Focus topic: ${args.topicHint}` : "",
-    `Write ${args.count} item(s) at difficulty: ${args.difficulty}.`,
+    args.baseQuestion
+      ? [
+          "EDIT MODE — revise the existing question below rather than writing a new one.",
+          "Keep what already works; change only what is weak, unclear or unsupported.",
+          `EXISTING QUESTION: ${JSON.stringify(args.baseQuestion).slice(0, 4000)}`,
+          args.revisionNotes ? `EDITOR NOTES: ${args.revisionNotes}` : "",
+          "Return exactly 1 revised item.",
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : `Write ${args.count} item(s) at difficulty: ${args.difficulty}.`,
     "",
     "SET CONTEXT (avoid duplicating these):",
     sc.existingStems.slice(0, 60).map((s) => `- ${s.slice(0, 140)}`).join("\n") || "(bank is empty)",
@@ -332,7 +381,7 @@ export async function runAuthoringLoop(args: AuthoringArgs): Promise<AuthoringRe
   const scores = await timed("reviewer", () => review(drafted), (r) => `${r.length} scored`);
 
   const citations = ev.passages.map((p) => ({ title: p.title, url: p.url ?? null }));
-  const seen = new Set(args.setContext.existingStems.map(norm));
+  const seen = new Set(args.baseQuestion ? [] : args.setContext.existingStems.map(norm));
 
   const drafts: AuthoredDraft[] = [];
   drafted.forEach((d, i) => {
@@ -349,5 +398,9 @@ export async function runAuthoringLoop(args: AuthoringArgs): Promise<AuthoringRe
     });
   });
 
-  return { drafts: drafts.slice(0, args.count), steps, evidenceCount: ev.passages.length };
+  return {
+    drafts: drafts.slice(0, args.baseQuestion ? 1 : args.count),
+    steps,
+    evidenceCount: ev.passages.length,
+  };
 }

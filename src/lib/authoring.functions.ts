@@ -122,6 +122,9 @@ const RunInput = z.object({
   count: z.number().int().min(1).max(5).default(2),
   difficulty: z.enum(["easy", "medium", "hard", "mixed"]).default("mixed"),
   topicHint: z.string().max(200).nullable().optional(),
+  /** B7 edit mode: revise this existing question instead of authoring new items. */
+  baseQuestionId: z.string().uuid().nullable().optional(),
+  revisionNotes: z.string().max(1000).nullable().optional(),
   /** Preview only: do not persist drafts. */
   dryRun: z.boolean().default(false),
 });
@@ -141,10 +144,14 @@ export type AuthoringRunResult = {
     citations: { title: string; url: string | null }[];
     options: { label: string; text: string; isCorrect: boolean; explanation: string | null }[];
     questionId: string | null;
+    /** Populated in edit mode: field-level changes against the live question. */
+    diff: { field: string; before: string; after: string }[];
+    isRevision: boolean;
   }[];
   queued: number;
   issues: string[];
 };
+
 
 export const runAgenticAuthoring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -152,7 +159,7 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<AuthoringRunResult> => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { runAuthoringLoop, norm } = await import("./authoring.server");
+    const { runAuthoringLoop, norm, diffQuestion } = await import("./authoring.server");
     const { startRun, logStep, finishRun } = await import("./orchestrator.server");
 
     const started = Date.now();
@@ -181,11 +188,50 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
       else if (usedDistractors.length < 40) usedDistractors.push(o.text.slice(0, 90));
     }
 
+    // B7 edit mode — seed the loop with the live question.
+    let baseQuestion:
+      | { scenario: string | null; stem: string; keyConcept: string | null; difficulty: string; options: any[] }
+      | null = null;
+    if (data.baseQuestionId) {
+      const [{ data: bq, error: bqErr }, { data: bqOpts }] = await Promise.all([
+        supabaseAdmin
+          .from("questions")
+          .select("id, scenario, stem, key_concept, difficulty")
+          .eq("id", data.baseQuestionId)
+          .single(),
+        supabaseAdmin
+          .from("question_options")
+          .select("label, text, is_correct, explanation, sort_order")
+          .eq("question_id", data.baseQuestionId)
+          .order("sort_order"),
+      ]);
+      if (bqErr) throw bqErr;
+      baseQuestion = {
+        scenario: bq.scenario,
+        stem: bq.stem,
+        keyConcept: bq.key_concept,
+        difficulty: bq.difficulty,
+        options: (bqOpts ?? []).map((o: any) => ({
+          label: o.label,
+          text: o.text,
+          isCorrect: o.is_correct,
+          explanation: o.explanation ?? null,
+        })),
+      };
+    }
+
     const runId = await startRun(supabaseAdmin as any, {
       userId: context.userId,
       mode: "authoring",
-      question: `Author ${data.count} item(s) for ${domain.title}`,
-      metadata: { domainId: domain.id, difficulty: data.difficulty, dryRun: data.dryRun },
+      question: baseQuestion
+        ? `Revise question for ${domain.title}`
+        : `Author ${data.count} item(s) for ${domain.title}`,
+      metadata: {
+        domainId: domain.id,
+        difficulty: data.difficulty,
+        dryRun: data.dryRun,
+        baseQuestionId: data.baseQuestionId ?? null,
+      },
     });
 
     let result;
@@ -194,7 +240,7 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
         domainTitle: domain.title,
         domainSlug: domain.slug,
         domainDescription: domain.description,
-        count: data.count,
+        count: baseQuestion ? 1 : data.count,
         difficulty: data.difficulty,
         topicHint: data.topicHint ?? null,
         allowedSources: (sources ?? []).map((s: any) => ({ label: s.label, host: s.host, url: s.url ?? null })),
@@ -203,6 +249,8 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
           labelCounts,
           usedDistractors,
         },
+        baseQuestion: baseQuestion as any,
+        revisionNotes: data.revisionNotes ?? null,
       });
     } catch (err) {
       await finishRun({
@@ -230,18 +278,66 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
 
     const drafts = result.drafts.map((d) => ({
       stem: d.stem,
-      scenario: d.scenario,
-      difficulty: d.difficulty,
+      scenario: d.scenario as string | null,
+      difficulty: d.difficulty as string,
       reviewScore: d.reviewScore,
       reviewNotes: d.reviewNotes,
       adversaryIssues: d.adversaryIssues,
       citations: d.citations,
       options: d.options,
       questionId: null as string | null,
+      diff: baseQuestion
+        ? diffQuestion(baseQuestion as any, {
+            scenario: d.scenario,
+            stem: d.stem,
+            keyConcept: d.keyConcept,
+            difficulty: d.difficulty,
+            options: d.options,
+          })
+        : [],
+      isRevision: Boolean(baseQuestion),
     }));
 
+
     let queued = 0;
-    if (!data.dryRun) {
+
+    // Edit mode persists a revision proposal only — the live question is untouched
+    // until a human accepts the revision in the review workspace.
+    if (!data.dryRun && baseQuestion && data.baseQuestionId) {
+      for (const d of result.drafts) {
+        const { error: dErr2 } = await (supabaseAdmin as any).from("question_drafts").insert({
+          domain_id: domain.id,
+          base_question_id: data.baseQuestionId,
+          run_id: runId,
+          iteration: d.iteration,
+          status: "pending",
+          payload: {
+            revision: true,
+            scenario: d.scenario,
+            stem: d.stem,
+            keyConcept: d.keyConcept,
+            difficulty: d.difficulty,
+            options: d.options,
+          },
+          rationale: d.rationale,
+          citations: d.citations,
+          review_score: d.reviewScore,
+          review_notes: d.reviewNotes,
+          created_by: context.userId,
+        });
+        if (dErr2) {
+          issues.push(`Revision draft failed: ${dErr2.message}`);
+          continue;
+        }
+        queued += 1;
+      }
+      drafts.forEach((x) => {
+        x.questionId = data.baseQuestionId ?? null;
+      });
+    }
+
+    if (!data.dryRun && !baseQuestion) {
+
       let nextSort = Math.max(0, ...(bank ?? []).map((q: any) => q.sort_order ?? 0));
       const existing = new Set((bank ?? []).map((q: any) => norm(q.stem)));
 
@@ -342,8 +438,19 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
 
 /* ------------------------- draft review workspace ------------------------- */
 
+export type ProposedQuestion = {
+  scenario: string | null;
+  stem: string;
+  keyConcept: string | null;
+  difficulty: string;
+  options: { label: string; text: string; isCorrect: boolean; explanation: string | null }[];
+};
+
 export type DraftReviewItem = {
   reviewId: string;
+  /** Set for revision proposals; the live question is untouched until accepted. */
+  draftId: string | null;
+  kind: "new" | "revision";
   questionId: string;
   status: string;
   source: string;
@@ -357,6 +464,9 @@ export type DraftReviewItem = {
   questionStatus: string;
   origin: string;
   options: { id: string; label: string; text: string; isCorrect: boolean; explanation: string | null }[];
+  /** Proposed revision content plus the field-level diff against the live question. */
+  proposed: ProposedQuestion | null;
+  diff: { field: string; before: string; after: string }[];
   /** Agentic provenance, when the draft came from the authoring loop. */
   rationale: string | null;
   reviewScore: number | null;
@@ -366,25 +476,41 @@ export type DraftReviewItem = {
   citations: { title: string; url: string | null }[];
 };
 
-/** Full detail for every pending review, including agentic evidence. */
+/** Full detail for every pending review and revision proposal. */
 export const listDraftReviews = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<DraftReviewItem[]> => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { diffQuestion } = await import("./authoring.server");
 
-    const { data: reviews, error } = await supabaseAdmin
-      .from("content_reviews")
-      .select("id, question_id, status, source, notes, created_at")
-      .eq("status", "pending")
-      .order("created_at", { ascending: false })
-      .limit(100);
-    if (error) throw error;
-    const rows = reviews ?? [];
-    if (rows.length === 0) return [];
+    const [reviewsRes, pendingDraftsRes] = await Promise.all([
+      supabaseAdmin
+        .from("content_reviews")
+        .select("id, question_id, status, source, notes, created_at")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(100),
+      (supabaseAdmin as any)
+        .from("question_drafts")
+        .select("id, base_question_id, payload, rationale, review_score, review_notes, iteration, run_id, citations, created_at")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(100),
+    ]);
+    if (reviewsRes.error) throw reviewsRes.error;
 
-    const ids = [...new Set(rows.map((r) => r.question_id))];
-    const [questionsRes, optionsRes, domainsRes, draftsRes] = await Promise.all([
+    const rows = reviewsRes.data ?? [];
+    const allDrafts: any[] = (pendingDraftsRes as any).data ?? [];
+    const revisionDrafts = allDrafts.filter((d) => d.payload?.revision === true && d.base_question_id);
+    const draftBy = new Map(allDrafts.filter((d) => !d.payload?.revision).map((d) => [d.base_question_id, d]));
+
+    const ids = [
+      ...new Set([...rows.map((r) => r.question_id), ...revisionDrafts.map((d) => d.base_question_id as string)]),
+    ];
+    if (ids.length === 0) return [];
+
+    const [questionsRes, optionsRes, domainsRes] = await Promise.all([
       supabaseAdmin
         .from("questions")
         .select("id, domain_id, scenario, stem, key_concept, difficulty, status, origin")
@@ -395,10 +521,6 @@ export const listDraftReviews = createServerFn({ method: "GET" })
         .in("question_id", ids)
         .order("sort_order"),
       supabaseAdmin.from("domains").select("id, title"),
-      (supabaseAdmin as any)
-        .from("question_drafts")
-        .select("base_question_id, rationale, review_score, review_notes, iteration, run_id, citations")
-        .in("base_question_id", ids),
     ]);
     for (const r of [questionsRes, optionsRes, domainsRes]) {
       if (r.error) throw r.error;
@@ -406,7 +528,6 @@ export const listDraftReviews = createServerFn({ method: "GET" })
 
     const domainTitle = new Map((domainsRes.data ?? []).map((d) => [d.id, d.title as string]));
     const questionById = new Map((questionsRes.data ?? []).map((q: any) => [q.id, q]));
-    const draftBy = new Map(((draftsRes as any).data ?? []).map((d: any) => [d.base_question_id, d]));
     const optionsBy = new Map<string, DraftReviewItem["options"]>();
     for (const o of optionsRes.data ?? []) {
       const list = optionsBy.get(o.question_id) ?? [];
@@ -420,16 +541,10 @@ export const listDraftReviews = createServerFn({ method: "GET" })
       optionsBy.set(o.question_id, list);
     }
 
-    return rows.map((r) => {
-      const q: any = questionById.get(r.question_id);
-      const d: any = draftBy.get(r.question_id);
+    const base = (questionId: string, d: any) => {
+      const q: any = questionById.get(questionId);
       return {
-        reviewId: r.id,
-        questionId: r.question_id,
-        status: r.status,
-        source: r.source,
-        notes: r.notes,
-        createdAt: r.created_at,
+        questionId,
         domainTitle: (q && domainTitle.get(q.domain_id)) ?? "—",
         scenario: q?.scenario ?? null,
         stem: q?.stem ?? "(question deleted)",
@@ -437,7 +552,7 @@ export const listDraftReviews = createServerFn({ method: "GET" })
         difficulty: q?.difficulty ?? "—",
         questionStatus: q?.status ?? "unknown",
         origin: q?.origin ?? "manual",
-        options: optionsBy.get(r.question_id) ?? [],
+        options: optionsBy.get(questionId) ?? [],
         rationale: d?.rationale ?? null,
         reviewScore: d?.review_score != null ? Number(d.review_score) : null,
         reviewNotes: d?.review_notes ?? null,
@@ -445,5 +560,219 @@ export const listDraftReviews = createServerFn({ method: "GET" })
         runId: d?.run_id ?? null,
         citations: Array.isArray(d?.citations) ? (d.citations as { title: string; url: string | null }[]) : [],
       };
-    });
+    };
+
+    const items: DraftReviewItem[] = rows.map((r) => ({
+      reviewId: r.id,
+      draftId: null,
+      kind: "new" as const,
+      status: r.status,
+      source: r.source,
+      notes: r.notes,
+      createdAt: r.created_at,
+      proposed: null,
+      diff: [],
+      ...base(r.question_id, draftBy.get(r.question_id)),
+    }));
+
+    for (const d of revisionDrafts) {
+      const b = base(d.base_question_id, d);
+      const proposed: ProposedQuestion = {
+        scenario: d.payload?.scenario ?? null,
+        stem: String(d.payload?.stem ?? ""),
+        keyConcept: d.payload?.keyConcept ?? null,
+        difficulty: String(d.payload?.difficulty ?? b.difficulty),
+        options: Array.isArray(d.payload?.options) ? d.payload.options : [],
+      };
+      items.push({
+        reviewId: `draft:${d.id}`,
+        draftId: d.id,
+        kind: "revision",
+        status: "pending",
+        source: "agentic",
+        notes: null,
+        createdAt: d.created_at,
+        proposed,
+        diff: diffQuestion(
+          {
+            scenario: b.scenario,
+            stem: b.stem,
+            keyConcept: b.keyConcept,
+            difficulty: b.difficulty,
+            options: b.options.map((o) => ({
+              label: o.label,
+              text: o.text,
+              isCorrect: o.isCorrect,
+              explanation: o.explanation,
+            })),
+          },
+          proposed as any,
+        ),
+        ...b,
+      });
+    }
+
+    return items.sort((a, b2) => (a.createdAt < b2.createdAt ? 1 : -1));
   });
+
+/* --------------------- inline editing + revision decisions --------------------- */
+
+const EditInput = z.object({
+  questionId: z.string().uuid(),
+  scenario: z.string().nullable().optional(),
+  stem: z.string().min(5),
+  keyConcept: z.string().nullable().optional(),
+  difficulty: z.enum(["easy", "medium", "hard"]),
+  options: z
+    .array(
+      z.object({
+        id: z.string().uuid().nullable().optional(),
+        label: z.string().min(1).max(4),
+        text: z.string().min(1),
+        isCorrect: z.boolean(),
+        explanation: z.string().nullable().optional(),
+      }),
+    )
+    .min(2),
+});
+
+/** C4 — save reviewer edits onto a draft question before it is published. */
+export const updateDraftQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => EditInput.parse(input))
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    await assertAdmin(context);
+    if (data.options.filter((o) => o.isCorrect).length !== 1) {
+      throw new Error("Exactly one option must be marked correct.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { error: qErr } = await supabaseAdmin
+      .from("questions")
+      .update({
+        scenario: data.scenario?.trim() || null,
+        stem: data.stem.trim(),
+        key_concept: data.keyConcept?.trim() || null,
+        difficulty: data.difficulty,
+      })
+      .eq("id", data.questionId);
+    if (qErr) throw qErr;
+
+    const { data: current, error: oErr } = await supabaseAdmin
+      .from("question_options")
+      .select("id, label")
+      .eq("question_id", data.questionId);
+    if (oErr) throw oErr;
+    const byLabel = new Map((current ?? []).map((o) => [o.label, o.id]));
+
+    let sort = 0;
+    for (const o of data.options) {
+      const existingId = o.id ?? byLabel.get(o.label) ?? null;
+      const payload = {
+        question_id: data.questionId,
+        label: o.label,
+        text: o.text.trim(),
+        is_correct: o.isCorrect,
+        explanation: o.explanation?.trim() || null,
+        sort_order: sort++,
+      };
+      const { error } = existingId
+        ? await supabaseAdmin.from("question_options").update(payload).eq("id", existingId)
+        : await supabaseAdmin.from("question_options").insert(payload);
+      if (error) throw error;
+    }
+    return { ok: true };
+  });
+
+/** C4/B7 — accept or reject a proposed revision against a live question. */
+export const resolveDraftRevision = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        draftId: z.string().uuid(),
+        decision: z.enum(["approved", "rejected"]),
+        notes: z.string().max(1000).nullable().optional(),
+        /** Reviewer-edited content to apply instead of the raw proposal. */
+        edits: EditInput.nullable().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: draft, error } = await (supabaseAdmin as any)
+      .from("question_drafts")
+      .select("id, base_question_id, payload")
+      .eq("id", data.draftId)
+      .single();
+    if (error) throw error;
+
+    if (data.decision === "approved") {
+      const p = data.edits ?? {
+        questionId: draft.base_question_id as string,
+        scenario: draft.payload?.scenario ?? null,
+        stem: String(draft.payload?.stem ?? ""),
+        keyConcept: draft.payload?.keyConcept ?? null,
+        difficulty: (["easy", "medium", "hard"].includes(String(draft.payload?.difficulty))
+          ? draft.payload.difficulty
+          : "medium") as "easy" | "medium" | "hard",
+        options: (Array.isArray(draft.payload?.options) ? draft.payload.options : []).map((o: any) => ({
+          id: null,
+          label: String(o.label),
+          text: String(o.text),
+          isCorrect: o.isCorrect === true,
+          explanation: o.explanation ?? null,
+        })),
+      };
+      if (!p.stem || p.options.length < 2) throw new Error("Revision payload is incomplete.");
+      if (p.options.filter((o: any) => o.isCorrect).length !== 1) {
+        throw new Error("Exactly one option must be marked correct.");
+      }
+
+      const { error: qErr } = await supabaseAdmin
+        .from("questions")
+        .update({
+          scenario: p.scenario?.trim() || null,
+          stem: p.stem.trim(),
+          key_concept: p.keyConcept?.trim() || null,
+          difficulty: p.difficulty,
+        })
+        .eq("id", draft.base_question_id);
+      if (qErr) throw qErr;
+
+      const { data: current, error: oErr } = await supabaseAdmin
+        .from("question_options")
+        .select("id, label")
+        .eq("question_id", draft.base_question_id);
+      if (oErr) throw oErr;
+      const byLabel = new Map((current ?? []).map((o) => [o.label, o.id]));
+
+      let sort = 0;
+      for (const o of p.options) {
+        const payload = {
+          question_id: draft.base_question_id,
+          label: o.label,
+          text: String(o.text).trim(),
+          is_correct: o.isCorrect,
+          explanation: o.explanation?.trim() || null,
+          sort_order: sort++,
+        };
+        const existingId = byLabel.get(o.label) ?? null;
+        const { error: upErr } = existingId
+          ? await supabaseAdmin.from("question_options").update(payload).eq("id", existingId)
+          : await supabaseAdmin.from("question_options").insert(payload);
+        if (upErr) throw upErr;
+      }
+    }
+
+    const { error: dErr } = await (supabaseAdmin as any)
+      .from("question_drafts")
+      .update({ status: data.decision, review_notes: data.notes?.trim() || null })
+      .eq("id", data.draftId);
+    if (dErr) throw dErr;
+
+    return { ok: true };
+  });
+

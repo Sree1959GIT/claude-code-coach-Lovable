@@ -135,7 +135,40 @@ function LearnersTable() {
   );
 }
 
+/** C1 — Manual (default) / Agentic authoring mode switch. */
+function AuthoringSection() {
+  const [mode, setMode] = useState<"manual" | "agentic">("manual");
+  const tab = (m: "manual" | "agentic") =>
+    `border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted ${
+      mode === m ? "bg-muted" : ""
+    }`;
+  return (
+    <div className="mt-3">
+      <div className="flex gap-2">
+        <button className={tab("manual")} onClick={() => setMode("manual")}>
+          Manual
+        </button>
+        <button className={tab("agentic")} onClick={() => setMode("agentic")}>
+          Agentic
+        </button>
+      </div>
+      {mode === "manual" ? (
+        <ContentPanel />
+      ) : (
+        <>
+          <p className="mt-3 font-mono text-[11px] text-muted-foreground">
+            Setter → Researcher → Adversary → Reviewer. Grounded in the RAG library first, then only admin-approved
+            sources. Output is always a draft: nothing reaches learners without human approval in the review queue.
+          </p>
+          <AgenticAuthoringPanel />
+        </>
+      )}
+    </div>
+  );
+}
+
 function ContentPanel() {
+
   const fetchContent = useServerFn(listContent);
   const sendToReview = useServerFn(submitForReview);
   const queryClient = useQueryClient();
@@ -716,12 +749,14 @@ function AdminPage() {
             </section>
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">02 · Content</h2>
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">02 · Content_&amp;_Authoring</h2>
               <p className="mt-1 font-mono text-[11px] text-muted-foreground">
-                Domains and their questions, with option health and live difficulty from real attempts.
+                Domains and their questions, with option health and live difficulty from real attempts. Manual
+                authoring is the default; switch to Agentic to run the drafting loop.
               </p>
-              <ContentPanel />
+              <AuthoringSection />
             </section>
+
 
             <section className="mt-10">
               <h2 className="font-mono text-sm font-bold uppercase tracking-tight">03 · Review_Queue</h2>
@@ -815,15 +850,6 @@ function AdminPage() {
               <CalibrationPanel />
             </section>
 
-            <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">12 · Agentic_Authoring</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
-                Setter → Researcher → Adversary → Reviewer. Grounded in the RAG library first, then only
-                admin-approved sources. Output is always a draft: nothing reaches learners without human approval in
-                the review queue.
-              </p>
-              <AgenticAuthoringPanel />
-            </section>
 
 
 
