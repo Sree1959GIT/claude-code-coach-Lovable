@@ -27,6 +27,7 @@ import { DistractorPanel } from "@/components/admin/DistractorPanel";
 import { EnrichPanel } from "@/components/admin/EnrichPanel";
 import { CitationPanel } from "@/components/admin/CitationPanel";
 import { CalibrationPanel } from "@/components/admin/CalibrationPanel";
+import { AgenticAuthoringPanel } from "@/components/admin/AgenticAuthoringPanel";
 
 
 
@@ -807,6 +808,16 @@ function AdminPage() {
                 value on the question. Preview first, then apply.
               </p>
               <CalibrationPanel />
+            </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">12 · Agentic_Authoring</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Setter → Researcher → Adversary → Reviewer. Grounded in the RAG library first, then only
+                admin-approved sources. Output is always a draft: nothing reaches learners without human approval in
+                the review queue.
+              </p>
+              <AgenticAuthoringPanel />
             </section>
 
 

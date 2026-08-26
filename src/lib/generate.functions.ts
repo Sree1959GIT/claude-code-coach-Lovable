@@ -124,6 +124,9 @@ export const generateQuestions = createServerFn({ method: "POST" })
           key_concept: draft.keyConcept,
           difficulty: draft.difficulty,
           sort_order: nextSort,
+          status: "draft",
+          origin: "agentic",
+          author_id: context.userId,
         })
         .select("id")
         .single();

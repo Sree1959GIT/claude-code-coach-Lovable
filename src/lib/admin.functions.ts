@@ -434,7 +434,7 @@ export const resolveReview = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
+    const { data: row, error } = await supabaseAdmin
       .from("content_reviews")
       .update({
         status: data.status,
@@ -442,8 +442,23 @@ export const resolveReview = createServerFn({ method: "POST" })
         reviewed_at: new Date().toISOString(),
         ...(data.notes?.trim() ? { notes: data.notes.trim() } : {}),
       })
-      .eq("id", data.id);
+      .eq("id", data.id)
+      .select("question_id")
+      .single();
     if (error) throw error;
+
+    // Publish path: approval flips the question live, rejection archives it.
+    if (row?.question_id) {
+      const patch =
+        data.status === "approved"
+          ? { status: "published", published_at: new Date().toISOString() }
+          : { status: "archived" };
+      const { error: qErr } = await supabaseAdmin
+        .from("questions")
+        .update(patch)
+        .eq("id", row.question_id);
+      if (qErr) throw qErr;
+    }
     return { ok: true };
   });
 
