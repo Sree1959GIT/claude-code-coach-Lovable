@@ -135,7 +135,40 @@ function LearnersTable() {
   );
 }
 
+/** C1 — Manual (default) / Agentic authoring mode switch. */
+function AuthoringSection() {
+  const [mode, setMode] = useState<"manual" | "agentic">("manual");
+  const tab = (m: "manual" | "agentic") =>
+    `border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted ${
+      mode === m ? "bg-muted" : ""
+    }`;
+  return (
+    <div className="mt-3">
+      <div className="flex gap-2">
+        <button className={tab("manual")} onClick={() => setMode("manual")}>
+          Manual
+        </button>
+        <button className={tab("agentic")} onClick={() => setMode("agentic")}>
+          Agentic
+        </button>
+      </div>
+      {mode === "manual" ? (
+        <ContentPanel />
+      ) : (
+        <>
+          <p className="mt-3 font-mono text-[11px] text-muted-foreground">
+            Setter → Researcher → Adversary → Reviewer. Grounded in the RAG library first, then only admin-approved
+            sources. Output is always a draft: nothing reaches learners without human approval in the review queue.
+          </p>
+          <AgenticAuthoringPanel />
+        </>
+      )}
+    </div>
+  );
+}
+
 function ContentPanel() {
+
   const fetchContent = useServerFn(listContent);
   const sendToReview = useServerFn(submitForReview);
   const queryClient = useQueryClient();
