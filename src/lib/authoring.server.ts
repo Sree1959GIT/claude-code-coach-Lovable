@@ -182,7 +182,17 @@ function setterPrompt(args: AuthoringArgs, ev: Evidence): string {
     `Domain: ${args.domainTitle} (${args.domainSlug})`,
     args.domainDescription ? `Domain description: ${args.domainDescription}` : "",
     args.topicHint ? `Focus topic: ${args.topicHint}` : "",
-    `Write ${args.count} item(s) at difficulty: ${args.difficulty}.`,
+    args.baseQuestion
+      ? [
+          "EDIT MODE — revise the existing question below rather than writing a new one.",
+          "Keep what already works; change only what is weak, unclear or unsupported.",
+          `EXISTING QUESTION: ${JSON.stringify(args.baseQuestion).slice(0, 4000)}`,
+          args.revisionNotes ? `EDITOR NOTES: ${args.revisionNotes}` : "",
+          "Return exactly 1 revised item.",
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : `Write ${args.count} item(s) at difficulty: ${args.difficulty}.`,
     "",
     "SET CONTEXT (avoid duplicating these):",
     sc.existingStems.slice(0, 60).map((s) => `- ${s.slice(0, 140)}`).join("\n") || "(bank is empty)",
