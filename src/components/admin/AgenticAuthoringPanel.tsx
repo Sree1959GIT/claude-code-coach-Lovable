@@ -72,19 +72,35 @@ export function AgenticAuthoringPanel() {
 
   const mutation = useMutation({
     mutationFn: (dryRun: boolean) =>
-      run({ data: { domainId, count, difficulty, topicHint: topicHint.trim() || null, dryRun } }),
+      run({
+        data: {
+          domainId,
+          count,
+          difficulty,
+          topicHint: topicHint.trim() || null,
+          baseQuestionId: baseQuestionId || null,
+          revisionNotes: revisionNotes.trim() || null,
+          dryRun,
+        },
+      }),
     onSuccess: (res) => {
       setResult(res);
       if (res.queued > 0) {
-        toast.success(`Queued ${res.queued} draft${res.queued === 1 ? "" : "s"} for human review`);
+        toast.success(
+          baseQuestionId
+            ? "Revision proposal queued for review"
+            : `Queued ${res.queued} draft${res.queued === 1 ? "" : "s"} for human review`,
+        );
         void queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
         void queryClient.invalidateQueries({ queryKey: ["admin-content"] });
+        void queryClient.invalidateQueries({ queryKey: ["draft-reviews"] });
       } else {
         toast.success(`Drafted ${res.drafts.length} item(s)`);
       }
     },
     onError: (e) => toast.error((e as Error).message),
   });
+
 
   const sourceMutation = useMutation({
     mutationFn: () => addSource({ data: { label: srcLabel.trim(), url: srcUrl.trim() } }),
