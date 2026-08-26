@@ -148,10 +148,12 @@ export function AgenticAuthoringPanel() {
             min={1}
             max={5}
             value={count}
+            disabled={Boolean(baseQuestionId)}
             onChange={(e) => setCount(Math.max(1, Math.min(5, Number(e.target.value) || 1)))}
-            className="w-20 border border-border bg-background px-2 py-1 font-mono text-xs text-foreground"
+            className="w-20 border border-border bg-background px-2 py-1 font-mono text-xs text-foreground disabled:opacity-40"
           />
         </label>
+
 
         <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
           Difficulty
