@@ -726,7 +726,12 @@ function AdminPage() {
             <section className="mt-10">
               <h2 className="font-mono text-sm font-bold uppercase tracking-tight">03 · Review_Queue</h2>
               <p className="mt-1 font-mono text-[11px] text-muted-foreground">
-                Drafted or flagged questions awaiting a human decision. Approve or reject with an optional note.
+                Drafted or flagged questions awaiting a human decision. Approve or reject with an optional note, or
+                open the{" "}
+                <Link to="/reviews" className="underline">
+                  full review workspace
+                </Link>{" "}
+                to inspect each draft with its agent evidence.
               </p>
               <ReviewQueue />
             </section>
