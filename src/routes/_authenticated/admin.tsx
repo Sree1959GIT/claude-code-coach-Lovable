@@ -27,6 +27,7 @@ import { DistractorPanel } from "@/components/admin/DistractorPanel";
 import { EnrichPanel } from "@/components/admin/EnrichPanel";
 import { CitationPanel } from "@/components/admin/CitationPanel";
 import { CalibrationPanel } from "@/components/admin/CalibrationPanel";
+import { AgenticAuthoringPanel } from "@/components/admin/AgenticAuthoringPanel";
 
 
 
