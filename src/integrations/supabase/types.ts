@@ -801,6 +801,10 @@ export type Database = {
       }
       questions: {
         Row: {
+          calibrated_at: string | null
+          calibrated_difficulty: string | null
+          calibration_accuracy: number | null
+          calibration_samples: number
           created_at: string
           difficulty: string
           domain_id: string
@@ -811,6 +815,10 @@ export type Database = {
           stem: string
         }
         Insert: {
+          calibrated_at?: string | null
+          calibrated_difficulty?: string | null
+          calibration_accuracy?: number | null
+          calibration_samples?: number
           created_at?: string
           difficulty?: string
           domain_id: string
@@ -821,6 +829,10 @@ export type Database = {
           stem: string
         }
         Update: {
+          calibrated_at?: string | null
+          calibrated_difficulty?: string | null
+          calibration_accuracy?: number | null
+          calibration_samples?: number
           created_at?: string
           difficulty?: string
           domain_id?: string
