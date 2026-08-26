@@ -184,10 +184,44 @@ export function AgenticAuthoringPanel() {
             {mutation.isPending ? "Running…" : "Preview_Loop"}
           </button>
           <button className={btn} disabled={!domainId || mutation.isPending} onClick={() => mutation.mutate(false)}>
-            Queue_Drafts
+            {baseQuestionId ? "Queue_Revision" : "Queue_Drafts"}
           </button>
         </div>
       </div>
+
+      {/* B7 — edit mode */}
+      <div className="mt-4 flex flex-wrap items-end gap-4 border-t border-border pt-4">
+        <label className="flex min-w-[18rem] flex-1 flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          Edit mode — revise an existing question (optional)
+          <select
+            value={baseQuestionId}
+            onChange={(e) => {
+              setBaseQuestionId(e.target.value);
+              setResult(null);
+            }}
+            className="border border-border bg-background px-2 py-1 font-mono text-xs text-foreground"
+          >
+            <option value="">— author new items —</option>
+            {questions.map((q) => (
+              <option key={q.id} value={q.id}>
+                [{q.status}] {q.stem.slice(0, 80)}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex min-w-[14rem] flex-1 flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          Revision notes
+          <input
+            value={revisionNotes}
+            onChange={(e) => setRevisionNotes(e.target.value)}
+            disabled={!baseQuestionId}
+            placeholder="e.g. distractor B is a giveaway"
+            className="border border-border bg-background px-2 py-1 font-mono text-xs text-foreground disabled:opacity-40"
+          />
+        </label>
+      </div>
+
 
       {/* Approved research sources */}
       <div className="mt-6 border-t border-border pt-4">
