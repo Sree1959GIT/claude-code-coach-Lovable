@@ -26,6 +26,17 @@ async function fetchDomains() {
   return data ?? [];
 }
 
+async function fetchQuestions(domainId: string) {
+  const { data, error } = await supabase
+    .from("questions")
+    .select("id, stem, status")
+    .eq("domain_id", domainId)
+    .order("sort_order")
+    .limit(300);
+  if (error) throw error;
+  return data ?? [];
+}
+
 export function AgenticAuthoringPanel() {
   const run = useServerFn(runAgenticAuthoring);
   const loadSources = useServerFn(listAuthoringSources);
@@ -41,13 +52,23 @@ export function AgenticAuthoringPanel() {
   const [count, setCount] = useState(2);
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard" | "mixed">("mixed");
   const [topicHint, setTopicHint] = useState("");
+  const [baseQuestionId, setBaseQuestionId] = useState("");
+  const [revisionNotes, setRevisionNotes] = useState("");
   const [result, setResult] = useState<AuthoringRunResult | null>(null);
   const [srcLabel, setSrcLabel] = useState("");
   const [srcUrl, setSrcUrl] = useState("");
 
+  const { data: questions = [] } = useQuery({
+    queryKey: ["authoring-questions", domainId],
+    queryFn: () => fetchQuestions(domainId),
+    enabled: Boolean(domainId),
+    staleTime: 60_000,
+  });
+
   useEffect(() => {
     if (!domainId && domains.length) setDomainId(domains[0]!.id);
   }, [domains, domainId]);
+
 
   const mutation = useMutation({
     mutationFn: (dryRun: boolean) =>
