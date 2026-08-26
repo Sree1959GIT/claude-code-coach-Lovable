@@ -300,7 +300,44 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
 
 
     let queued = 0;
-    if (!data.dryRun) {
+
+    // Edit mode persists a revision proposal only — the live question is untouched
+    // until a human accepts the revision in the review workspace.
+    if (!data.dryRun && baseQuestion && data.baseQuestionId) {
+      for (const d of result.drafts) {
+        const { error: dErr2 } = await (supabaseAdmin as any).from("question_drafts").insert({
+          domain_id: domain.id,
+          base_question_id: data.baseQuestionId,
+          run_id: runId,
+          iteration: d.iteration,
+          status: "pending",
+          payload: {
+            revision: true,
+            scenario: d.scenario,
+            stem: d.stem,
+            keyConcept: d.keyConcept,
+            difficulty: d.difficulty,
+            options: d.options,
+          },
+          rationale: d.rationale,
+          citations: d.citations,
+          review_score: d.reviewScore,
+          review_notes: d.reviewNotes,
+          created_by: context.userId,
+        });
+        if (dErr2) {
+          issues.push(`Revision draft failed: ${dErr2.message}`);
+          continue;
+        }
+        queued += 1;
+      }
+      drafts.forEach((x) => {
+        x.questionId = data.baseQuestionId ?? null;
+      });
+    }
+
+    if (!data.dryRun && !baseQuestion) {
+
       let nextSort = Math.max(0, ...(bank ?? []).map((q: any) => q.sort_order ?? 0));
       const existing = new Set((bank ?? []).map((q: any) => norm(q.stem)));
 
