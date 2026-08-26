@@ -188,11 +188,50 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
       else if (usedDistractors.length < 40) usedDistractors.push(o.text.slice(0, 90));
     }
 
+    // B7 edit mode — seed the loop with the live question.
+    let baseQuestion:
+      | { scenario: string | null; stem: string; keyConcept: string | null; difficulty: string; options: any[] }
+      | null = null;
+    if (data.baseQuestionId) {
+      const [{ data: bq, error: bqErr }, { data: bqOpts }] = await Promise.all([
+        supabaseAdmin
+          .from("questions")
+          .select("id, scenario, stem, key_concept, difficulty")
+          .eq("id", data.baseQuestionId)
+          .single(),
+        supabaseAdmin
+          .from("question_options")
+          .select("label, text, is_correct, explanation, sort_order")
+          .eq("question_id", data.baseQuestionId)
+          .order("sort_order"),
+      ]);
+      if (bqErr) throw bqErr;
+      baseQuestion = {
+        scenario: bq.scenario,
+        stem: bq.stem,
+        keyConcept: bq.key_concept,
+        difficulty: bq.difficulty,
+        options: (bqOpts ?? []).map((o: any) => ({
+          label: o.label,
+          text: o.text,
+          isCorrect: o.is_correct,
+          explanation: o.explanation ?? null,
+        })),
+      };
+    }
+
     const runId = await startRun(supabaseAdmin as any, {
       userId: context.userId,
       mode: "authoring",
-      question: `Author ${data.count} item(s) for ${domain.title}`,
-      metadata: { domainId: domain.id, difficulty: data.difficulty, dryRun: data.dryRun },
+      question: baseQuestion
+        ? `Revise question for ${domain.title}`
+        : `Author ${data.count} item(s) for ${domain.title}`,
+      metadata: {
+        domainId: domain.id,
+        difficulty: data.difficulty,
+        dryRun: data.dryRun,
+        baseQuestionId: data.baseQuestionId ?? null,
+      },
     });
 
     let result;
@@ -201,7 +240,7 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
         domainTitle: domain.title,
         domainSlug: domain.slug,
         domainDescription: domain.description,
-        count: data.count,
+        count: baseQuestion ? 1 : data.count,
         difficulty: data.difficulty,
         topicHint: data.topicHint ?? null,
         allowedSources: (sources ?? []).map((s: any) => ({ label: s.label, host: s.host, url: s.url ?? null })),
@@ -210,6 +249,8 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
           labelCounts,
           usedDistractors,
         },
+        baseQuestion: baseQuestion as any,
+        revisionNotes: data.revisionNotes ?? null,
       });
     } catch (err) {
       await finishRun({
@@ -237,15 +278,26 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
 
     const drafts = result.drafts.map((d) => ({
       stem: d.stem,
-      scenario: d.scenario,
-      difficulty: d.difficulty,
+      scenario: d.scenario as string | null,
+      difficulty: d.difficulty as string,
       reviewScore: d.reviewScore,
       reviewNotes: d.reviewNotes,
       adversaryIssues: d.adversaryIssues,
       citations: d.citations,
       options: d.options,
       questionId: null as string | null,
+      diff: baseQuestion
+        ? diffQuestion(baseQuestion as any, {
+            scenario: d.scenario,
+            stem: d.stem,
+            keyConcept: d.keyConcept,
+            difficulty: d.difficulty,
+            options: d.options,
+          })
+        : [],
+      isRevision: Boolean(baseQuestion),
     }));
+
 
     let queued = 0;
     if (!data.dryRun) {
