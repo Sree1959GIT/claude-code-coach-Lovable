@@ -122,6 +122,9 @@ const RunInput = z.object({
   count: z.number().int().min(1).max(5).default(2),
   difficulty: z.enum(["easy", "medium", "hard", "mixed"]).default("mixed"),
   topicHint: z.string().max(200).nullable().optional(),
+  /** B7 edit mode: revise this existing question instead of authoring new items. */
+  baseQuestionId: z.string().uuid().nullable().optional(),
+  revisionNotes: z.string().max(1000).nullable().optional(),
   /** Preview only: do not persist drafts. */
   dryRun: z.boolean().default(false),
 });
@@ -141,10 +144,14 @@ export type AuthoringRunResult = {
     citations: { title: string; url: string | null }[];
     options: { label: string; text: string; isCorrect: boolean; explanation: string | null }[];
     questionId: string | null;
+    /** Populated in edit mode: field-level changes against the live question. */
+    diff: { field: string; before: string; after: string }[];
+    isRevision: boolean;
   }[];
   queued: number;
   issues: string[];
 };
+
 
 export const runAgenticAuthoring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
