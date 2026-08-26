@@ -26,6 +26,7 @@ import { DuplicatePanel } from "@/components/admin/DuplicatePanel";
 import { DistractorPanel } from "@/components/admin/DistractorPanel";
 import { EnrichPanel } from "@/components/admin/EnrichPanel";
 import { CitationPanel } from "@/components/admin/CitationPanel";
+import { CalibrationPanel } from "@/components/admin/CalibrationPanel";
 
 
 
@@ -58,6 +59,7 @@ const SECTIONS: { code: string; title: string; body: string; status: "live" | "p
   { code: "08", title: "Distractors", body: "Option-level audit of pick rates and missing explanations.", status: "live" },
   { code: "09", title: "Explanations", body: "Grounded explanation drafts for options that have none.", status: "live" },
   { code: "10", title: "Citation coverage", body: "Per-domain share of questions linked to at least one library chunk.", status: "live" },
+  { code: "11", title: "Difficulty calibration", body: "Recompute question difficulty from live first-attempt accuracy.", status: "live" },
 ];
 
 
@@ -796,6 +798,15 @@ function AdminPage() {
                 recompute semantic citations against the current library.
               </p>
               <CitationPanel />
+            </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">11 · Difficulty_Calibration</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Recomputes each question's difficulty band from live first-attempt accuracy, then stores the calibrated
+                value on the question. Preview first, then apply.
+              </p>
+              <CalibrationPanel />
             </section>
 
 
