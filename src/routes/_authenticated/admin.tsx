@@ -716,12 +716,14 @@ function AdminPage() {
             </section>
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">02 · Content</h2>
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">02 · Content_&amp;_Authoring</h2>
               <p className="mt-1 font-mono text-[11px] text-muted-foreground">
-                Domains and their questions, with option health and live difficulty from real attempts.
+                Domains and their questions, with option health and live difficulty from real attempts. Manual
+                authoring is the default; switch to Agentic to run the drafting loop.
               </p>
-              <ContentPanel />
+              <AuthoringSection />
             </section>
+
 
             <section className="mt-10">
               <h2 className="font-mono text-sm font-bold uppercase tracking-tight">03 · Review_Queue</h2>
