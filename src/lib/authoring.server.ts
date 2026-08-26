@@ -398,5 +398,9 @@ export async function runAuthoringLoop(args: AuthoringArgs): Promise<AuthoringRe
     });
   });
 
-  return { drafts: drafts.slice(0, args.count), steps, evidenceCount: ev.passages.length };
+  return {
+    drafts: drafts.slice(0, args.baseQuestion ? 1 : args.count),
+    steps,
+    evidenceCount: ev.passages.length,
+  };
 }
