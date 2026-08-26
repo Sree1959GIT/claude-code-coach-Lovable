@@ -381,7 +381,7 @@ export async function runAuthoringLoop(args: AuthoringArgs): Promise<AuthoringRe
   const scores = await timed("reviewer", () => review(drafted), (r) => `${r.length} scored`);
 
   const citations = ev.passages.map((p) => ({ title: p.title, url: p.url ?? null }));
-  const seen = new Set(args.setContext.existingStems.map(norm));
+  const seen = new Set(args.baseQuestion ? [] : args.setContext.existingStems.map(norm));
 
   const drafts: AuthoredDraft[] = [];
   drafted.forEach((d, i) => {
