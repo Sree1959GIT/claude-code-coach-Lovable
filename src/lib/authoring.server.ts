@@ -39,6 +39,15 @@ export type SetContext = {
   usedDistractors: string[];
 };
 
+/** B7 — an existing question used to seed the loop in edit mode. */
+export type BaseQuestion = {
+  scenario: string | null;
+  stem: string;
+  keyConcept: string | null;
+  difficulty: string;
+  options: DraftOption[];
+};
+
 export type AuthoringArgs = {
   domainTitle: string;
   domainSlug: string;
@@ -49,9 +58,39 @@ export type AuthoringArgs = {
   /** Whitelisted hosts an admin configured; research never leaves these. */
   allowedSources: { label: string; host: string; url: string | null }[];
   setContext: SetContext;
+  /** Edit mode: revise this live question instead of authoring a new one. */
+  baseQuestion?: BaseQuestion | null;
+  revisionNotes?: string | null;
 };
 
 export const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+
+/** B7 — field-level diff between the live question and a proposed revision. */
+export type FieldDiff = { field: string; before: string; after: string };
+
+export function diffQuestion(base: BaseQuestion, proposed: BaseQuestion): FieldDiff[] {
+  const out: FieldDiff[] = [];
+  const cmp = (field: string, before: unknown, after: unknown) => {
+    const b = before == null ? "" : String(before);
+    const a = after == null ? "" : String(after);
+    if (norm(b) !== norm(a)) out.push({ field, before: b, after: a });
+  };
+  cmp("scenario", base.scenario, proposed.scenario);
+  cmp("stem", base.stem, proposed.stem);
+  cmp("keyConcept", base.keyConcept, proposed.keyConcept);
+  cmp("difficulty", base.difficulty, proposed.difficulty);
+
+  const labels = [...new Set([...base.options.map((o) => o.label), ...proposed.options.map((o) => o.label)])].sort();
+  for (const label of labels) {
+    const b = base.options.find((o) => o.label === label);
+    const p = proposed.options.find((o) => o.label === label);
+    cmp(`option ${label} text`, b?.text ?? "(none)", p?.text ?? "(removed)");
+    cmp(`option ${label} correct`, b ? String(b.isCorrect) : "(none)", p ? String(p.isCorrect) : "(removed)");
+    cmp(`option ${label} explanation`, b?.explanation ?? "", p?.explanation ?? "");
+  }
+  return out;
+}
+
 
 /* ------------------------------ gateway ------------------------------ */
 
