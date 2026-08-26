@@ -458,6 +458,16 @@ export const resolveReview = createServerFn({ method: "POST" })
         .update(patch)
         .eq("id", row.question_id);
       if (qErr) throw qErr;
+
+      // Keep the agentic draft row in sync with the human decision (best effort).
+      await (supabaseAdmin as any)
+        .from("question_drafts")
+        .update({
+          status: data.status,
+          review_notes: data.notes?.trim() || null,
+        })
+        .eq("base_question_id", row.question_id)
+        .eq("status", "pending");
     }
     return { ok: true };
   });

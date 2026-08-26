@@ -339,3 +339,111 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
       issues,
     };
   });
+
+/* ------------------------- draft review workspace ------------------------- */
+
+export type DraftReviewItem = {
+  reviewId: string;
+  questionId: string;
+  status: string;
+  source: string;
+  notes: string | null;
+  createdAt: string;
+  domainTitle: string;
+  scenario: string | null;
+  stem: string;
+  keyConcept: string | null;
+  difficulty: string;
+  questionStatus: string;
+  origin: string;
+  options: { id: string; label: string; text: string; isCorrect: boolean; explanation: string | null }[];
+  /** Agentic provenance, when the draft came from the authoring loop. */
+  rationale: string | null;
+  reviewScore: number | null;
+  reviewNotes: string | null;
+  iteration: number | null;
+  runId: string | null;
+  citations: { title: string; url: string | null }[];
+};
+
+/** Full detail for every pending review, including agentic evidence. */
+export const listDraftReviews = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<DraftReviewItem[]> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: reviews, error } = await supabaseAdmin
+      .from("content_reviews")
+      .select("id, question_id, status, source, notes, created_at")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    const rows = reviews ?? [];
+    if (rows.length === 0) return [];
+
+    const ids = [...new Set(rows.map((r) => r.question_id))];
+    const [questionsRes, optionsRes, domainsRes, draftsRes] = await Promise.all([
+      supabaseAdmin
+        .from("questions")
+        .select("id, domain_id, scenario, stem, key_concept, difficulty, status, origin")
+        .in("id", ids),
+      supabaseAdmin
+        .from("question_options")
+        .select("id, question_id, label, text, is_correct, explanation, sort_order")
+        .in("question_id", ids)
+        .order("sort_order"),
+      supabaseAdmin.from("domains").select("id, title"),
+      (supabaseAdmin as any)
+        .from("question_drafts")
+        .select("base_question_id, rationale, review_score, review_notes, iteration, run_id, citations")
+        .in("base_question_id", ids),
+    ]);
+    for (const r of [questionsRes, optionsRes, domainsRes]) {
+      if (r.error) throw r.error;
+    }
+
+    const domainTitle = new Map((domainsRes.data ?? []).map((d) => [d.id, d.title as string]));
+    const questionById = new Map((questionsRes.data ?? []).map((q: any) => [q.id, q]));
+    const draftBy = new Map(((draftsRes as any).data ?? []).map((d: any) => [d.base_question_id, d]));
+    const optionsBy = new Map<string, DraftReviewItem["options"]>();
+    for (const o of optionsRes.data ?? []) {
+      const list = optionsBy.get(o.question_id) ?? [];
+      list.push({
+        id: o.id,
+        label: o.label,
+        text: o.text,
+        isCorrect: o.is_correct,
+        explanation: o.explanation,
+      });
+      optionsBy.set(o.question_id, list);
+    }
+
+    return rows.map((r) => {
+      const q: any = questionById.get(r.question_id);
+      const d: any = draftBy.get(r.question_id);
+      return {
+        reviewId: r.id,
+        questionId: r.question_id,
+        status: r.status,
+        source: r.source,
+        notes: r.notes,
+        createdAt: r.created_at,
+        domainTitle: (q && domainTitle.get(q.domain_id)) ?? "—",
+        scenario: q?.scenario ?? null,
+        stem: q?.stem ?? "(question deleted)",
+        keyConcept: q?.key_concept ?? null,
+        difficulty: q?.difficulty ?? "—",
+        questionStatus: q?.status ?? "unknown",
+        origin: q?.origin ?? "manual",
+        options: optionsBy.get(r.question_id) ?? [],
+        rationale: d?.rationale ?? null,
+        reviewScore: d?.review_score != null ? Number(d.review_score) : null,
+        reviewNotes: d?.review_notes ?? null,
+        iteration: d?.iteration ?? null,
+        runId: d?.run_id ?? null,
+        citations: Array.isArray(d?.citations) ? (d.citations as { title: string; url: string | null }[]) : [],
+      };
+    });
+  });
