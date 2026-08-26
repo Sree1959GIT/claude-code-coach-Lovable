@@ -314,8 +314,30 @@ export function AgenticAuthoringPanel() {
                 <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                   <span>{d.difficulty}</span>
                   <span>reviewer {d.reviewScore}/100</span>
+                  <span>{d.isRevision ? "revision" : "new"}</span>
                   <span>{d.questionId ? "queued for review" : "preview"}</span>
                 </div>
+                {d.isRevision && (
+                  <div className="mt-2 border border-border p-2">
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      Field_Diff ({d.diff.length})
+                    </p>
+                    {d.diff.length === 0 ? (
+                      <p className="mt-1 font-mono text-[11px] text-muted-foreground">No changes proposed.</p>
+                    ) : (
+                      <ul className="mt-1 space-y-1">
+                        {d.diff.map((f, k) => (
+                          <li key={k} className="font-mono text-[11px]">
+                            <span className="uppercase tracking-widest text-muted-foreground">{f.field}</span>
+                            <div className="text-destructive">− {f.before || "(empty)"}</div>
+                            <div className="text-primary">+ {f.after || "(empty)"}</div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+
                 {d.scenario && <p className="mt-2 font-mono text-[11px] text-muted-foreground">{d.scenario}</p>}
                 <p className="mt-2 text-sm font-medium">{d.stem}</p>
                 <ul className="mt-2 space-y-1">
