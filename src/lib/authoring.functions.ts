@@ -456,6 +456,7 @@ export type DraftReviewItem = {
   source: string;
   notes: string | null;
   createdAt: string;
+  domainId: string | null;
   domainTitle: string;
   scenario: string | null;
   stem: string;
@@ -467,6 +468,11 @@ export type DraftReviewItem = {
   /** Proposed revision content plus the field-level diff against the live question. */
   proposed: ProposedQuestion | null;
   diff: { field: string; before: string; after: string }[];
+  /** C5 — claim-to-review assignment. */
+  claimedBy: string | null;
+  claimedByName: string | null;
+  claimedByMe: boolean;
+  claimedAt: string | null;
   /** Agentic provenance, when the draft came from the authoring loop. */
   rationale: string | null;
   reviewScore: number | null;
@@ -476,29 +482,42 @@ export type DraftReviewItem = {
   citations: { title: string; url: string | null }[];
 };
 
-/** Full detail for every pending review and revision proposal. */
+const ReviewFilter = z
+  .object({
+    status: z.enum(["pending", "approved", "rejected", "all"]).default("pending"),
+    domainId: z.string().uuid().nullable().optional(),
+    mine: z.boolean().default(false),
+  })
+  .default({ status: "pending", mine: false });
+
+/** Full detail for every review and revision proposal matching the filter. */
 export const listDraftReviews = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<DraftReviewItem[]> => {
+  .inputValidator((input: unknown) => ReviewFilter.parse(input ?? {}))
+  .handler(async ({ data, context }): Promise<DraftReviewItem[]> => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { diffQuestion } = await import("./authoring.server");
 
+    let reviewQuery = supabaseAdmin
+      .from("content_reviews")
+      .select("id, question_id, status, source, notes, created_at, claimed_by, claimed_at");
+    let draftQuery = (supabaseAdmin as any)
+      .from("question_drafts")
+      .select(
+        "id, base_question_id, payload, rationale, review_score, review_notes, iteration, run_id, citations, created_at, status, claimed_by, claimed_at",
+      );
+    if (data.status !== "all") {
+      reviewQuery = reviewQuery.eq("status", data.status);
+      draftQuery = draftQuery.eq("status", data.status);
+    }
+
     const [reviewsRes, pendingDraftsRes] = await Promise.all([
-      supabaseAdmin
-        .from("content_reviews")
-        .select("id, question_id, status, source, notes, created_at")
-        .eq("status", "pending")
-        .order("created_at", { ascending: false })
-        .limit(100),
-      (supabaseAdmin as any)
-        .from("question_drafts")
-        .select("id, base_question_id, payload, rationale, review_score, review_notes, iteration, run_id, citations, created_at")
-        .eq("status", "pending")
-        .order("created_at", { ascending: false })
-        .limit(100),
+      reviewQuery.order("created_at", { ascending: false }).limit(100),
+      draftQuery.order("created_at", { ascending: false }).limit(100),
     ]);
     if (reviewsRes.error) throw reviewsRes.error;
+
 
     const rows = reviewsRes.data ?? [];
     const allDrafts: any[] = (pendingDraftsRes as any).data ?? [];
