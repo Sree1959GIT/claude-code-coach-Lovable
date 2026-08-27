@@ -48,6 +48,8 @@ const btn =
   "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
 
 type OriginFilter = "all" | "agentic" | "manual" | "ai";
+type StatusFilter = "pending" | "approved" | "rejected" | "all";
+
 
 type EditableOption = { id: string | null; label: string; text: string; isCorrect: boolean; explanation: string | null };
 
