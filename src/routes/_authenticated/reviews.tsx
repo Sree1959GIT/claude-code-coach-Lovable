@@ -151,6 +151,16 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
     onError: (e) => toast.error((e as Error).message),
   });
 
+  const claimMutation = useMutation({
+    mutationFn: (next: boolean) =>
+      claim({ data: { reviewId: item.draftId ? null : item.reviewId, draftId: item.draftId, claim: next } }),
+    onSuccess: (_r, next) => {
+      toast.success(next ? "Claimed for review" : "Released");
+      invalidate();
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
   const hasOneCorrect = draft.options.filter((o) => o.isCorrect).length === 1;
   const missingExplanations = draft.options.filter((o) => !o.explanation?.trim()).length;
   const input =
@@ -164,9 +174,14 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
         <span>origin: {item.origin}</span>
         <span>state: {item.questionStatus}</span>
         <span className={item.kind === "revision" ? "text-primary" : ""}>{item.kind}</span>
+        <span>review: {item.status}</span>
         {item.reviewScore != null && <span>reviewer {item.reviewScore}/100</span>}
         {item.iteration != null && <span>iteration {item.iteration}</span>}
+        <span className={lockedByOther ? "text-destructive" : item.claimedByMe ? "text-primary" : ""}>
+          {item.claimedBy ? `claimed: ${item.claimedByMe ? "you" : item.claimedByName}` : "unclaimed"}
+        </span>
       </div>
+
 
       {item.kind === "revision" && (
         <div className="mt-3 grid gap-3 md:grid-cols-2">
