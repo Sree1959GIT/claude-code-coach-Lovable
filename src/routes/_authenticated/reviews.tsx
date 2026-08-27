@@ -55,9 +55,12 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
   const decide = useServerFn(resolveReview);
   const decideRevision = useServerFn(resolveDraftRevision);
   const saveEdits = useServerFn(updateDraftQuestion);
+  const claim = useServerFn(claimReviewItem);
   const queryClient = useQueryClient();
   const [notes, setNotes] = useState("");
   const [editing, setEditing] = useState(false);
+  const lockedByOther = item.claimedBy != null && !item.claimedByMe;
+
 
   const source = item.proposed ?? {
     scenario: item.scenario,
