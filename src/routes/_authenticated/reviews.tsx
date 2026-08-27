@@ -10,12 +10,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import {
+  claimReviewItem,
   listDraftReviews,
   resolveDraftRevision,
   updateDraftQuestion,
   type DraftReviewItem,
 } from "@/lib/authoring.functions";
 import { resolveReview } from "@/lib/admin.functions";
+
 
 export const Route = createFileRoute("/_authenticated/reviews")({
   component: ReviewsPage,
@@ -46,6 +48,8 @@ const btn =
   "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
 
 type OriginFilter = "all" | "agentic" | "manual" | "ai";
+type StatusFilter = "pending" | "approved" | "rejected" | "all";
+
 
 type EditableOption = { id: string | null; label: string; text: string; isCorrect: boolean; explanation: string | null };
 
@@ -53,9 +57,12 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
   const decide = useServerFn(resolveReview);
   const decideRevision = useServerFn(resolveDraftRevision);
   const saveEdits = useServerFn(updateDraftQuestion);
+  const claim = useServerFn(claimReviewItem);
   const queryClient = useQueryClient();
   const [notes, setNotes] = useState("");
   const [editing, setEditing] = useState(false);
+  const lockedByOther = item.claimedBy != null && !item.claimedByMe;
+
 
   const source = item.proposed ?? {
     scenario: item.scenario,
@@ -146,6 +153,16 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
     onError: (e) => toast.error((e as Error).message),
   });
 
+  const claimMutation = useMutation({
+    mutationFn: (next: boolean) =>
+      claim({ data: { reviewId: item.draftId ? null : item.reviewId, draftId: item.draftId, claim: next } }),
+    onSuccess: (_r, next) => {
+      toast.success(next ? "Claimed for review" : "Released");
+      invalidate();
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
   const hasOneCorrect = draft.options.filter((o) => o.isCorrect).length === 1;
   const missingExplanations = draft.options.filter((o) => !o.explanation?.trim()).length;
   const input =
@@ -159,9 +176,14 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
         <span>origin: {item.origin}</span>
         <span>state: {item.questionStatus}</span>
         <span className={item.kind === "revision" ? "text-primary" : ""}>{item.kind}</span>
+        <span>review: {item.status}</span>
         {item.reviewScore != null && <span>reviewer {item.reviewScore}/100</span>}
         {item.iteration != null && <span>iteration {item.iteration}</span>}
+        <span className={lockedByOther ? "text-destructive" : item.claimedByMe ? "text-primary" : ""}>
+          {item.claimedBy ? `claimed: ${item.claimedByMe ? "you" : item.claimedByName}` : "unclaimed"}
+        </span>
       </div>
+
 
       {item.kind === "revision" && (
         <div className="mt-3 grid gap-3 md:grid-cols-2">
@@ -331,25 +353,40 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
         <input
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Decision note (optional)"
+          placeholder="Reviewer note (saved with the decision)"
           className="min-w-[14rem] flex-1 border border-border bg-background px-2 py-1 font-mono text-xs text-foreground"
         />
-        <button className={btn} onClick={() => setEditing((v) => !v)}>
+        <button
+          className={btn}
+          disabled={claimMutation.isPending || lockedByOther}
+          onClick={() => claimMutation.mutate(!item.claimedByMe)}
+        >
+          {item.claimedByMe ? "Release_Claim" : "Claim_Review"}
+        </button>
+        <button className={btn} disabled={lockedByOther} onClick={() => setEditing((v) => !v)}>
           {editing ? "Close_Editor" : "Edit_Inline"}
         </button>
         {editing && item.kind === "new" && (
-          <button className={btn} disabled={saveMutation.isPending} onClick={() => saveMutation.mutate()}>
+          <button
+            className={btn}
+            disabled={saveMutation.isPending || lockedByOther}
+            onClick={() => saveMutation.mutate()}
+          >
             Save_Edits
           </button>
         )}
         <button
           className={btn}
-          disabled={mutation.isPending || !hasOneCorrect}
+          disabled={mutation.isPending || !hasOneCorrect || lockedByOther || item.status !== "pending"}
           onClick={() => mutation.mutate("approved")}
         >
           {item.kind === "revision" ? "Approve_And_Apply" : "Approve_And_Publish"}
         </button>
-        <button className={btn} disabled={mutation.isPending} onClick={() => mutation.mutate("rejected")}>
+        <button
+          className={btn}
+          disabled={mutation.isPending || lockedByOther || item.status !== "pending"}
+          onClick={() => mutation.mutate("rejected")}
+        >
           Reject
         </button>
       </div>
@@ -361,12 +398,31 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
 function ReviewsPage() {
   const load = useServerFn(listDraftReviews);
   const [filter, setFilter] = useState<OriginFilter>("all");
+  const [status, setStatus] = useState<StatusFilter>("pending");
+  const [domainId, setDomainId] = useState<string>("all");
+  const [mine, setMine] = useState(false);
 
-  const { data = [], isLoading, error } = useQuery({ queryKey: ["draft-reviews"], queryFn: () => load({}) });
+  const {
+    data = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["draft-reviews", status, mine],
+    queryFn: () => load({ data: { status, mine, domainId: null } }),
+  });
+
+  const domains = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const d of data) if (d.domainId) map.set(d.domainId, d.domainTitle);
+    return [...map.entries()];
+  }, [data]);
 
   const items = useMemo(
-    () => (filter === "all" ? data : data.filter((d) => d.origin === filter || d.source === filter)),
-    [data, filter],
+    () =>
+      data
+        .filter((d) => (filter === "all" ? true : d.origin === filter || d.source === filter))
+        .filter((d) => (domainId === "all" ? true : d.domainId === domainId)),
+    [data, filter, domainId],
   );
 
   return (
@@ -380,6 +436,14 @@ function ReviewsPage() {
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
+          {(["pending", "approved", "rejected", "all"] as StatusFilter[]).map((s) => (
+            <button key={s} onClick={() => setStatus(s)} className={`${btn} ${status === s ? "bg-muted" : ""}`}>
+              {s}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-2 flex flex-wrap items-center gap-2">
           {(["all", "agentic", "ai", "manual"] as OriginFilter[]).map((f) => (
             <button
               key={f}
@@ -389,10 +453,26 @@ function ReviewsPage() {
               {f}
             </button>
           ))}
+          <select
+            value={domainId}
+            onChange={(e) => setDomainId(e.target.value)}
+            className="border border-border bg-background px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-foreground"
+          >
+            <option value="all">all domains</option>
+            {domains.map(([id, title]) => (
+              <option key={id} value={id}>
+                {title}
+              </option>
+            ))}
+          </select>
+          <button onClick={() => setMine((v) => !v)} className={`${btn} ${mine ? "bg-muted" : ""}`}>
+            Claimed_By_Me
+          </button>
           <Link to="/admin" className={btn}>
             Admin_Console
           </Link>
         </div>
+
 
         {isLoading && <p className="mt-6 font-mono text-xs text-muted-foreground">Loading drafts…</p>}
         {error && <p className="mt-6 font-mono text-xs text-destructive">{(error as Error).message}</p>}

@@ -391,6 +391,8 @@ export type Database = {
       }
       content_reviews: {
         Row: {
+          claimed_at: string | null
+          claimed_by: string | null
           created_at: string
           id: string
           notes: string | null
@@ -403,6 +405,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          claimed_at?: string | null
+          claimed_by?: string | null
           created_at?: string
           id?: string
           notes?: string | null
@@ -415,6 +419,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          claimed_at?: string | null
+          claimed_by?: string | null
           created_at?: string
           id?: string
           notes?: string | null
@@ -786,6 +792,8 @@ export type Database = {
         Row: {
           base_question_id: string | null
           citations: Json
+          claimed_at: string | null
+          claimed_by: string | null
           created_at: string
           created_by: string | null
           domain_id: string | null
@@ -802,6 +810,8 @@ export type Database = {
         Insert: {
           base_question_id?: string | null
           citations?: Json
+          claimed_at?: string | null
+          claimed_by?: string | null
           created_at?: string
           created_by?: string | null
           domain_id?: string | null
@@ -818,6 +828,8 @@ export type Database = {
         Update: {
           base_question_id?: string | null
           citations?: Json
+          claimed_at?: string | null
+          claimed_by?: string | null
           created_at?: string
           created_by?: string | null
           domain_id?: string | null
