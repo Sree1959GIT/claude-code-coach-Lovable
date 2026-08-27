@@ -10,12 +10,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import {
+  claimReviewItem,
   listDraftReviews,
   resolveDraftRevision,
   updateDraftQuestion,
   type DraftReviewItem,
 } from "@/lib/authoring.functions";
 import { resolveReview } from "@/lib/admin.functions";
+
 
 export const Route = createFileRoute("/_authenticated/reviews")({
   component: ReviewsPage,
