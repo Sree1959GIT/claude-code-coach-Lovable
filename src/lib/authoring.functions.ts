@@ -560,10 +560,34 @@ export const listDraftReviews = createServerFn({ method: "GET" })
       optionsBy.set(o.question_id, list);
     }
 
+    const claimIds = [
+      ...new Set(
+        [...rows.map((r: any) => r.claimed_by), ...revisionDrafts.map((d: any) => d.claimed_by)].filter(
+          Boolean,
+        ) as string[],
+      ),
+    ];
+    const claimNames = new Map<string, string>();
+    if (claimIds.length) {
+      const { data: profs } = await supabaseAdmin
+        .from("profiles")
+        .select("id, display_name")
+        .in("id", claimIds);
+      for (const p of profs ?? []) claimNames.set(p.id, p.display_name ?? "reviewer");
+    }
+
+    const claim = (claimedBy: string | null, claimedAt: string | null) => ({
+      claimedBy: claimedBy ?? null,
+      claimedByName: claimedBy ? (claimNames.get(claimedBy) ?? "reviewer") : null,
+      claimedByMe: claimedBy === context.userId,
+      claimedAt: claimedAt ?? null,
+    });
+
     const base = (questionId: string, d: any) => {
       const q: any = questionById.get(questionId);
       return {
         questionId,
+        domainId: q?.domain_id ?? null,
         domainTitle: (q && domainTitle.get(q.domain_id)) ?? "—",
         scenario: q?.scenario ?? null,
         stem: q?.stem ?? "(question deleted)",
@@ -581,7 +605,7 @@ export const listDraftReviews = createServerFn({ method: "GET" })
       };
     };
 
-    const items: DraftReviewItem[] = rows.map((r) => ({
+    const items: DraftReviewItem[] = rows.map((r: any) => ({
       reviewId: r.id,
       draftId: null,
       kind: "new" as const,
@@ -591,6 +615,7 @@ export const listDraftReviews = createServerFn({ method: "GET" })
       createdAt: r.created_at,
       proposed: null,
       diff: [],
+      ...claim(r.claimed_by ?? null, r.claimed_at ?? null),
       ...base(r.question_id, draftBy.get(r.question_id)),
     }));
 
@@ -607,7 +632,7 @@ export const listDraftReviews = createServerFn({ method: "GET" })
         reviewId: `draft:${d.id}`,
         draftId: d.id,
         kind: "revision",
-        status: "pending",
+        status: d.status ?? "pending",
         source: "agentic",
         notes: null,
         createdAt: d.created_at,
@@ -627,12 +652,73 @@ export const listDraftReviews = createServerFn({ method: "GET" })
           },
           proposed as any,
         ),
+        ...claim(d.claimed_by ?? null, d.claimed_at ?? null),
         ...b,
       });
     }
 
-    return items.sort((a, b2) => (a.createdAt < b2.createdAt ? 1 : -1));
+    const filtered = items
+      .filter((i) => (data.domainId ? i.domainId === data.domainId : true))
+      .filter((i) => (data.mine ? i.claimedByMe : true));
+
+    return filtered.sort((a, b2) => (a.createdAt < b2.createdAt ? 1 : -1));
   });
+
+/** C5 — claim or release a queue item so reviewers do not collide. */
+export const claimReviewItem = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        reviewId: z.string().uuid().nullable().optional(),
+        draftId: z.string().uuid().nullable().optional(),
+        claim: z.boolean(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const patch = data.claim
+      ? { claimed_by: context.userId, claimed_at: new Date().toISOString() }
+      : { claimed_by: null, claimed_at: null };
+
+    if (data.draftId) {
+      const { data: row, error } = await (supabaseAdmin as any)
+        .from("question_drafts")
+        .select("claimed_by")
+        .eq("id", data.draftId)
+        .single();
+      if (error) throw error;
+      if (row.claimed_by && row.claimed_by !== context.userId) {
+        throw new Error("Already claimed by another reviewer.");
+      }
+      const { error: uErr } = await (supabaseAdmin as any)
+        .from("question_drafts")
+        .update(patch)
+        .eq("id", data.draftId);
+      if (uErr) throw uErr;
+      return { ok: true };
+    }
+
+    if (!data.reviewId) throw new Error("Nothing to claim.");
+    const { data: row, error } = await (supabaseAdmin as any)
+      .from("content_reviews")
+      .select("claimed_by")
+      .eq("id", data.reviewId)
+      .single();
+    if (error) throw error;
+    if (row.claimed_by && row.claimed_by !== context.userId) {
+      throw new Error("Already claimed by another reviewer.");
+    }
+    const { error: uErr } = await (supabaseAdmin as any)
+      .from("content_reviews")
+      .update(patch)
+      .eq("id", data.reviewId);
+    if (uErr) throw uErr;
+    return { ok: true };
+  });
+
 
 /* --------------------- inline editing + revision decisions --------------------- */
 
