@@ -89,6 +89,7 @@ export function AgenticAuthoringPanel() {
       }),
     onSuccess: (res) => {
       setResult(res);
+      setAccepted(Object.fromEntries(res.drafts.map((d, i) => [i, !d.duplicate])));
       if (res.queued > 0) {
         toast.success(
           baseQuestionId
@@ -101,6 +102,44 @@ export function AgenticAuthoringPanel() {
       } else {
         toast.success(`Drafted ${res.drafts.length} item(s)`);
       }
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  // C6 — queue only the items the admin accepted from a preview batch.
+  const queueMutation = useMutation({
+    mutationFn: () => {
+      const picks = (result?.drafts ?? []).filter((d, i) => accepted[i] && !d.isRevision && !d.questionId);
+      if (picks.length === 0) throw new Error("No items accepted");
+      return queueSelected({
+        data: {
+          domainId,
+          runId: result?.runId ?? null,
+          allowDuplicates,
+          drafts: picks.map((d) => ({
+            scenario: d.scenario,
+            stem: d.stem,
+            keyConcept: d.keyConcept,
+            difficulty: d.difficulty,
+            rationale: d.rationale,
+            reviewScore: d.reviewScore,
+            reviewNotes: d.reviewNotes,
+            iteration: d.iteration,
+            adversaryIssues: d.adversaryIssues,
+            citations: d.citations,
+            options: d.options,
+          })),
+        },
+      });
+    },
+    onSuccess: (res) => {
+      toast.success(`Queued ${res.queued} item(s)`);
+      res.skipped.forEach((s) => toast.error(`Skipped: ${s.reason}`));
+      setResult(null);
+      setAccepted({});
+      void queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-content"] });
+      void queryClient.invalidateQueries({ queryKey: ["draft-reviews"] });
     },
     onError: (e) => toast.error((e as Error).message),
   });
