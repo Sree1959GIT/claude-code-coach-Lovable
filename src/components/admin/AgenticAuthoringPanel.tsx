@@ -40,6 +40,7 @@ async function fetchQuestions(domainId: string) {
 
 export function AgenticAuthoringPanel() {
   const run = useServerFn(runAgenticAuthoring);
+  const queueSelected = useServerFn(queueAuthoredDrafts);
   const loadSources = useServerFn(listAuthoringSources);
   const addSource = useServerFn(addAuthoringSource);
   const toggleSource = useServerFn(setAuthoringSourceEnabled);
