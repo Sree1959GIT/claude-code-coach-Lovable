@@ -167,7 +167,9 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<AuthoringRunResult> => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { runAuthoringLoop, norm, diffQuestion } = await import("./authoring.server");
+    const { runAuthoringLoop, norm, diffQuestion, findNearDuplicate, persistAuthoredDraft } = await import(
+      "./authoring.server"
+    );
     const { startRun, logStep, finishRun } = await import("./orchestrator.server");
 
     const started = Date.now();
