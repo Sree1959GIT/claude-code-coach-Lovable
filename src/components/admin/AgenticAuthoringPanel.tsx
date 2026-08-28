@@ -57,6 +57,8 @@ export function AgenticAuthoringPanel() {
   const [baseQuestionId, setBaseQuestionId] = useState("");
   const [revisionNotes, setRevisionNotes] = useState("");
   const [result, setResult] = useState<AuthoringRunResult | null>(null);
+  const [accepted, setAccepted] = useState<Record<number, boolean>>({});
+  const [allowDuplicates, setAllowDuplicates] = useState(false);
   const [srcLabel, setSrcLabel] = useState("");
   const [srcUrl, setSrcUrl] = useState("");
 
