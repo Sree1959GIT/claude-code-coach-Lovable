@@ -365,7 +365,6 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
     }
 
     if (!data.dryRun && !baseQuestion) {
-
       let nextSort = Math.max(0, ...(bank ?? []).map((q: any) => q.sort_order ?? 0));
       const existing = new Set((bank ?? []).map((q: any) => norm(q.stem)));
 
@@ -375,72 +374,27 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
           issues.push(`Skipped duplicate stem: ${d.stem.slice(0, 70)}…`);
           continue;
         }
+        const dup = drafts[i]?.duplicate;
+        if (dup && dup.similarity >= 0.85) {
+          issues.push(`Skipped near-duplicate (${dup.similarity}) of: ${dup.stem.slice(0, 60)}…`);
+          continue;
+        }
         nextSort += 1;
 
-        const { data: inserted, error } = await supabaseAdmin
-          .from("questions")
-          .insert({
-            domain_id: domain.id,
-            scenario: d.scenario,
-            stem: d.stem,
-            key_concept: d.keyConcept,
-            difficulty: d.difficulty,
-            sort_order: nextSort,
-            status: "draft",
-            origin: "agentic",
-            author_id: context.userId,
-          } as any)
-          .select("id")
-          .single();
-        if (error) {
-          issues.push(`Insert failed: ${error.message}`);
+        const { questionId, error } = await persistAuthoredDraft(supabaseAdmin as any, {
+          domainId: domain.id,
+          runId,
+          userId: context.userId,
+          sortOrder: nextSort,
+          draft: d,
+        });
+        if (error || !questionId) {
+          issues.push(error ?? "Insert failed");
           continue;
         }
-
-        const { error: optErr } = await supabaseAdmin.from("question_options").insert(
-          d.options.map((o, idx) => ({
-            question_id: inserted.id,
-            label: o.label,
-            text: o.text,
-            is_correct: o.isCorrect,
-            explanation: o.explanation,
-            sort_order: idx,
-          })),
-        );
-        if (optErr) {
-          await supabaseAdmin.from("questions").delete().eq("id", inserted.id);
-          issues.push(`Options failed: ${optErr.message}`);
-          continue;
-        }
-
-        await (supabaseAdmin as any).from("question_drafts").insert({
-          domain_id: domain.id,
-          base_question_id: inserted.id,
-          run_id: runId,
-          iteration: d.iteration,
-          status: "pending",
-          payload: { scenario: d.scenario, stem: d.stem, options: d.options, difficulty: d.difficulty },
-          rationale: d.rationale,
-          citations: d.citations,
-          review_score: d.reviewScore,
-          review_notes: d.reviewNotes,
-          created_by: context.userId,
-        });
-
-        await supabaseAdmin.from("content_reviews").insert({
-          question_id: inserted.id,
-          status: "pending",
-          source: "agentic",
-          submitted_by: context.userId,
-          notes: [
-            `Agentic draft · reviewer ${d.reviewScore}/100`,
-            d.adversaryIssues.length ? `adversary: ${d.adversaryIssues.slice(0, 2).join("; ")}` : "adversary: clean",
-            d.citations.length ? `sources: ${d.citations.slice(0, 2).map((c) => c.title).join("; ")}` : "ungrounded",
-          ].join(" · "),
-        });
 
         existing.add(norm(d.stem));
-        drafts[i]!.questionId = inserted.id;
+        drafts[i]!.questionId = questionId;
         queued += 1;
       }
     }
