@@ -12,6 +12,7 @@ import {
   addAuthoringSource,
   deleteAuthoringSource,
   listAuthoringSources,
+  queueAuthoredDrafts,
   runAgenticAuthoring,
   setAuthoringSourceEnabled,
   type AuthoringRunResult,
@@ -39,6 +40,7 @@ async function fetchQuestions(domainId: string) {
 
 export function AgenticAuthoringPanel() {
   const run = useServerFn(runAgenticAuthoring);
+  const queueSelected = useServerFn(queueAuthoredDrafts);
   const loadSources = useServerFn(listAuthoringSources);
   const addSource = useServerFn(addAuthoringSource);
   const toggleSource = useServerFn(setAuthoringSourceEnabled);
@@ -55,6 +57,8 @@ export function AgenticAuthoringPanel() {
   const [baseQuestionId, setBaseQuestionId] = useState("");
   const [revisionNotes, setRevisionNotes] = useState("");
   const [result, setResult] = useState<AuthoringRunResult | null>(null);
+  const [accepted, setAccepted] = useState<Record<number, boolean>>({});
+  const [allowDuplicates, setAllowDuplicates] = useState(false);
   const [srcLabel, setSrcLabel] = useState("");
   const [srcUrl, setSrcUrl] = useState("");
 
@@ -85,6 +89,7 @@ export function AgenticAuthoringPanel() {
       }),
     onSuccess: (res) => {
       setResult(res);
+      setAccepted(Object.fromEntries(res.drafts.map((d, i) => [i, !d.duplicate])));
       if (res.queued > 0) {
         toast.success(
           baseQuestionId
@@ -97,6 +102,44 @@ export function AgenticAuthoringPanel() {
       } else {
         toast.success(`Drafted ${res.drafts.length} item(s)`);
       }
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  // C6 — queue only the items the admin accepted from a preview batch.
+  const queueMutation = useMutation({
+    mutationFn: () => {
+      const picks = (result?.drafts ?? []).filter((d, i) => accepted[i] && !d.isRevision && !d.questionId);
+      if (picks.length === 0) throw new Error("No items accepted");
+      return queueSelected({
+        data: {
+          domainId,
+          runId: result?.runId ?? null,
+          allowDuplicates,
+          drafts: picks.map((d) => ({
+            scenario: d.scenario,
+            stem: d.stem,
+            keyConcept: d.keyConcept,
+            difficulty: d.difficulty,
+            rationale: d.rationale,
+            reviewScore: d.reviewScore,
+            reviewNotes: d.reviewNotes,
+            iteration: d.iteration,
+            adversaryIssues: d.adversaryIssues,
+            citations: d.citations,
+            options: d.options,
+          })),
+        },
+      });
+    },
+    onSuccess: (res) => {
+      toast.success(`Queued ${res.queued} item(s)`);
+      res.skipped.forEach((s) => toast.error(`Skipped: ${s.reason}`));
+      setResult(null);
+      setAccepted({});
+      void queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-content"] });
+      void queryClient.invalidateQueries({ queryKey: ["draft-reviews"] });
     },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -146,10 +189,10 @@ export function AgenticAuthoringPanel() {
           <input
             type="number"
             min={1}
-            max={5}
+            max={10}
             value={count}
             disabled={Boolean(baseQuestionId)}
-            onChange={(e) => setCount(Math.max(1, Math.min(5, Number(e.target.value) || 1)))}
+            onChange={(e) => setCount(Math.max(1, Math.min(10, Number(e.target.value) || 1)))}
             className="w-20 border border-border bg-background px-2 py-1 font-mono text-xs text-foreground disabled:opacity-40"
           />
         </label>
@@ -308,15 +351,68 @@ export function AgenticAuthoringPanel() {
             </ul>
           )}
 
+          {/* C6 — per-item accept / reject for the batch */}
+          {result.drafts.some((d) => !d.isRevision && !d.questionId) && (
+            <div className="mt-4 flex flex-wrap items-center gap-3 border border-border px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <span>
+                {Object.values(accepted).filter(Boolean).length}/{result.drafts.length} accepted
+              </span>
+              <button
+                className="underline"
+                onClick={() => setAccepted(Object.fromEntries(result.drafts.map((_, i) => [i, true])))}
+              >
+                Accept_All
+              </button>
+              <button className="underline" onClick={() => setAccepted({})}>
+                Reject_All
+              </button>
+              <label className="flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={allowDuplicates}
+                  onChange={(e) => setAllowDuplicates(e.target.checked)}
+                />
+                Allow_Duplicates
+              </label>
+              <button
+                className={`${btn} ml-auto`}
+                disabled={queueMutation.isPending || Object.values(accepted).filter(Boolean).length === 0}
+                onClick={() => queueMutation.mutate()}
+              >
+                {queueMutation.isPending ? "Queueing…" : "Queue_Accepted"}
+              </button>
+            </div>
+          )}
+
           <div className="mt-4 space-y-4">
             {result.drafts.map((d, i) => (
               <article key={i} className="border border-border p-4">
                 <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  {!d.isRevision && !d.questionId && (
+                    <label className="flex items-center gap-1">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(accepted[i])}
+                        onChange={(e) => setAccepted((prev) => ({ ...prev, [i]: e.target.checked }))}
+                      />
+                      Accept
+                    </label>
+                  )}
                   <span>{d.difficulty}</span>
                   <span>reviewer {d.reviewScore}/100</span>
                   <span>{d.isRevision ? "revision" : "new"}</span>
                   <span>{d.questionId ? "queued for review" : "preview"}</span>
+                  {d.duplicate && (
+                    <span className="text-destructive">
+                      dup {d.duplicate.similarity} · {d.duplicate.domainTitle}
+                    </span>
+                  )}
                 </div>
+                {d.duplicate && (
+                  <p className="mt-1 font-mono text-[11px] text-destructive">
+                    Near-duplicate of: {d.duplicate.stem.slice(0, 110)}…
+                  </p>
+                )}
                 {d.isRevision && (
                   <div className="mt-2 border border-border p-2">
                     <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
