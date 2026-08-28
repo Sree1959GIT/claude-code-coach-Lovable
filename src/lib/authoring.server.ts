@@ -404,3 +404,138 @@ export async function runAuthoringLoop(args: AuthoringArgs): Promise<AuthoringRe
     evidenceCount: ev.passages.length,
   };
 }
+
+/* ------------------------ C6 — batch set authoring ------------------------ */
+
+const STOP = new Set([
+  "the","a","an","of","to","in","for","and","or","is","are","which","what","that","this","with","on","by","as","be","you","your","it","its","at","from","should","would","most","best",
+]);
+
+function tokens(s: string): Set<string> {
+  return new Set(
+    norm(s)
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter((t) => t.length > 2 && !STOP.has(t)),
+  );
+}
+
+/** Jaccard similarity between two stems (0..1). */
+export function stemSimilarity(a: string, b: string): number {
+  const ta = tokens(a);
+  const tb = tokens(b);
+  if (ta.size === 0 || tb.size === 0) return 0;
+  let inter = 0;
+  for (const t of ta) if (tb.has(t)) inter += 1;
+  return inter / (ta.size + tb.size - inter);
+}
+
+export type BankItem = { id: string; stem: string; domainTitle: string };
+export type DuplicateHit = { questionId: string; stem: string; domainTitle: string; similarity: number };
+
+/** Nearest existing bank question above the threshold, if any. */
+export function findNearDuplicate(stem: string, bank: BankItem[], threshold = 0.7): DuplicateHit | null {
+  let best: DuplicateHit | null = null;
+  for (const q of bank) {
+    const sim = stemSimilarity(stem, q.stem);
+    if (sim >= threshold && (!best || sim > best.similarity)) {
+      best = {
+        questionId: q.id,
+        stem: q.stem,
+        domainTitle: q.domainTitle,
+        similarity: Math.round(sim * 100) / 100,
+      };
+    }
+  }
+  return best;
+}
+
+export type PersistDraftInput = {
+  domainId: string;
+  runId: string | null;
+  userId: string;
+  sortOrder: number;
+  draft: {
+    scenario: string | null;
+    stem: string;
+    keyConcept: string | null;
+    difficulty: string;
+    options: DraftOption[];
+    citations: { title: string; url: string | null }[];
+    rationale: string | null;
+    adversaryIssues: string[];
+    reviewScore: number;
+    reviewNotes: string | null;
+    iteration: number;
+  };
+};
+
+/**
+ * Insert one authored item as a DRAFT question plus a pending review row.
+ * Shared by the auto-queue path and the per-item accept path.
+ */
+export async function persistAuthoredDraft(
+  supabaseAdmin: any,
+  input: PersistDraftInput,
+): Promise<{ questionId: string | null; error: string | null }> {
+  const d = input.draft;
+  const { data: inserted, error } = await supabaseAdmin
+    .from("questions")
+    .insert({
+      domain_id: input.domainId,
+      scenario: d.scenario,
+      stem: d.stem,
+      key_concept: d.keyConcept,
+      difficulty: d.difficulty,
+      sort_order: input.sortOrder,
+      status: "draft",
+      origin: "agentic",
+      author_id: input.userId,
+    })
+    .select("id")
+    .single();
+  if (error) return { questionId: null, error: `Insert failed: ${error.message}` };
+
+  const { error: optErr } = await supabaseAdmin.from("question_options").insert(
+    d.options.map((o, idx) => ({
+      question_id: inserted.id,
+      label: o.label,
+      text: o.text,
+      is_correct: o.isCorrect,
+      explanation: o.explanation,
+      sort_order: idx,
+    })),
+  );
+  if (optErr) {
+    await supabaseAdmin.from("questions").delete().eq("id", inserted.id);
+    return { questionId: null, error: `Options failed: ${optErr.message}` };
+  }
+
+  await supabaseAdmin.from("question_drafts").insert({
+    domain_id: input.domainId,
+    base_question_id: inserted.id,
+    run_id: input.runId,
+    iteration: d.iteration,
+    status: "pending",
+    payload: { scenario: d.scenario, stem: d.stem, options: d.options, difficulty: d.difficulty },
+    rationale: d.rationale,
+    citations: d.citations,
+    review_score: d.reviewScore,
+    review_notes: d.reviewNotes,
+    created_by: input.userId,
+  });
+
+  await supabaseAdmin.from("content_reviews").insert({
+    question_id: inserted.id,
+    status: "pending",
+    source: "agentic",
+    submitted_by: input.userId,
+    notes: [
+      `Agentic draft · reviewer ${d.reviewScore}/100`,
+      d.adversaryIssues.length ? `adversary: ${d.adversaryIssues.slice(0, 2).join("; ")}` : "adversary: clean",
+      d.citations.length ? `sources: ${d.citations.slice(0, 2).map((c) => c.title).join("; ")}` : "ungrounded",
+    ].join(" · "),
+  });
+
+  return { questionId: inserted.id, error: null };
+}
