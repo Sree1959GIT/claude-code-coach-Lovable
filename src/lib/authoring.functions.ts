@@ -295,12 +295,15 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
       });
     }
 
-    const drafts = result.drafts.map((d) => ({
+    const drafts: AuthoringRunDraft[] = result.drafts.map((d) => ({
       stem: d.stem,
       scenario: d.scenario as string | null,
+      keyConcept: d.keyConcept as string | null,
       difficulty: d.difficulty as string,
       reviewScore: d.reviewScore,
       reviewNotes: d.reviewNotes,
+      rationale: d.rationale,
+      iteration: d.iteration,
       adversaryIssues: d.adversaryIssues,
       citations: d.citations,
       options: d.options,
@@ -315,6 +318,12 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
           })
         : [],
       isRevision: Boolean(baseQuestion),
+      duplicate: baseQuestion
+        ? null
+        : findNearDuplicate(
+            d.stem,
+            bankItems.filter((b) => b.id !== data.baseQuestionId),
+          ),
     }));
 
 
