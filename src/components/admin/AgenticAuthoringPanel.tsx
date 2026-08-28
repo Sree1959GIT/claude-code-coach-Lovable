@@ -12,6 +12,7 @@ import {
   addAuthoringSource,
   deleteAuthoringSource,
   listAuthoringSources,
+  queueAuthoredDrafts,
   runAgenticAuthoring,
   setAuthoringSourceEnabled,
   type AuthoringRunResult,
