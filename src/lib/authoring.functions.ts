@@ -173,12 +173,23 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
     const started = Date.now();
     const issues: string[] = [];
 
-    const [{ data: domain, error: dErr }, { data: sources }, { data: bank }] = await Promise.all([
-      supabaseAdmin.from("domains").select("id, title, slug, description").eq("id", data.domainId).single(),
-      (supabaseAdmin as any).from("authoring_sources").select("label, host, url").eq("enabled", true),
-      supabaseAdmin.from("questions").select("id, stem, sort_order").eq("domain_id", data.domainId),
-    ]);
+    const [{ data: domain, error: dErr }, { data: sources }, { data: bank }, { data: allBank }, { data: allDomains }] =
+      await Promise.all([
+        supabaseAdmin.from("domains").select("id, title, slug, description").eq("id", data.domainId).single(),
+        (supabaseAdmin as any).from("authoring_sources").select("label, host, url").eq("enabled", true),
+        supabaseAdmin.from("questions").select("id, stem, sort_order").eq("domain_id", data.domainId),
+        // C6 — duplicate detection runs against the whole bank, not just this domain.
+        supabaseAdmin.from("questions").select("id, stem, domain_id").limit(2000),
+        supabaseAdmin.from("domains").select("id, title"),
+      ]);
     if (dErr) throw dErr;
+
+    const domainTitles = new Map((allDomains ?? []).map((d: any) => [d.id, d.title as string]));
+    const bankItems = (allBank ?? []).map((q: any) => ({
+      id: q.id as string,
+      stem: q.stem as string,
+      domainTitle: domainTitles.get(q.domain_id) ?? "—",
+    }));
 
     // Set-level context: dedupe + answer-position balance + distractor reuse.
     const questionIds = (bank ?? []).map((q: any) => q.id);
