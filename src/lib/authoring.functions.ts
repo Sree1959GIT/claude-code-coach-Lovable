@@ -129,6 +129,27 @@ const RunInput = z.object({
   dryRun: z.boolean().default(false),
 });
 
+/** One authored item returned to the admin UI (C6: accept/reject per item). */
+export type AuthoringRunDraft = {
+  stem: string;
+  scenario: string | null;
+  keyConcept: string | null;
+  difficulty: string;
+  reviewScore: number;
+  reviewNotes: string | null;
+  rationale: string | null;
+  iteration: number;
+  adversaryIssues: string[];
+  citations: { title: string; url: string | null }[];
+  options: { label: string; text: string; isCorrect: boolean; explanation: string | null }[];
+  questionId: string | null;
+  /** Populated in edit mode: field-level changes against the live question. */
+  diff: { field: string; before: string; after: string }[];
+  isRevision: boolean;
+  /** Nearest existing bank question above the similarity threshold, if any. */
+  duplicate: { questionId: string; stem: string; domainTitle: string; similarity: number } | null;
+};
+
 export type AuthoringRunResult = {
   domainTitle: string;
   runId: string | null;
