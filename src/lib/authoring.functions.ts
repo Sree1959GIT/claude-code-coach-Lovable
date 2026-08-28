@@ -865,3 +865,104 @@ export const resolveDraftRevision = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+
+/* --------------------- C6 — per-item accept from a batch --------------------- */
+
+const QueueDraftsInput = z.object({
+  domainId: z.string().uuid(),
+  runId: z.string().uuid().nullable().optional(),
+  /** Only the items the admin accepted in the preview batch. */
+  drafts: z
+    .array(
+      z.object({
+        scenario: z.string().nullable().default(null),
+        stem: z.string().min(10),
+        keyConcept: z.string().nullable().default(null),
+        difficulty: z.string().default("medium"),
+        rationale: z.string().nullable().default(null),
+        reviewScore: z.number().default(0),
+        reviewNotes: z.string().nullable().default(null),
+        iteration: z.number().int().default(1),
+        adversaryIssues: z.array(z.string()).default([]),
+        citations: z.array(z.object({ title: z.string(), url: z.string().nullable() })).default([]),
+        options: z
+          .array(
+            z.object({
+              label: z.string(),
+              text: z.string().min(1),
+              isCorrect: z.boolean(),
+              explanation: z.string().nullable().default(null),
+            }),
+          )
+          .min(2),
+      }),
+    )
+    .min(1)
+    .max(10),
+  /** Accept even when a near-duplicate exists in the bank. */
+  allowDuplicates: z.boolean().default(false),
+});
+
+export type QueueDraftsResult = {
+  queued: number;
+  skipped: { stem: string; reason: string }[];
+};
+
+/** Queue only the accepted items of a preview batch as drafts + pending reviews. */
+export const queueAuthoredDrafts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => QueueDraftsInput.parse(input))
+  .handler(async ({ data, context }): Promise<QueueDraftsResult> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { norm, findNearDuplicate, persistAuthoredDraft } = await import("./authoring.server");
+
+    const [{ data: bank }, { data: allBank }, { data: allDomains }] = await Promise.all([
+      supabaseAdmin.from("questions").select("id, stem, sort_order").eq("domain_id", data.domainId),
+      supabaseAdmin.from("questions").select("id, stem, domain_id").limit(2000),
+      supabaseAdmin.from("domains").select("id, title"),
+    ]);
+
+    const titles = new Map((allDomains ?? []).map((d: any) => [d.id, d.title as string]));
+    const bankItems = (allBank ?? []).map((q: any) => ({
+      id: q.id as string,
+      stem: q.stem as string,
+      domainTitle: titles.get(q.domain_id) ?? "—",
+    }));
+
+    let nextSort = Math.max(0, ...(bank ?? []).map((q: any) => q.sort_order ?? 0));
+    const existing = new Set((bank ?? []).map((q: any) => norm(q.stem)));
+    const skipped: { stem: string; reason: string }[] = [];
+    let queued = 0;
+
+    for (const d of data.drafts) {
+      if (existing.has(norm(d.stem))) {
+        skipped.push({ stem: d.stem, reason: "Exact duplicate stem already in the bank" });
+        continue;
+      }
+      if (!data.allowDuplicates) {
+        const dup = findNearDuplicate(d.stem, bankItems, 0.85);
+        if (dup) {
+          skipped.push({ stem: d.stem, reason: `Near-duplicate (${dup.similarity}) of "${dup.stem.slice(0, 60)}…"` });
+          continue;
+        }
+      }
+      nextSort += 1;
+      const { questionId, error } = await persistAuthoredDraft(supabaseAdmin as any, {
+        domainId: data.domainId,
+        runId: data.runId ?? null,
+        userId: context.userId,
+        sortOrder: nextSort,
+        draft: d,
+      });
+      if (error || !questionId) {
+        skipped.push({ stem: d.stem, reason: error ?? "Insert failed" });
+        continue;
+      }
+      existing.add(norm(d.stem));
+      bankItems.push({ id: questionId, stem: d.stem, domainTitle: "" });
+      queued += 1;
+    }
+
+    return { queued, skipped };
+  });
