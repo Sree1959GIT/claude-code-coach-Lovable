@@ -119,7 +119,7 @@ export const deleteAuthoringSource = createServerFn({ method: "POST" })
 
 const RunInput = z.object({
   domainId: z.string().uuid(),
-  count: z.number().int().min(1).max(5).default(2),
+  count: z.number().int().min(1).max(10).default(2),
   difficulty: z.enum(["easy", "medium", "hard", "mixed"]).default("mixed"),
   topicHint: z.string().max(200).nullable().optional(),
   /** B7 edit mode: revise this existing question instead of authoring new items. */
