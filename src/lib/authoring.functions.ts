@@ -134,20 +134,7 @@ export type AuthoringRunResult = {
   runId: string | null;
   evidenceCount: number;
   steps: { agent: string; status: string; detail: string; durationMs: number }[];
-  drafts: {
-    stem: string;
-    scenario: string | null;
-    difficulty: string;
-    reviewScore: number;
-    reviewNotes: string | null;
-    adversaryIssues: string[];
-    citations: { title: string; url: string | null }[];
-    options: { label: string; text: string; isCorrect: boolean; explanation: string | null }[];
-    questionId: string | null;
-    /** Populated in edit mode: field-level changes against the live question. */
-    diff: { field: string; before: string; after: string }[];
-    isRevision: boolean;
-  }[];
+  drafts: AuthoringRunDraft[];
   queued: number;
   issues: string[];
 };
