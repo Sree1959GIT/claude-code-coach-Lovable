@@ -120,6 +120,99 @@ export const deleteAuthoringSource = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** C7 — edit an existing approved source (label, url/host, domain, notes). */
+export const updateAuthoringSource = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        label: z.string().min(1).max(120).optional(),
+        url: z.string().url().optional(),
+        domainId: z.string().uuid().nullable().optional(),
+        notes: z.string().max(500).nullable().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const patch: Record<string, unknown> = {};
+    if (data.label !== undefined) patch['label'] = data.label.trim();
+    if (data.url !== undefined) {
+      patch['url'] = data.url;
+      patch['host'] = new URL(data.url).host;
+    }
+    if (data.domainId !== undefined) patch['domain_id'] = data.domainId;
+    if (data.notes !== undefined) patch['notes'] = data.notes?.trim() || null;
+    if (Object.keys(patch).length === 0) return { ok: true };
+    const { error } = await (supabaseAdmin as any)
+      .from("authoring_sources")
+      .update(patch)
+      .eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export type SourceTestResult = {
+  id: string;
+  ok: boolean;
+  status: string;
+  checkedAt: string;
+};
+
+/** C7 — test-fetch a source URL and record reachability on the row. */
+export const testAuthoringSource = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }): Promise<SourceTestResult> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await (supabaseAdmin as any)
+      .from("authoring_sources")
+      .select("id, url, host")
+      .eq("id", data.id)
+      .single();
+    if (error) throw error;
+
+    const target: string | null = row.url ?? (row.host ? `https://${row.host}/` : null);
+    let ok = false;
+    let status = "no url configured";
+
+    if (target) {
+      const started = Date.now();
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 10_000);
+        let res: Response;
+        try {
+          res = await fetch(target, { method: "HEAD", redirect: "follow", signal: controller.signal });
+          if (res.status === 405 || res.status === 501) {
+            res = await fetch(target, { method: "GET", redirect: "follow", signal: controller.signal });
+          }
+        } finally {
+          clearTimeout(timer);
+        }
+        ok = res.ok;
+        const authNote = res.status === 401 || res.status === 403 ? " (authentication required)" : "";
+        status = `HTTP ${res.status}${authNote} · ${Date.now() - started}ms`;
+      } catch (e) {
+        ok = false;
+        status = `unreachable: ${(e as Error).message.slice(0, 120)}`;
+      }
+    }
+
+    const checkedAt = new Date().toISOString();
+    await (supabaseAdmin as any)
+      .from("authoring_sources")
+      .update({ last_checked_at: checkedAt, last_status: status })
+      .eq("id", data.id);
+
+    return { id: data.id, ok, status, checkedAt };
+  });
+
+
+
 /* ------------------------------ authoring run ------------------------------ */
 
 const RunInput = z.object({
