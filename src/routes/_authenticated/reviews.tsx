@@ -394,7 +394,12 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
         >
           Reject
         </button>
+        <label className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <input type="checkbox" checked={selfOverride} onChange={(e) => setSelfOverride(e.target.checked)} />
+          Override_Self_Review
+        </label>
       </div>
+
     </article>
   );
 }
