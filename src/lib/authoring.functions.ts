@@ -8,14 +8,28 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function assertAdmin(context: { supabase: any; userId: string }) {
-  const { data: isAdmin, error } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "admin",
-  });
+async function hasRole(context: { supabase: any; userId: string }, role: string) {
+  const { data, error } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: role });
   if (error) throw error;
-  if (!isAdmin) throw new Error("Forbidden");
+  return Boolean(data);
 }
+
+async function assertAdmin(context: { supabase: any; userId: string }) {
+  if (!(await hasRole(context, "admin"))) throw new Error("Forbidden");
+}
+
+/** C8 — authoring is open to admins and users granted the `author` role. */
+async function assertAuthor(context: { supabase: any; userId: string }) {
+  if ((await hasRole(context, "admin")) || (await hasRole(context, "author"))) return;
+  throw new Error("Forbidden");
+}
+
+/** C8 — review decisions are open to admins and users granted `reviewer`. */
+async function assertReviewer(context: { supabase: any; userId: string }) {
+  if ((await hasRole(context, "admin")) || (await hasRole(context, "reviewer"))) return;
+  throw new Error("Forbidden");
+}
+
 
 /* --------------------------- authoring sources --------------------------- */
 
