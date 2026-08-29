@@ -493,6 +493,38 @@ export const resolveReview = createServerFn({ method: "POST" })
   });
 
 /**
+ * C8 — grant or revoke content roles. Admins only; the `admin` role itself is
+ * not grantable here to avoid accidental privilege escalation from the UI.
+ */
+export const setUserRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { userId: string; role: "author" | "reviewer" | "pro"; grant: boolean }) => {
+    if (!input.userId) throw new Error("Missing user.");
+    if (!["author", "reviewer", "pro"].includes(input.role)) throw new Error("Role not grantable here.");
+    return input;
+  })
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (data.grant) {
+      const { error } = await (supabaseAdmin as any)
+        .from("user_roles")
+        .upsert({ user_id: data.userId, role: data.role }, { onConflict: "user_id,role" });
+      if (error) throw error;
+    } else {
+      const { error } = await (supabaseAdmin as any)
+        .from("user_roles")
+        .delete()
+        .eq("user_id", data.userId)
+        .eq("role", data.role);
+      if (error) throw error;
+    }
+    return { ok: true };
+  });
+
+
+
+/**
  * Stage 6b sub-task 9 — job run history.
  */
 
