@@ -16,6 +16,7 @@ import {
   listEvalRuns,
   listEvalResults,
   runEvalsNow,
+  setUserRole,
 } from "@/lib/admin.functions";
 
 
