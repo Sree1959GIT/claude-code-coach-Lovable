@@ -28,6 +28,8 @@ export type AuthoringSource = {
   domainId: string | null;
   notes: string | null;
   enabled: boolean;
+  lastCheckedAt: string | null;
+  lastStatus: string | null;
   createdAt: string;
 };
 
@@ -51,9 +53,12 @@ export const listAuthoringSources = createServerFn({ method: "GET" })
       domainId: s.domain_id ?? null,
       notes: s.notes ?? null,
       enabled: s.enabled,
+      lastCheckedAt: s.last_checked_at ?? null,
+      lastStatus: s.last_status ?? null,
       createdAt: s.created_at,
     }));
   });
+
 
 const SourceInput = z.object({
   label: z.string().min(1).max(120),
