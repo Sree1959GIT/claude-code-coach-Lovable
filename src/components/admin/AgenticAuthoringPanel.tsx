@@ -163,10 +163,20 @@ export function AgenticAuthoringPanel() {
 
 
   const sourceMutation = useMutation({
-    mutationFn: () => addSource({ data: { label: srcLabel.trim(), url: srcUrl.trim() } }),
+    mutationFn: () =>
+      addSource({
+        data: {
+          label: srcLabel.trim(),
+          url: srcUrl.trim(),
+          domainId: srcDomainId || null,
+          notes: srcNotes.trim() || null,
+        },
+      }),
     onSuccess: () => {
       setSrcLabel("");
       setSrcUrl("");
+      setSrcDomainId("");
+      setSrcNotes("");
       toast.success("Source approved");
       void queryClient.invalidateQueries({ queryKey: ["authoring-sources"] });
     },
@@ -179,6 +189,66 @@ export function AgenticAuthoringPanel() {
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["authoring-sources"] }),
     onError: (e) => toast.error((e as Error).message),
   });
+
+  // C7 — test-fetch validation
+  const testMutation = useMutation({
+    mutationFn: (id: string) => {
+      setTestingId(id);
+      return testSource({ data: { id } });
+    },
+    onSuccess: (res) => {
+      setTestingId(null);
+      if (res.ok) toast.success(`Reachable — ${res.status}`);
+      else toast.error(`Check failed — ${res.status}`);
+      void queryClient.invalidateQueries({ queryKey: ["authoring-sources"] });
+    },
+    onError: (e) => {
+      setTestingId(null);
+      toast.error((e as Error).message);
+    },
+  });
+
+  const testAllMutation = useMutation({
+    mutationFn: async () => {
+      for (const s of sources) await testSource({ data: { id: s.id } });
+      return sources.length;
+    },
+    onSuccess: (n) => {
+      toast.success(`Tested ${n} source(s)`);
+      void queryClient.invalidateQueries({ queryKey: ["authoring-sources"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const editMutation = useMutation({
+    mutationFn: () =>
+      editSource({
+        data: {
+          id: editingId!,
+          label: editDraft.label.trim(),
+          url: editDraft.url.trim(),
+          domainId: editDraft.domainId || null,
+          notes: editDraft.notes.trim() || null,
+        },
+      }),
+    onSuccess: () => {
+      setEditingId(null);
+      toast.success("Source updated");
+      void queryClient.invalidateQueries({ queryKey: ["authoring-sources"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  function startEdit(s: AuthoringSource) {
+    setEditingId(s.id);
+    setEditDraft({
+      label: s.label,
+      url: s.url ?? `https://${s.host}/`,
+      domainId: s.domainId ?? "",
+      notes: s.notes ?? "",
+    });
+  }
+
 
   return (
     <div className="mt-4 border border-border bg-background p-5">
