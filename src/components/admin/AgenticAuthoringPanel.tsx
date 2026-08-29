@@ -49,6 +49,8 @@ export function AgenticAuthoringPanel() {
   const addSource = useServerFn(addAuthoringSource);
   const toggleSource = useServerFn(setAuthoringSourceEnabled);
   const removeSource = useServerFn(deleteAuthoringSource);
+  const testSource = useServerFn(testAuthoringSource);
+  const editSource = useServerFn(updateAuthoringSource);
   const queryClient = useQueryClient();
 
   const { data: domains = [] } = useQuery({ queryKey: ["domains-list"], queryFn: fetchDomains, staleTime: 300_000 });
@@ -65,6 +67,17 @@ export function AgenticAuthoringPanel() {
   const [allowDuplicates, setAllowDuplicates] = useState(false);
   const [srcLabel, setSrcLabel] = useState("");
   const [srcUrl, setSrcUrl] = useState("");
+  const [srcDomainId, setSrcDomainId] = useState("");
+  const [srcNotes, setSrcNotes] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<{ label: string; url: string; domainId: string; notes: string }>({
+    label: "",
+    url: "",
+    domainId: "",
+    notes: "",
+  });
+  const [testingId, setTestingId] = useState<string | null>(null);
+
 
   const { data: questions = [] } = useQuery({
     queryKey: ["authoring-questions", domainId],
