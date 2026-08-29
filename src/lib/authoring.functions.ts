@@ -277,7 +277,7 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => RunInput.parse(input))
   .handler(async ({ data, context }): Promise<AuthoringRunResult> => {
-    await assertAdmin(context);
+    await assertAuthor(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { runAuthoringLoop, norm, diffQuestion, findNearDuplicate, persistAuthoredDraft } = await import(
       "./authoring.server"
@@ -591,7 +591,7 @@ export const listDraftReviews = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => ReviewFilter.parse(input ?? {}))
   .handler(async ({ data, context }): Promise<DraftReviewItem[]> => {
-    await assertAdmin(context);
+    await assertReviewer(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { diffQuestion } = await import("./authoring.server");
 
@@ -773,7 +773,7 @@ export const claimReviewItem = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    await assertAdmin(context);
+    await assertReviewer(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const patch = data.claim
       ? { claimed_by: context.userId, claimed_at: new Date().toISOString() }
@@ -842,7 +842,7 @@ export const updateDraftQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => EditInput.parse(input))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    await assertAdmin(context);
+    await assertReviewer(context);
     if (data.options.filter((o) => o.isCorrect).length !== 1) {
       throw new Error("Exactly one option must be marked correct.");
     }
@@ -900,7 +900,7 @@ export const resolveDraftRevision = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    await assertAdmin(context);
+    await assertReviewer(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: draft, error } = await (supabaseAdmin as any)
@@ -1025,7 +1025,7 @@ export const queueAuthoredDrafts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => QueueDraftsInput.parse(input))
   .handler(async ({ data, context }): Promise<QueueDraftsResult> => {
-    await assertAdmin(context);
+    await assertAuthor(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { norm, findNearDuplicate, persistAuthoredDraft } = await import("./authoring.server");
 
