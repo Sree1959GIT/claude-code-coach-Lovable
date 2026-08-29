@@ -896,6 +896,8 @@ export const resolveDraftRevision = createServerFn({ method: "POST" })
         notes: z.string().max(1000).nullable().optional(),
         /** Reviewer-edited content to apply instead of the raw proposal. */
         edits: EditInput.nullable().optional(),
+        /** C8 — explicit override when the reviewer also authored the draft. */
+        allowSelfReview: z.boolean().optional(),
       })
       .parse(input),
   )
@@ -905,10 +907,16 @@ export const resolveDraftRevision = createServerFn({ method: "POST" })
 
     const { data: draft, error } = await (supabaseAdmin as any)
       .from("question_drafts")
-      .select("id, base_question_id, payload")
+      .select("id, base_question_id, payload, created_by")
       .eq("id", data.draftId)
       .single();
     if (error) throw error;
+
+    // C8 — reviewer should not be the author of the same item.
+    if (draft.created_by && draft.created_by === context.userId && !data.allowSelfReview) {
+      throw new Error("You authored this draft — a different reviewer should decide it.");
+    }
+
 
     if (data.decision === "approved") {
       const p = data.edits ?? {
