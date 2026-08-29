@@ -375,6 +375,24 @@ export function AgenticAuthoringPanel() {
             placeholder="https://docs.example.com/…"
             className="min-w-[16rem] flex-1 border border-border bg-background px-2 py-1 font-mono text-xs text-foreground"
           />
+          <select
+            value={srcDomainId}
+            onChange={(e) => setSrcDomainId(e.target.value)}
+            className="border border-border bg-background px-2 py-1 font-mono text-xs text-foreground"
+          >
+            <option value="">all domains</option>
+            {domains.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.title}
+              </option>
+            ))}
+          </select>
+          <input
+            value={srcNotes}
+            onChange={(e) => setSrcNotes(e.target.value)}
+            placeholder="Notes (optional)"
+            className="min-w-[10rem] border border-border bg-background px-2 py-1 font-mono text-xs text-foreground"
+          />
           <button
             className={btn}
             disabled={!srcLabel.trim() || !srcUrl.trim() || sourceMutation.isPending}
@@ -382,31 +400,108 @@ export function AgenticAuthoringPanel() {
           >
             Add_Source
           </button>
+          <button
+            className={btn}
+            disabled={sources.length === 0 || testAllMutation.isPending}
+            onClick={() => testAllMutation.mutate()}
+          >
+            {testAllMutation.isPending ? "Testing…" : "Test_All"}
+          </button>
         </div>
         {sources.length === 0 ? (
           <p className="mt-3 font-mono text-[11px] text-muted-foreground">No approved sources yet.</p>
         ) : (
           <ul className="mt-3 space-y-1">
             {sources.map((s) => (
-              <li key={s.id} className="flex flex-wrap items-center gap-3 border border-border px-3 py-1.5 font-mono text-[11px]">
-                <span className="font-bold">{s.label}</span>
-                <span className="text-muted-foreground">{s.host}</span>
-                <span className={s.enabled ? "text-primary" : "text-muted-foreground"}>
-                  {s.enabled ? "enabled" : "disabled"}
-                </span>
-                <button
-                  className="ml-auto underline"
-                  onClick={() => mutateSource.mutate({ id: s.id, enabled: !s.enabled })}
-                >
-                  {s.enabled ? "Disable" : "Enable"}
-                </button>
-                <button className="underline" onClick={() => mutateSource.mutate({ id: s.id, remove: true })}>
-                  Remove
-                </button>
+              <li key={s.id} className="border border-border px-3 py-1.5 font-mono text-[11px]">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="font-bold">{s.label}</span>
+                  <span className="text-muted-foreground">{s.host}</span>
+                  <span className="text-muted-foreground">
+                    {s.domainId ? domains.find((d) => d.id === s.domainId)?.title ?? "domain" : "all domains"}
+                  </span>
+                  <span className={s.enabled ? "text-primary" : "text-muted-foreground"}>
+                    {s.enabled ? "enabled" : "disabled"}
+                  </span>
+                  <button
+                    className="ml-auto underline"
+                    disabled={testMutation.isPending && testingId === s.id}
+                    onClick={() => testMutation.mutate(s.id)}
+                  >
+                    {testMutation.isPending && testingId === s.id ? "Testing…" : "Test_Fetch"}
+                  </button>
+                  <button className="underline" onClick={() => (editingId === s.id ? setEditingId(null) : startEdit(s))}>
+                    {editingId === s.id ? "Cancel" : "Edit"}
+                  </button>
+                  <button
+                    className="underline"
+                    onClick={() => mutateSource.mutate({ id: s.id, enabled: !s.enabled })}
+                  >
+                    {s.enabled ? "Disable" : "Enable"}
+                  </button>
+                  <button className="underline" onClick={() => mutateSource.mutate({ id: s.id, remove: true })}>
+                    Remove
+                  </button>
+                </div>
+
+                {(s.lastStatus || s.notes) && (
+                  <div className="mt-1 flex flex-wrap gap-3 text-muted-foreground">
+                    {s.lastStatus && (
+                      <span className={s.lastStatus.startsWith("HTTP 2") ? "text-primary" : "text-destructive"}>
+                        last check: {s.lastStatus}
+                        {s.lastCheckedAt ? ` · ${new Date(s.lastCheckedAt).toLocaleString()}` : ""}
+                      </span>
+                    )}
+                    {s.notes && <span>{s.notes}</span>}
+                  </div>
+                )}
+
+                {editingId === s.id && (
+                  <div className="mt-2 flex flex-wrap items-end gap-2 border-t border-border pt-2">
+                    <input
+                      value={editDraft.label}
+                      onChange={(e) => setEditDraft((p) => ({ ...p, label: e.target.value }))}
+                      placeholder="Label"
+                      className="border border-border bg-background px-2 py-1 font-mono text-xs text-foreground"
+                    />
+                    <input
+                      value={editDraft.url}
+                      onChange={(e) => setEditDraft((p) => ({ ...p, url: e.target.value }))}
+                      placeholder="https://…"
+                      className="min-w-[16rem] flex-1 border border-border bg-background px-2 py-1 font-mono text-xs text-foreground"
+                    />
+                    <select
+                      value={editDraft.domainId}
+                      onChange={(e) => setEditDraft((p) => ({ ...p, domainId: e.target.value }))}
+                      className="border border-border bg-background px-2 py-1 font-mono text-xs text-foreground"
+                    >
+                      <option value="">all domains</option>
+                      {domains.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.title}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      value={editDraft.notes}
+                      onChange={(e) => setEditDraft((p) => ({ ...p, notes: e.target.value }))}
+                      placeholder="Notes"
+                      className="min-w-[10rem] border border-border bg-background px-2 py-1 font-mono text-xs text-foreground"
+                    />
+                    <button
+                      className={btn}
+                      disabled={!editDraft.label.trim() || !editDraft.url.trim() || editMutation.isPending}
+                      onClick={() => editMutation.mutate()}
+                    >
+                      Save
+                    </button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
         )}
+
       </div>
 
       {/* Run output */}
