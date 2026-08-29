@@ -16,6 +16,7 @@ import {
   listEvalRuns,
   listEvalResults,
   runEvalsNow,
+  setUserRole,
 } from "@/lib/admin.functions";
 
 
@@ -72,10 +73,18 @@ function fmt(ts: string | null) {
 
 function LearnersTable() {
   const fetchLearners = useServerFn(listLearners);
+  const changeRole = useServerFn(setUserRole);
+  const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-learners"],
     queryFn: () => fetchLearners(),
     staleTime: 60_000,
+  });
+
+  // C8 — grant/revoke content roles from the learners table.
+  const roleMutation = useMutation({
+    mutationFn: (args: { userId: string; role: "author" | "reviewer"; grant: boolean }) => changeRole({ data: args }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["admin-learners"] }),
   });
 
   if (isLoading) return <p className="mt-4 font-mono text-xs text-muted-foreground">Loading learners…</p>;
@@ -116,8 +125,23 @@ function LearnersTable() {
                   <span className="ml-2 text-[10px] text-muted-foreground">{r.userId.slice(0, 8)}</span>
                 </td>
                 <td className="px-3 py-2 uppercase tracking-widest text-[10px] text-muted-foreground">
-                  {r.roles.length ? r.roles.join(" · ") : "user"}
+                  <div>{r.roles.length ? r.roles.join(" · ") : "user"}</div>
+                  <div className="mt-1 flex gap-2">
+                    {(["author", "reviewer"] as const).map((role) => (
+                      <button
+                        key={role}
+                        className="underline disabled:opacity-40"
+                        disabled={roleMutation.isPending}
+                        onClick={() =>
+                          roleMutation.mutate({ userId: r.userId, role, grant: !r.roles.includes(role) })
+                        }
+                      >
+                        {r.roles.includes(role) ? `−${role}` : `+${role}`}
+                      </button>
+                    ))}
+                  </div>
                 </td>
+
                 <td className="px-3 py-2 text-right">{r.attempts}</td>
                 <td className="px-3 py-2 text-right">{r.attempts ? `${r.accuracy}%` : "—"}</td>
                 <td className="px-3 py-2 text-right">{r.masteryTracked}</td>

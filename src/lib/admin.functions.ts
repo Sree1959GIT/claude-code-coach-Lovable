@@ -426,14 +426,34 @@ export const submitForReview = createServerFn({ method: "POST" })
 
 export const resolveReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string; status: "approved" | "rejected"; notes?: string | null }) => {
-    if (!input.id) throw new Error("Missing review.");
-    if (input.status !== "approved" && input.status !== "rejected") throw new Error("Invalid decision.");
-    return input;
-  })
+  .inputValidator(
+    (input: {
+      id: string;
+      status: "approved" | "rejected";
+      notes?: string | null;
+      /** C8 — explicit override when the reviewer also authored the item. */
+      allowSelfReview?: boolean;
+    }) => {
+      if (!input.id) throw new Error("Missing review.");
+      if (input.status !== "approved" && input.status !== "rejected") throw new Error("Invalid decision.");
+      return input;
+    },
+  )
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // C8 — reviewer should not be the author of the same item.
+    const { data: existing, error: exErr } = await supabaseAdmin
+      .from("content_reviews")
+      .select("submitted_by")
+      .eq("id", data.id)
+      .single();
+    if (exErr) throw exErr;
+    if (existing?.submitted_by === context.userId && !data.allowSelfReview) {
+      throw new Error("You submitted this item — a different reviewer should decide it.");
+    }
+
     const { data: row, error } = await supabaseAdmin
       .from("content_reviews")
       .update({
@@ -471,6 +491,38 @@ export const resolveReview = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+/**
+ * C8 — grant or revoke content roles. Admins only; the `admin` role itself is
+ * not grantable here to avoid accidental privilege escalation from the UI.
+ */
+export const setUserRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { userId: string; role: "author" | "reviewer" | "pro"; grant: boolean }) => {
+    if (!input.userId) throw new Error("Missing user.");
+    if (!["author", "reviewer", "pro"].includes(input.role)) throw new Error("Role not grantable here.");
+    return input;
+  })
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (data.grant) {
+      const { error } = await (supabaseAdmin as any)
+        .from("user_roles")
+        .upsert({ user_id: data.userId, role: data.role }, { onConflict: "user_id,role" });
+      if (error) throw error;
+    } else {
+      const { error } = await (supabaseAdmin as any)
+        .from("user_roles")
+        .delete()
+        .eq("user_id", data.userId)
+        .eq("role", data.role);
+      if (error) throw error;
+    }
+    return { ok: true };
+  });
+
+
 
 /**
  * Stage 6b sub-task 9 — job run history.

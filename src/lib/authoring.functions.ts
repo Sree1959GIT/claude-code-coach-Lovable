@@ -8,14 +8,28 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function assertAdmin(context: { supabase: any; userId: string }) {
-  const { data: isAdmin, error } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "admin",
-  });
+async function hasRole(context: { supabase: any; userId: string }, role: string) {
+  const { data, error } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: role });
   if (error) throw error;
-  if (!isAdmin) throw new Error("Forbidden");
+  return Boolean(data);
 }
+
+async function assertAdmin(context: { supabase: any; userId: string }) {
+  if (!(await hasRole(context, "admin"))) throw new Error("Forbidden");
+}
+
+/** C8 — authoring is open to admins and users granted the `author` role. */
+async function assertAuthor(context: { supabase: any; userId: string }) {
+  if ((await hasRole(context, "admin")) || (await hasRole(context, "author"))) return;
+  throw new Error("Forbidden");
+}
+
+/** C8 — review decisions are open to admins and users granted `reviewer`. */
+async function assertReviewer(context: { supabase: any; userId: string }) {
+  if ((await hasRole(context, "admin")) || (await hasRole(context, "reviewer"))) return;
+  throw new Error("Forbidden");
+}
+
 
 /* --------------------------- authoring sources --------------------------- */
 
@@ -263,7 +277,7 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => RunInput.parse(input))
   .handler(async ({ data, context }): Promise<AuthoringRunResult> => {
-    await assertAdmin(context);
+    await assertAuthor(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { runAuthoringLoop, norm, diffQuestion, findNearDuplicate, persistAuthoredDraft } = await import(
       "./authoring.server"
@@ -577,7 +591,7 @@ export const listDraftReviews = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => ReviewFilter.parse(input ?? {}))
   .handler(async ({ data, context }): Promise<DraftReviewItem[]> => {
-    await assertAdmin(context);
+    await assertReviewer(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { diffQuestion } = await import("./authoring.server");
 
@@ -759,7 +773,7 @@ export const claimReviewItem = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    await assertAdmin(context);
+    await assertReviewer(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const patch = data.claim
       ? { claimed_by: context.userId, claimed_at: new Date().toISOString() }
@@ -828,7 +842,7 @@ export const updateDraftQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => EditInput.parse(input))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    await assertAdmin(context);
+    await assertReviewer(context);
     if (data.options.filter((o) => o.isCorrect).length !== 1) {
       throw new Error("Exactly one option must be marked correct.");
     }
@@ -882,19 +896,27 @@ export const resolveDraftRevision = createServerFn({ method: "POST" })
         notes: z.string().max(1000).nullable().optional(),
         /** Reviewer-edited content to apply instead of the raw proposal. */
         edits: EditInput.nullable().optional(),
+        /** C8 — explicit override when the reviewer also authored the draft. */
+        allowSelfReview: z.boolean().optional(),
       })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    await assertAdmin(context);
+    await assertReviewer(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: draft, error } = await (supabaseAdmin as any)
       .from("question_drafts")
-      .select("id, base_question_id, payload")
+      .select("id, base_question_id, payload, created_by")
       .eq("id", data.draftId)
       .single();
     if (error) throw error;
+
+    // C8 — reviewer should not be the author of the same item.
+    if (draft.created_by && draft.created_by === context.userId && !data.allowSelfReview) {
+      throw new Error("You authored this draft — a different reviewer should decide it.");
+    }
+
 
     if (data.decision === "approved") {
       const p = data.edits ?? {
@@ -1011,7 +1033,7 @@ export const queueAuthoredDrafts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => QueueDraftsInput.parse(input))
   .handler(async ({ data, context }): Promise<QueueDraftsResult> => {
-    await assertAdmin(context);
+    await assertAuthor(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { norm, findNearDuplicate, persistAuthoredDraft } = await import("./authoring.server");
 

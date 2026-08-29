@@ -61,6 +61,8 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
   const queryClient = useQueryClient();
   const [notes, setNotes] = useState("");
   const [editing, setEditing] = useState(false);
+  // C8 — reviewer = author is discouraged; requires an explicit override.
+  const [selfOverride, setSelfOverride] = useState(false);
   const lockedByOther = item.claimedBy != null && !item.claimedByMe;
 
 
@@ -135,9 +137,12 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
               decision: status,
               notes: notes.trim() || null,
               edits: status === "approved" ? editPayload() : null,
+              allowSelfReview: selfOverride,
             },
           })
-        : decide({ data: { id: item.reviewId, status, notes: notes.trim() || null } }),
+        : decide({
+            data: { id: item.reviewId, status, notes: notes.trim() || null, allowSelfReview: selfOverride },
+          }),
     onSuccess: (_r, status) => {
       toast.success(
         status === "approved"
@@ -389,7 +394,12 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
         >
           Reject
         </button>
+        <label className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <input type="checkbox" checked={selfOverride} onChange={(e) => setSelfOverride(e.target.checked)} />
+          Override_Self_Review
+        </label>
       </div>
+
     </article>
   );
 }
