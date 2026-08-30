@@ -513,6 +513,22 @@ export function AgenticAuthoringPanel() {
 
       </div>
 
+      {/* C9 — gateway failure surfacing with a one-click retry */}
+      {mutation.isError && (
+        <div className="mt-6 border border-destructive px-3 py-2">
+          <p className="font-mono text-[11px] text-destructive">
+            {(mutation.error as Error).message}
+          </p>
+          <button
+            className={`${btn} mt-2`}
+            disabled={mutation.isPending}
+            onClick={() => mutation.mutate(mutation.variables ?? true)}
+          >
+            {mutation.isPending ? "Retrying…" : "Retry_Run"}
+          </button>
+        </div>
+      )}
+
       {/* Run output */}
       {result && (
         <div className="mt-6 border-t border-border pt-4">
@@ -520,6 +536,29 @@ export function AgenticAuthoringPanel() {
             {result.domainTitle} · {result.evidenceCount} evidence passage(s) · {result.drafts.length} drafted ·{" "}
             {result.queued} queued
           </p>
+
+          {result.runId && (
+            <a
+              href={`/traces?runId=${result.runId}`}
+              className="mt-1 inline-block font-mono text-[10px] uppercase tracking-widest underline"
+            >
+              View_Agent_Trace
+            </a>
+          )}
+
+          {result.evidenceCount === 0 && (
+            <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+              No library passages matched — items were written without grounding. Ingest material in the library or add
+              an approved source before publishing.
+            </p>
+          )}
+
+          {result.drafts.length === 0 && (
+            <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+              The loop returned no usable items. Try a narrower focus topic or re-run.
+            </p>
+          )}
+
 
           <ul className="mt-2 flex flex-wrap gap-2">
             {result.steps.map((s, i) => (
