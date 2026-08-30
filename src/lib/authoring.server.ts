@@ -550,7 +550,7 @@ export async function persistAuthoredDraft(
     })
     .select("id")
     .single();
-  if (error) return { questionId: null, error: `Insert failed: ${error.message}` };
+  if (error) return { questionId: null, error: `Insert failed: ${error.message}`, deduped: false };
 
   const { error: optErr } = await supabaseAdmin.from("question_options").insert(
     d.options.map((o, idx) => ({
@@ -564,7 +564,7 @@ export async function persistAuthoredDraft(
   );
   if (optErr) {
     await supabaseAdmin.from("questions").delete().eq("id", inserted.id);
-    return { questionId: null, error: `Options failed: ${optErr.message}` };
+    return { questionId: null, error: `Options failed: ${optErr.message}`, deduped: false };
   }
 
   await supabaseAdmin.from("question_drafts").insert({
@@ -581,17 +581,36 @@ export async function persistAuthoredDraft(
     created_by: input.userId,
   });
 
+  await ensurePendingReview(supabaseAdmin, inserted.id, input.userId, d);
+
+  return { questionId: inserted.id, error: null, deduped: false };
+}
+
+/** C9 — one pending review per question, so retries never fan out the queue. */
+async function ensurePendingReview(
+  supabaseAdmin: any,
+  questionId: string,
+  userId: string,
+  d: PersistDraftInput["draft"],
+): Promise<void> {
+  const { data: existing } = await supabaseAdmin
+    .from("content_reviews")
+    .select("id")
+    .eq("question_id", questionId)
+    .eq("status", "pending")
+    .limit(1);
+  if ((existing ?? []).length > 0) return;
+
   await supabaseAdmin.from("content_reviews").insert({
-    question_id: inserted.id,
+    question_id: questionId,
     status: "pending",
     source: "agentic",
-    submitted_by: input.userId,
+    submitted_by: userId,
     notes: [
       `Agentic draft · reviewer ${d.reviewScore}/100`,
       d.adversaryIssues.length ? `adversary: ${d.adversaryIssues.slice(0, 2).join("; ")}` : "adversary: clean",
       d.citations.length ? `sources: ${d.citations.slice(0, 2).map((c) => c.title).join("; ")}` : "ungrounded",
     ].join(" · "),
   });
-
-  return { questionId: inserted.id, error: null };
 }
+
