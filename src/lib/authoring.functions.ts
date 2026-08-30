@@ -446,7 +446,23 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
     // Edit mode persists a revision proposal only — the live question is untouched
     // until a human accepts the revision in the review workspace.
     if (!data.dryRun && baseQuestion && data.baseQuestionId) {
+      // C9 — idempotent: an identical pending revision proposal is not re-queued.
+      const { data: pendingRevisions } = await (supabaseAdmin as any)
+        .from("question_drafts")
+        .select("id, payload")
+        .eq("base_question_id", data.baseQuestionId)
+        .eq("status", "pending");
+      const alreadyProposed = new Set(
+        ((pendingRevisions ?? []) as any[])
+          .filter((r) => r.payload?.revision === true && typeof r.payload?.stem === "string")
+          .map((r) => norm(r.payload.stem as string)),
+      );
+
       for (const d of result.drafts) {
+        if (alreadyProposed.has(norm(d.stem))) {
+          issues.push("Identical revision proposal is already pending review — not queued again.");
+          continue;
+        }
         const { error: dErr2 } = await (supabaseAdmin as any).from("question_drafts").insert({
           domain_id: domain.id,
           base_question_id: data.baseQuestionId,
@@ -471,12 +487,14 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
           issues.push(`Revision draft failed: ${dErr2.message}`);
           continue;
         }
+        alreadyProposed.add(norm(d.stem));
         queued += 1;
       }
       drafts.forEach((x) => {
         x.questionId = data.baseQuestionId ?? null;
       });
     }
+
 
     if (!data.dryRun && !baseQuestion) {
       let nextSort = Math.max(0, ...(bank ?? []).map((q: any) => q.sort_order ?? 0));
@@ -495,7 +513,7 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
         }
         nextSort += 1;
 
-        const { questionId, error } = await persistAuthoredDraft(supabaseAdmin as any, {
+        const { questionId, error, deduped } = await persistAuthoredDraft(supabaseAdmin as any, {
           domainId: domain.id,
           runId,
           userId: context.userId,
@@ -509,8 +527,13 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
 
         existing.add(norm(d.stem));
         drafts[i]!.questionId = questionId;
+        if (deduped) {
+          issues.push(`Already in the bank — reused existing draft: ${d.stem.slice(0, 60)}…`);
+          continue;
+        }
         queued += 1;
       }
+
     }
 
     await finishRun({
@@ -1068,7 +1091,7 @@ export const queueAuthoredDrafts = createServerFn({ method: "POST" })
         }
       }
       nextSort += 1;
-      const { questionId, error } = await persistAuthoredDraft(supabaseAdmin as any, {
+      const { questionId, error, deduped } = await persistAuthoredDraft(supabaseAdmin as any, {
         domainId: data.domainId,
         runId: data.runId ?? null,
         userId: context.userId,
@@ -1081,7 +1104,13 @@ export const queueAuthoredDrafts = createServerFn({ method: "POST" })
       }
       existing.add(norm(d.stem));
       bankItems.push({ id: questionId, stem: d.stem, domainTitle: "" });
+      if (deduped) {
+        // C9 — idempotent accept: a re-submitted item reuses its existing draft.
+        skipped.push({ stem: d.stem, reason: "Already queued earlier — reused the existing draft" });
+        continue;
+      }
       queued += 1;
+
     }
 
     return { queued, skipped };

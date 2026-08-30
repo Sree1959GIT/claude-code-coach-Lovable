@@ -94,41 +94,82 @@ export function diffQuestion(base: BaseQuestion, proposed: BaseQuestion): FieldD
 
 /* ------------------------------ gateway ------------------------------ */
 
-async function chatJson(system: string, user: string): Promise<unknown> {
-  const apiKey = process.env["LOVABLE_API_KEY"];
-  if (!apiKey) throw new Error("Missing LOVABLE_API_KEY");
-
-  const res = await fetch(GATEWAY_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      response_format: { type: "json_object" },
-    }),
-  });
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    if (res.status === 429) throw new Error("Authoring agents are rate limited. Try again shortly.");
-    if (res.status === 402) throw new Error("AI credits exhausted. Add credits in Lovable settings.");
-    throw new Error(`Authoring call failed: ${res.status} ${body.slice(0, 200)}`);
-  }
-
-  const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-  const content = (json.choices?.[0]?.message?.content ?? "")
-    .replace(/^\s*```(?:json)?/i, "")
-    .replace(/```\s*$/, "")
-    .trim();
-  try {
-    return JSON.parse(content);
-  } catch {
-    throw new Error("An authoring agent returned malformed JSON.");
+/** C9 — typed gateway failure so callers can surface 429/402 precisely. */
+export class GatewayError extends Error {
+  status: number;
+  retryable: boolean;
+  constructor(status: number, message: string, retryable: boolean) {
+    super(message);
+    this.name = "GatewayError";
+    this.status = status;
+    this.retryable = retryable;
   }
 }
+
+const RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function gatewayMessage(status: number, body: string): string {
+  if (status === 429) return "Rate limited by the AI gateway (429). Wait a moment and re-run the loop.";
+  if (status === 402) return "AI credits exhausted (402). Add credits in Lovable settings, then re-run.";
+  return `Authoring call failed: ${status} ${body.slice(0, 200)}`;
+}
+
+/** POST to the gateway with bounded retries on transient failures. */
+async function chatJson(system: string, user: string, attempts = 3): Promise<unknown> {
+  const apiKey = process.env["LOVABLE_API_KEY"];
+  if (!apiKey) throw new GatewayError(0, "Missing LOVABLE_API_KEY", false);
+
+  let lastError: Error = new GatewayError(0, "Authoring gateway unavailable", true);
+
+  for (let i = 0; i < Math.max(1, attempts); i++) {
+    let res: Response | null = null;
+    try {
+      res = await fetch(GATEWAY_URL, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: user },
+          ],
+          response_format: { type: "json_object" },
+        }),
+      });
+    } catch (err) {
+      lastError = new GatewayError(0, err instanceof Error ? err.message : String(err), true);
+    }
+
+    if (res) {
+      if (res.ok) {
+        const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+        const content = (json.choices?.[0]?.message?.content ?? "")
+          .replace(/^\s*```(?:json)?/i, "")
+          .replace(/```\s*$/, "")
+          .trim();
+        try {
+          return JSON.parse(content);
+        } catch {
+          // Malformed JSON is worth one more shot at the model.
+          lastError = new Error("An authoring agent returned malformed JSON.");
+          if (i === attempts - 1) throw lastError;
+          await sleep(400 * (i + 1));
+          continue;
+        }
+      }
+      const body = await res.text().catch(() => "");
+      const retryable = RETRYABLE_STATUS.has(res.status);
+      lastError = new GatewayError(res.status, gatewayMessage(res.status, body), retryable);
+      if (!retryable) throw lastError;
+    }
+
+    if (i < attempts - 1) await sleep(500 * Math.pow(2, i));
+  }
+
+  throw lastError;
+}
+
 
 /* ----------------------------- researcher ----------------------------- */
 
@@ -477,10 +518,25 @@ export type PersistDraftInput = {
 export async function persistAuthoredDraft(
   supabaseAdmin: any,
   input: PersistDraftInput,
-): Promise<{ questionId: string | null; error: string | null }> {
+): Promise<{ questionId: string | null; error: string | null; deduped: boolean }> {
   const d = input.draft;
+
+  // C9 — idempotent write: an identical stem in this domain is never inserted
+  // twice, so a retried or double-submitted run reuses the existing draft.
+  const { data: existingRows } = await supabaseAdmin
+    .from("questions")
+    .select("id, stem")
+    .eq("domain_id", input.domainId)
+    .limit(2000);
+  const match = (existingRows ?? []).find((q: any) => norm(q.stem) === norm(d.stem));
+  if (match) {
+    await ensurePendingReview(supabaseAdmin, match.id, input.userId, d);
+    return { questionId: match.id, error: null, deduped: true };
+  }
+
   const { data: inserted, error } = await supabaseAdmin
     .from("questions")
+
     .insert({
       domain_id: input.domainId,
       scenario: d.scenario,
@@ -494,7 +550,7 @@ export async function persistAuthoredDraft(
     })
     .select("id")
     .single();
-  if (error) return { questionId: null, error: `Insert failed: ${error.message}` };
+  if (error) return { questionId: null, error: `Insert failed: ${error.message}`, deduped: false };
 
   const { error: optErr } = await supabaseAdmin.from("question_options").insert(
     d.options.map((o, idx) => ({
@@ -508,7 +564,7 @@ export async function persistAuthoredDraft(
   );
   if (optErr) {
     await supabaseAdmin.from("questions").delete().eq("id", inserted.id);
-    return { questionId: null, error: `Options failed: ${optErr.message}` };
+    return { questionId: null, error: `Options failed: ${optErr.message}`, deduped: false };
   }
 
   await supabaseAdmin.from("question_drafts").insert({
@@ -525,17 +581,36 @@ export async function persistAuthoredDraft(
     created_by: input.userId,
   });
 
+  await ensurePendingReview(supabaseAdmin, inserted.id, input.userId, d);
+
+  return { questionId: inserted.id, error: null, deduped: false };
+}
+
+/** C9 — one pending review per question, so retries never fan out the queue. */
+async function ensurePendingReview(
+  supabaseAdmin: any,
+  questionId: string,
+  userId: string,
+  d: PersistDraftInput["draft"],
+): Promise<void> {
+  const { data: existing } = await supabaseAdmin
+    .from("content_reviews")
+    .select("id")
+    .eq("question_id", questionId)
+    .eq("status", "pending")
+    .limit(1);
+  if ((existing ?? []).length > 0) return;
+
   await supabaseAdmin.from("content_reviews").insert({
-    question_id: inserted.id,
+    question_id: questionId,
     status: "pending",
     source: "agentic",
-    submitted_by: input.userId,
+    submitted_by: userId,
     notes: [
       `Agentic draft · reviewer ${d.reviewScore}/100`,
       d.adversaryIssues.length ? `adversary: ${d.adversaryIssues.slice(0, 2).join("; ")}` : "adversary: clean",
       d.citations.length ? `sources: ${d.citations.slice(0, 2).map((c) => c.title).join("; ")}` : "ungrounded",
     ].join(" · "),
   });
-
-  return { questionId: inserted.id, error: null };
 }
+
