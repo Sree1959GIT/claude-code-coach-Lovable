@@ -7,6 +7,10 @@ import { fetchAgentRuns, fetchAgentSteps, type AgentRun, type AgentStep } from "
 
 export const Route = createFileRoute("/_authenticated/traces")({
   component: TracesPage,
+  // C9 — deep link from any authored draft: /traces?runId=…
+  validateSearch: (search: Record<string, unknown>): { runId?: string } => ({
+    runId: typeof search["runId"] === "string" ? search["runId"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Agent Traces · Claude Architect Prep" },
@@ -19,6 +23,7 @@ export const Route = createFileRoute("/_authenticated/traces")({
     ],
   }),
 });
+
 
 function ms(v: number | null) {
   if (v == null) return "—";
