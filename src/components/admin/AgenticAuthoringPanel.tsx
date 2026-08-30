@@ -409,8 +409,17 @@ export function AgenticAuthoringPanel() {
           </button>
         </div>
         {sources.length === 0 ? (
-          <p className="mt-3 font-mono text-[11px] text-muted-foreground">No approved sources yet.</p>
-        ) : (
+          <p className="mt-3 border border-border px-3 py-2 font-mono text-[11px] text-muted-foreground">
+            No approved sources yet — the loop will run library-only. Add a source above to let the agents reference
+            external documentation.
+          </p>
+        ) : sources.every((s) => !s.enabled) ? (
+          <p className="mt-3 border border-border px-3 py-2 font-mono text-[11px] text-muted-foreground">
+            Every source is disabled — the loop will run library-only.
+          </p>
+        ) : null}
+        {sources.length === 0 ? null : (
+
           <ul className="mt-3 space-y-1">
             {sources.map((s) => (
               <li key={s.id} className="border border-border px-3 py-1.5 font-mono text-[11px]">
