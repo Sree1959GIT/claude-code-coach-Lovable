@@ -518,10 +518,25 @@ export type PersistDraftInput = {
 export async function persistAuthoredDraft(
   supabaseAdmin: any,
   input: PersistDraftInput,
-): Promise<{ questionId: string | null; error: string | null }> {
+): Promise<{ questionId: string | null; error: string | null; deduped: boolean }> {
   const d = input.draft;
+
+  // C9 — idempotent write: an identical stem in this domain is never inserted
+  // twice, so a retried or double-submitted run reuses the existing draft.
+  const { data: existingRows } = await supabaseAdmin
+    .from("questions")
+    .select("id, stem")
+    .eq("domain_id", input.domainId)
+    .limit(2000);
+  const match = (existingRows ?? []).find((q: any) => norm(q.stem) === norm(d.stem));
+  if (match) {
+    await ensurePendingReview(supabaseAdmin, match.id, input.userId, d);
+    return { questionId: match.id, error: null, deduped: true };
+  }
+
   const { data: inserted, error } = await supabaseAdmin
     .from("questions")
+
     .insert({
       domain_id: input.domainId,
       scenario: d.scenario,
