@@ -1091,7 +1091,7 @@ export const queueAuthoredDrafts = createServerFn({ method: "POST" })
         }
       }
       nextSort += 1;
-      const { questionId, error } = await persistAuthoredDraft(supabaseAdmin as any, {
+      const { questionId, error, deduped } = await persistAuthoredDraft(supabaseAdmin as any, {
         domainId: data.domainId,
         runId: data.runId ?? null,
         userId: context.userId,
@@ -1104,7 +1104,13 @@ export const queueAuthoredDrafts = createServerFn({ method: "POST" })
       }
       existing.add(norm(d.stem));
       bankItems.push({ id: questionId, stem: d.stem, domainTitle: "" });
+      if (deduped) {
+        // C9 — idempotent accept: a re-submitted item reuses its existing draft.
+        skipped.push({ stem: d.stem, reason: "Already queued earlier — reused the existing draft" });
+        continue;
+      }
       queued += 1;
+
     }
 
     return { queued, skipped };
