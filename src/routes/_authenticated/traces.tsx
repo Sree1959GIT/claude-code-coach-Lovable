@@ -191,9 +191,15 @@ function TracesPage() {
     logEvent("page_view", { page: "traces" });
   }, []);
 
-  const [openId, setOpenId] = useState<string | null>(null);
+  const { runId: linkedRunId } = Route.useSearch();
+  const [openId, setOpenId] = useState<string | null>(linkedRunId ?? null);
   const [flaggedOnly, setFlaggedOnly] = useState(false);
   const runsQ = useQuery({ queryKey: ["agent_runs"], queryFn: () => fetchAgentRuns(40) });
+
+  useEffect(() => {
+    if (linkedRunId) setOpenId(linkedRunId);
+  }, [linkedRunId]);
+
 
   const allRuns = runsQ.data ?? [];
   const errored = allRuns.filter((r) => r.status === "error").length;
