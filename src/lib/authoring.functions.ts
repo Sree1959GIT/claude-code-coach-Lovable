@@ -513,7 +513,7 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
         }
         nextSort += 1;
 
-        const { questionId, error } = await persistAuthoredDraft(supabaseAdmin as any, {
+        const { questionId, error, deduped } = await persistAuthoredDraft(supabaseAdmin as any, {
           domainId: domain.id,
           runId,
           userId: context.userId,
@@ -527,8 +527,13 @@ export const runAgenticAuthoring = createServerFn({ method: "POST" })
 
         existing.add(norm(d.stem));
         drafts[i]!.questionId = questionId;
+        if (deduped) {
+          issues.push(`Already in the bank — reused existing draft: ${d.stem.slice(0, 60)}…`);
+          continue;
+        }
         queued += 1;
       }
+
     }
 
     await finishRun({
