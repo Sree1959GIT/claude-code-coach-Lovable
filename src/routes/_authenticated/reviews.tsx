@@ -348,11 +348,13 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
       {item.runId && (
         <Link
           to="/traces"
+          search={{ runId: item.runId }}
           className="mt-1 inline-block font-mono text-[10px] uppercase tracking-widest underline"
         >
           View_Agent_Trace
         </Link>
       )}
+
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <input
