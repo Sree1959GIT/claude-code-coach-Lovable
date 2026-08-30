@@ -632,6 +632,12 @@ export function AgenticAuthoringPanel() {
                   <span>reviewer {d.reviewScore}/100</span>
                   <span>{d.isRevision ? "revision" : "new"}</span>
                   <span>{d.questionId ? "queued for review" : "preview"}</span>
+                  {result.runId && (
+                    <a href={`/traces?runId=${result.runId}`} className="underline">
+                      Trace
+                    </a>
+                  )}
+
                   {d.duplicate && (
                     <span className="text-destructive">
                       dup {d.duplicate.similarity} · {d.duplicate.domainTitle}
