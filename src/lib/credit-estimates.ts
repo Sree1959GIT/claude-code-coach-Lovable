@@ -38,7 +38,7 @@ export const STAGES: Stage[] = [
       { id: "s1-dark", label: "Light + dark mode", hint: "Token set + persisted toggle", low: 10, high: 20, default: true },
       { id: "s1-google", label: "Google OAuth", hint: "Provider config + callback handling", low: 10, high: 20, default: true },
       { id: "s1-analytics", label: "Event analytics", hint: "Page views and CTA tracking", low: 10, high: 25, default: true },
-      { id: "s1-copy", label: "Custom illustrations / generated art", hint: "Image generation passes", low: 15, high: 35 },
+      { id: "s1-copy", label: "Custom illustrations / generated art", hint: "Image generation passes", low: 15, high: 35, default: true },
     ],
   },
   {
