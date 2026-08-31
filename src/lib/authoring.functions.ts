@@ -359,22 +359,23 @@ export const testAuthoringSource = createServerFn({ method: "POST" })
     let status = "no url configured";
 
     if (target) {
-      const started = Date.now();
+      const { fetchWithCredentials, loadCredential } = await import("./source-fetch.server");
       try {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 10_000);
-        let res: Response;
-        try {
-          res = await fetch(target, { method: "HEAD", redirect: "follow", signal: controller.signal });
-          if (res.status === 405 || res.status === 501) {
-            res = await fetch(target, { method: "GET", redirect: "follow", signal: controller.signal });
-          }
-        } finally {
-          clearTimeout(timer);
+        const credential = await loadCredential(data.id);
+        let res = await fetchWithCredentials(target, { credential, method: "HEAD", maxBytes: 1 });
+        if (res.status === 405 || res.status === 501) {
+          res = await fetchWithCredentials(target, { credential, maxBytes: 1000 });
         }
         ok = res.ok;
-        const authNote = res.status === 401 || res.status === 403 ? " (authentication required)" : "";
-        status = `HTTP ${res.status}${authNote} · ${Date.now() - started}ms`;
+        const authNote =
+          res.status === 401 || res.status === 403
+            ? res.authenticated
+              ? " (credential rejected)"
+              : " (authentication required)"
+            : res.authenticated
+              ? " (authenticated)"
+              : "";
+        status = `HTTP ${res.status}${authNote} · ${res.durationMs}ms`;
       } catch (e) {
         ok = false;
         status = `unreachable: ${(e as Error).message.slice(0, 120)}`;
