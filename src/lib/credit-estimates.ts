@@ -69,8 +69,7 @@ export const STAGES: Stage[] = [
       { id: "s3-tts", label: "Text-to-speech narration", hint: "Gateway TTS + audio playback", low: 25, high: 45, default: true },
       { id: "s3-live", label: "Live two-way voice", hint: "Continuous mic + turn handling", low: 30, high: 60, default: true },
       { id: "s3-highlight", label: "Highlight sync while speaking", hint: "Marker parsing + blink states", low: 20, high: 40, default: true },
-      { id: "s3-video", label: "Video reference modal", hint: "Curated links + timestamped playback", low: 20, high: 45 },
-      { id: "s3-custom-tts", label: "Self-hosted TTS model (Inflect)", hint: "External endpoint + fallback path", low: 40, high: 90 },
+      { id: "s3-video", label: "Video reference modal", hint: "Curated links + timestamped playback", low: 20, high: 45, default: true },
     ],
   },
   {
