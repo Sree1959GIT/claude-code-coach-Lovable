@@ -27,7 +27,8 @@ export const Route = createFileRoute("/_authenticated/estimator")({
   }),
 });
 
-const STORAGE_KEY = "cca.estimator.v1";
+// v2 — reset saved selections so the refreshed "already shipped" defaults apply.
+const STORAGE_KEY = "cca.estimator.v2";
 
 const STATUS_LABEL: Record<string, string> = {
   done: "Shipped",
