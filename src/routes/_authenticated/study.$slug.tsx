@@ -1,9 +1,10 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { PanelLeftClose, PanelLeftOpen, UserRound } from "lucide-react";
+import { Code2, PanelLeftClose, PanelLeftOpen, UserRound } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { MentorCanvas, type HighlightTarget } from "@/components/MentorCanvas";
+import { FloatingWindow } from "@/components/FloatingWindow";
 import { useSession } from "@/hooks/useSession";
 import {
   fetchDomainBySlug,
@@ -50,6 +51,7 @@ function DomainRunner() {
   const [mentorOpen, setMentorOpen] = useState(false);
   const [mentorWidth, setMentorWidth] = useState(400);
   const [navOpen, setNavOpen] = useState(true);
+  const [canvasOpen, setCanvasOpen] = useState(false);
   const [focus, setFocus] = useState<HighlightTarget>(null);
   const draggingRef = useRef(false);
 
@@ -201,6 +203,13 @@ function DomainRunner() {
             >
               <UserRound className="h-4 w-4" /> Ask_Mentor
             </button>
+            <button
+              onClick={() => setCanvasOpen(true)}
+              className="inline-flex items-center gap-2 border-2 border-border px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-widest hover:border-primary"
+            >
+              <Code2 className="h-4 w-4" /> Study_Canvas
+            </button>
+
             <Link
               to="/study"
               className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
@@ -373,6 +382,21 @@ function DomainRunner() {
           </>
         )}
       </div>
+
+      {/* Phase D1 — non-modal floating study canvas (coexists with the mentor drawer) */}
+      <FloatingWindow
+        open={canvasOpen}
+        title="Study_Canvas"
+        subtitle="Code_Workspace"
+        defaultRect={{ x: 120, y: 140, width: 600, height: 420 }}
+        onClose={() => setCanvasOpen(false)}
+      >
+        <div className="p-4 font-mono text-[11px] leading-relaxed text-muted-foreground">
+          Canvas shell ready. Drag the title bar to move, pull the right, bottom or
+          corner edge to resize. Code tabs and execution arrive in the next sub-tasks.
+        </div>
+      </FloatingWindow>
     </div>
+
   );
 }
