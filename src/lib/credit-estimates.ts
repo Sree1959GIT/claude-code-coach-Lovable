@@ -53,7 +53,7 @@ export const STAGES: Stage[] = [
       { id: "s2-schema", label: "Question bank schema + seed", hint: "Domains, questions, options, attempts", low: 20, high: 35, default: true },
       { id: "s2-runner", label: "Exam-anatomy runner", hint: "Scenario layout, instant feedback", low: 25, high: 45, default: true },
       { id: "s2-charts", label: "Charts dashboard", hint: "Accuracy, cadence, domain heatmap", low: 20, high: 40, default: true },
-      { id: "s2-import", label: "Bulk question import tooling", hint: "CSV/JSON ingestion + validation", low: 25, high: 50 },
+      { id: "s2-import", label: "Bulk question import tooling", hint: "CSV/JSON ingestion + validation", low: 25, high: 50, default: true },
     ],
   },
   {
