@@ -56,6 +56,9 @@ export function AgenticAuthoringPanel() {
   const removeSource = useServerFn(deleteAuthoringSource);
   const testSource = useServerFn(testAuthoringSource);
   const editSource = useServerFn(updateAuthoringSource);
+  const saveCredential = useServerFn(setSourceCredential);
+  const removeCredential = useServerFn(clearSourceCredential);
+  const ingestGated = useServerFn(ingestSourceUrl);
   const queryClient = useQueryClient();
 
   const { data: domains = [] } = useQuery({ queryKey: ["domains-list"], queryFn: fetchDomains, staleTime: 300_000 });
