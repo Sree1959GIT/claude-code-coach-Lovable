@@ -546,6 +546,91 @@ export function AgenticAuthoringPanel() {
                   </div>
                 )}
 
+                {credId === s.id && (
+                  <div className="mt-2 space-y-2 border-t border-border pt-2">
+                    <p className="text-muted-foreground">
+                      Credentials are stored server-side and never returned to the browser.
+                      {s.hasCredential
+                        ? ` Current: ${s.authType}${s.credentialUpdatedAt ? ` · updated ${new Date(s.credentialUpdatedAt).toLocaleString()}` : ""}.`
+                        : " No credential stored."}
+                    </p>
+                    <div className="flex flex-wrap items-end gap-2">
+                      <select
+                        value={credDraft.authType}
+                        onChange={(e) =>
+                          setCredDraft((p) => ({ ...p, authType: e.target.value as AuthType }))
+                        }
+                        className="border border-border bg-background px-2 py-1 font-mono text-xs text-foreground"
+                      >
+                        <option value="bearer">bearer token</option>
+                        <option value="basic">basic auth</option>
+                        <option value="header">custom header</option>
+                        <option value="cookie">cookie</option>
+                        <option value="none">none</option>
+                      </select>
+                      {credDraft.authType === "header" && (
+                        <input
+                          value={credDraft.headerName}
+                          onChange={(e) => setCredDraft((p) => ({ ...p, headerName: e.target.value }))}
+                          placeholder="Header name"
+                          className="border border-border bg-background px-2 py-1 font-mono text-xs text-foreground"
+                        />
+                      )}
+                      {credDraft.authType === "basic" && (
+                        <input
+                          value={credDraft.username}
+                          onChange={(e) => setCredDraft((p) => ({ ...p, username: e.target.value }))}
+                          placeholder="Username"
+                          className="border border-border bg-background px-2 py-1 font-mono text-xs text-foreground"
+                        />
+                      )}
+                      {credDraft.authType !== "none" && (
+                        <input
+                          type="password"
+                          autoComplete="new-password"
+                          value={credDraft.secretValue}
+                          onChange={(e) => setCredDraft((p) => ({ ...p, secretValue: e.target.value }))}
+                          placeholder={s.hasCredential ? "Secret (leave blank to keep)" : "Secret value"}
+                          className="min-w-[14rem] flex-1 border border-border bg-background px-2 py-1 font-mono text-xs text-foreground"
+                        />
+                      )}
+                      <button
+                        className={btn}
+                        disabled={credentialMutation.isPending}
+                        onClick={() => credentialMutation.mutate()}
+                      >
+                        {credentialMutation.isPending ? "Saving…" : "Save_Credential"}
+                      </button>
+                      {s.hasCredential && (
+                        <button
+                          className={btn}
+                          disabled={clearCredentialMutation.isPending}
+                          onClick={() => clearCredentialMutation.mutate(s.id)}
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-end gap-2">
+                      <input
+                        value={ingestUrl}
+                        onChange={(e) => setIngestUrl(e.target.value)}
+                        placeholder="https://gated.example.com/lesson"
+                        className="min-w-[18rem] flex-1 border border-border bg-background px-2 py-1 font-mono text-xs text-foreground"
+                      />
+                      <button
+                        className={btn}
+                        disabled={!ingestUrl.trim() || gatedIngestMutation.isPending}
+                        onClick={() => gatedIngestMutation.mutate(s.id)}
+                      >
+                        {gatedIngestMutation.isPending ? "Ingesting…" : "Ingest_URL"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+
+
                 {editingId === s.id && (
                   <div className="mt-2 flex flex-wrap items-end gap-2 border-t border-border pt-2">
                     <input
