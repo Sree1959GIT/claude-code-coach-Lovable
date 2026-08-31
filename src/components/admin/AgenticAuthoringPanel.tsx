@@ -85,6 +85,16 @@ export function AgenticAuthoringPanel() {
     notes: "",
   });
   const [testingId, setTestingId] = useState<string | null>(null);
+  // G3 — credentialed access to gated sources
+  const [credId, setCredId] = useState<string | null>(null);
+  const [credDraft, setCredDraft] = useState<{
+    authType: AuthType;
+    headerName: string;
+    username: string;
+    secretValue: string;
+  }>({ authType: "bearer", headerName: "", username: "", secretValue: "" });
+  const [ingestUrl, setIngestUrl] = useState("");
+
 
 
   const { data: questions = [] } = useQuery({
