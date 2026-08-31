@@ -27,7 +27,8 @@ export const Route = createFileRoute("/_authenticated/estimator")({
   }),
 });
 
-const STORAGE_KEY = "cca.estimator.v1";
+// v2 — reset saved selections so the refreshed "already shipped" defaults apply.
+const STORAGE_KEY = "cca.estimator.v2";
 
 const STATUS_LABEL: Record<string, string> = {
   done: "Shipped",
@@ -86,14 +87,25 @@ function EstimatorPage() {
     [selected, complexity, iterations],
   );
 
-  const total = useMemo(() => {
-    return perStage
-      .filter(({ stage }) => includeDone || stage.status !== "done")
-      .reduce(
+  const split = useMemo(() => {
+    const sum = (pred: (s: (typeof perStage)[number]) => boolean) =>
+      perStage.filter(pred).reduce(
         (acc, { est }) => ({ low: acc.low + est.low, high: acc.high + est.high }),
         { low: 0, high: 0 },
       );
-  }, [perStage, includeDone]);
+    return {
+      shipped: sum(({ stage }) => stage.status === "done"),
+      remaining: sum(({ stage }) => stage.status !== "done"),
+    };
+  }, [perStage]);
+
+  const total = includeDone
+    ? {
+        low: split.shipped.low + split.remaining.low,
+        high: split.shipped.high + split.remaining.high,
+      }
+    : split.remaining;
+
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -187,7 +199,12 @@ function EstimatorPage() {
                   credits
                 </span>
               </p>
+              <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Shipped so far {split.shipped.low}–{split.shipped.high} · Remaining{" "}
+                {split.remaining.low}–{split.remaining.high}
+              </p>
             </div>
+
             <label className="flex cursor-pointer items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               <input
                 type="checkbox"
