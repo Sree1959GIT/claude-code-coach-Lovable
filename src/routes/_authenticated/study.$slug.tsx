@@ -201,6 +201,13 @@ function DomainRunner() {
             >
               <UserRound className="h-4 w-4" /> Ask_Mentor
             </button>
+            <button
+              onClick={() => setCanvasOpen(true)}
+              className="inline-flex items-center gap-2 border-2 border-border px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-widest hover:border-primary"
+            >
+              <Code2 className="h-4 w-4" /> Study_Canvas
+            </button>
+
             <Link
               to="/study"
               className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
