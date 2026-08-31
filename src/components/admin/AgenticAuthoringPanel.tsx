@@ -10,16 +10,21 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
   addAuthoringSource,
+  clearSourceCredential,
   deleteAuthoringSource,
+  ingestSourceUrl,
   listAuthoringSources,
   queueAuthoredDrafts,
   runAgenticAuthoring,
   setAuthoringSourceEnabled,
+  setSourceCredential,
   testAuthoringSource,
   updateAuthoringSource,
   type AuthoringRunResult,
   type AuthoringSource,
 } from "@/lib/authoring.functions";
+
+type AuthType = "none" | "bearer" | "header" | "basic" | "cookie";
 
 
 const btn =
