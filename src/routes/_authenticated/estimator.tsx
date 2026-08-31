@@ -199,7 +199,12 @@ function EstimatorPage() {
                   credits
                 </span>
               </p>
+              <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Shipped so far {split.shipped.low}–{split.shipped.high} · Remaining{" "}
+                {split.remaining.low}–{split.remaining.high}
+              </p>
             </div>
+
             <label className="flex cursor-pointer items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               <input
                 type="checkbox"
