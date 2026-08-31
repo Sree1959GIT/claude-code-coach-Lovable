@@ -514,6 +514,12 @@ export function AgenticAuthoringPanel() {
                   >
                     {testMutation.isPending && testingId === s.id ? "Testing…" : "Test_Fetch"}
                   </button>
+                  <button
+                    className="underline"
+                    onClick={() => (credId === s.id ? setCredId(null) : startCredential(s))}
+                  >
+                    {credId === s.id ? "Close_Auth" : s.hasCredential ? "Auth ✓" : "Auth"}
+                  </button>
                   <button className="underline" onClick={() => (editingId === s.id ? setEditingId(null) : startEdit(s))}>
                     {editingId === s.id ? "Cancel" : "Edit"}
                   </button>
