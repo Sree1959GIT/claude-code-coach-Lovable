@@ -382,6 +382,21 @@ function DomainRunner() {
           </>
         )}
       </div>
+
+      {/* Phase D1 — non-modal floating study canvas (coexists with the mentor drawer) */}
+      <FloatingWindow
+        open={canvasOpen}
+        title="Study_Canvas"
+        subtitle="Code_Workspace"
+        defaultRect={{ x: 120, y: 140, width: 600, height: 420 }}
+        onClose={() => setCanvasOpen(false)}
+      >
+        <div className="p-4 font-mono text-[11px] leading-relaxed text-muted-foreground">
+          Canvas shell ready. Drag the title bar to move, pull the right, bottom or
+          corner edge to resize. Code tabs and execution arrive in the next sub-tasks.
+        </div>
+      </FloatingWindow>
     </div>
+
   );
 }
