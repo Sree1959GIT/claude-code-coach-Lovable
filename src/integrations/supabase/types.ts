@@ -333,6 +333,50 @@ export type Database = {
         }
         Relationships: []
       }
+      authoring_source_credentials: {
+        Row: {
+          auth_type: string
+          created_at: string
+          header_name: string | null
+          id: string
+          secret_value: string | null
+          source_id: string
+          updated_at: string
+          updated_by: string | null
+          username: string | null
+        }
+        Insert: {
+          auth_type?: string
+          created_at?: string
+          header_name?: string | null
+          id?: string
+          secret_value?: string | null
+          source_id: string
+          updated_at?: string
+          updated_by?: string | null
+          username?: string | null
+        }
+        Update: {
+          auth_type?: string
+          created_at?: string
+          header_name?: string | null
+          id?: string
+          secret_value?: string | null
+          source_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "authoring_source_credentials_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: true
+            referencedRelation: "authoring_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       authoring_sources: {
         Row: {
           created_at: string
@@ -345,6 +389,7 @@ export type Database = {
           last_checked_at: string | null
           last_status: string | null
           notes: string | null
+          requires_auth: boolean
           subject: string
           updated_at: string
           url: string | null
@@ -360,6 +405,7 @@ export type Database = {
           last_checked_at?: string | null
           last_status?: string | null
           notes?: string | null
+          requires_auth?: boolean
           subject?: string
           updated_at?: string
           url?: string | null
@@ -375,6 +421,7 @@ export type Database = {
           last_checked_at?: string | null
           last_status?: string | null
           notes?: string | null
+          requires_auth?: boolean
           subject?: string
           updated_at?: string
           url?: string | null
