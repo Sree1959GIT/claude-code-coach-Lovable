@@ -87,7 +87,6 @@ function EstimatorPage() {
     [selected, complexity, iterations],
   );
 
-  const total = useMemo(() => {
   const split = useMemo(() => {
     const sum = (pred: (s: (typeof perStage)[number]) => boolean) =>
       perStage.filter(pred).reduce(
