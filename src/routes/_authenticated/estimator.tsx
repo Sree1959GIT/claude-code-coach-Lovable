@@ -88,13 +88,25 @@ function EstimatorPage() {
   );
 
   const total = useMemo(() => {
-    return perStage
-      .filter(({ stage }) => includeDone || stage.status !== "done")
-      .reduce(
+  const split = useMemo(() => {
+    const sum = (pred: (s: (typeof perStage)[number]) => boolean) =>
+      perStage.filter(pred).reduce(
         (acc, { est }) => ({ low: acc.low + est.low, high: acc.high + est.high }),
         { low: 0, high: 0 },
       );
-  }, [perStage, includeDone]);
+    return {
+      shipped: sum(({ stage }) => stage.status === "done"),
+      remaining: sum(({ stage }) => stage.status !== "done"),
+    };
+  }, [perStage]);
+
+  const total = includeDone
+    ? {
+        low: split.shipped.low + split.remaining.low,
+        high: split.shipped.high + split.remaining.high,
+      }
+    : split.remaining;
+
 
   function toggle(id: string) {
     setSelected((prev) => {
