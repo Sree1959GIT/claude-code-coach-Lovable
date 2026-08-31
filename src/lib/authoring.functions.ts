@@ -45,6 +45,10 @@ export type AuthoringSource = {
   lastCheckedAt: string | null;
   lastStatus: string | null;
   createdAt: string;
+  /** G3 — credential state. The secret itself is never returned. */
+  authType: "none" | "bearer" | "header" | "basic" | "cookie";
+  hasCredential: boolean;
+  credentialUpdatedAt: string | null;
 };
 
 export const listAuthoringSources = createServerFn({ method: "GET" })
@@ -58,19 +62,180 @@ export const listAuthoringSources = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) throw error;
-    return (data ?? []).map((s: any) => ({
-      id: s.id,
-      label: s.label,
-      host: s.host,
-      url: s.url ?? null,
-      subject: s.subject,
-      domainId: s.domain_id ?? null,
-      notes: s.notes ?? null,
-      enabled: s.enabled,
-      lastCheckedAt: s.last_checked_at ?? null,
-      lastStatus: s.last_status ?? null,
-      createdAt: s.created_at,
-    }));
+
+    const ids = (data ?? []).map((s: any) => s.id);
+    const credMap = new Map<string, { authType: string; hasSecret: boolean; updatedAt: string }>();
+    if (ids.length) {
+      const { data: creds } = await (supabaseAdmin as any)
+        .from("authoring_source_credentials")
+        .select("source_id, auth_type, secret_value, updated_at")
+        .in("source_id", ids);
+      for (const c of creds ?? []) {
+        credMap.set(c.source_id, {
+          authType: c.auth_type,
+          hasSecret: Boolean(c.secret_value),
+          updatedAt: c.updated_at,
+        });
+      }
+    }
+
+    return (data ?? []).map((s: any) => {
+      const cred = credMap.get(s.id);
+      return {
+        id: s.id,
+        label: s.label,
+        host: s.host,
+        url: s.url ?? null,
+        subject: s.subject,
+        domainId: s.domain_id ?? null,
+        notes: s.notes ?? null,
+        enabled: s.enabled,
+        lastCheckedAt: s.last_checked_at ?? null,
+        lastStatus: s.last_status ?? null,
+        createdAt: s.created_at,
+        authType: (cred?.authType ?? "none") as AuthoringSource["authType"],
+        hasCredential: Boolean(cred?.hasSecret),
+        credentialUpdatedAt: cred?.updatedAt ?? null,
+      };
+    });
+  });
+
+/* ------------------- G3: credentialed access to sources ------------------- */
+
+const CredentialInput = z.object({
+  sourceId: z.string().uuid(),
+  authType: z.enum(["none", "bearer", "header", "basic", "cookie"]),
+  headerName: z.string().max(80).nullable().optional(),
+  username: z.string().max(160).nullable().optional(),
+  /** Write-only. Omit to keep the stored secret unchanged. */
+  secretValue: z.string().max(8000).nullable().optional(),
+});
+
+/** Store or update the credential used to fetch a gated source. */
+export const setSourceCredential = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => CredentialInput.parse(input))
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    await assertAdmin(context);
+    if (data.authType === "header" && !data.headerName?.trim()) {
+      throw new Error("A header name is required for custom-header auth");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: existing } = await (supabaseAdmin as any)
+      .from("authoring_source_credentials")
+      .select("id, secret_value")
+      .eq("source_id", data.sourceId)
+      .maybeSingle();
+
+    const secret =
+      data.secretValue === undefined || data.secretValue === null || data.secretValue === ""
+        ? (existing?.secret_value ?? null)
+        : data.secretValue;
+
+    if (data.authType !== "none" && !secret) {
+      throw new Error("A secret value is required for this authentication type");
+    }
+
+    const row = {
+      source_id: data.sourceId,
+      auth_type: data.authType,
+      header_name: data.headerName?.trim() || null,
+      username: data.username?.trim() || null,
+      secret_value: data.authType === "none" ? null : secret,
+      updated_by: context.userId,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = existing
+      ? await (supabaseAdmin as any)
+          .from("authoring_source_credentials")
+          .update(row)
+          .eq("id", existing.id)
+      : await (supabaseAdmin as any).from("authoring_source_credentials").insert(row);
+    if (error) throw error;
+
+    await (supabaseAdmin as any)
+      .from("authoring_sources")
+      .update({ requires_auth: data.authType !== "none" })
+      .eq("id", data.sourceId);
+
+    return { ok: true };
+  });
+
+/** Remove a stored credential entirely. */
+export const clearSourceCredential = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ sourceId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any)
+      .from("authoring_source_credentials")
+      .delete()
+      .eq("source_id", data.sourceId);
+    if (error) throw error;
+    await (supabaseAdmin as any)
+      .from("authoring_sources")
+      .update({ requires_auth: false })
+      .eq("id", data.sourceId);
+    return { ok: true };
+  });
+
+/**
+ * G3 — fetch a (possibly gated) URL with the stored credential and ingest the
+ * readable text into the RAG library.
+ */
+export const ingestSourceUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        sourceId: z.string().uuid().nullable().optional(),
+        url: z.string().url(),
+        title: z.string().max(200).nullable().optional(),
+        tags: z.array(z.string().max(60)).max(20).default([]),
+        force: z.boolean().default(false),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { fetchWithCredentials, htmlToText, extractTitle, loadCredential } = await import(
+      "./source-fetch.server"
+    );
+    const credential = data.sourceId ? await loadCredential(data.sourceId) : undefined;
+    const res = await fetchWithCredentials(data.url, credential !== undefined ? { credential } : {});
+
+    if (!res.ok) {
+      const hint =
+        res.status === 401 || res.status === 403
+          ? " — the stored credential was rejected or is missing."
+          : "";
+      throw new Error(`Fetch failed: HTTP ${res.status} ${res.statusText}${hint}`);
+    }
+
+    const text = res.contentType.includes("html") ? htmlToText(res.body) : res.body.trim();
+    if (text.length < 200) throw new Error("Fetched page had too little readable text to ingest");
+
+    const { ingestOne } = await import("./ingest.server");
+    const host = new URL(data.url).host;
+    const result = await ingestOne({
+      title: data.title?.trim() || extractTitle(res.body, data.url),
+      source: host,
+      url: data.url,
+      kind: "doc",
+      tags: Array.from(new Set([...data.tags, "authenticated-fetch"])),
+      content: text,
+      force: data.force,
+    });
+
+    return {
+      ...result,
+      authenticated: res.authenticated,
+      chars: text.length,
+      status: `HTTP ${res.status} · ${res.durationMs}ms`,
+    };
   });
 
 
