@@ -257,6 +257,63 @@ export function AgenticAuthoringPanel() {
     onError: (e) => toast.error((e as Error).message),
   });
 
+  // G3 — credential save / clear / gated ingest
+  const credentialMutation = useMutation({
+    mutationFn: () =>
+      saveCredential({
+        data: {
+          sourceId: credId!,
+          authType: credDraft.authType,
+          headerName: credDraft.headerName.trim() || null,
+          username: credDraft.username.trim() || null,
+          secretValue: credDraft.secretValue || null,
+        },
+      }),
+    onSuccess: () => {
+      setCredDraft((p) => ({ ...p, secretValue: "" }));
+      toast.success("Credential saved");
+      void queryClient.invalidateQueries({ queryKey: ["authoring-sources"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const clearCredentialMutation = useMutation({
+    mutationFn: (sourceId: string) => removeCredential({ data: { sourceId } }),
+    onSuccess: () => {
+      toast.success("Credential removed");
+      void queryClient.invalidateQueries({ queryKey: ["authoring-sources"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const gatedIngestMutation = useMutation({
+    mutationFn: (sourceId: string) =>
+      ingestGated({ data: { sourceId, url: ingestUrl.trim(), tags: [], force: false } }),
+    onSuccess: (res) => {
+      toast.success(
+        res.skipped
+          ? `Already current — ${res.status}`
+          : `Ingested ${res.chunkCount} chunk(s)${res.authenticated ? " (authenticated)" : ""} — ${res.status}`,
+      );
+      setIngestUrl("");
+      void queryClient.invalidateQueries({ queryKey: ["library-docs"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  function startCredential(s: AuthoringSource) {
+    setCredId(s.id);
+    setIngestUrl(s.url ?? `https://${s.host}/`);
+    setCredDraft({
+      authType: s.authType === "none" ? "bearer" : s.authType,
+      headerName: "",
+      username: "",
+      secretValue: "",
+    });
+  }
+
+
+
   function startEdit(s: AuthoringSource) {
     setEditingId(s.id);
     setEditDraft({
