@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Code2, PanelLeftClose, PanelLeftOpen, UserRound } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { MentorCanvas, type HighlightTarget } from "@/components/MentorCanvas";
-import { FloatingWindow } from "@/components/FloatingWindow";
+import { FloatingWindow, type WindowRect } from "@/components/FloatingWindow";
 import { useSession } from "@/hooks/useSession";
 import {
   fetchDomainBySlug,
