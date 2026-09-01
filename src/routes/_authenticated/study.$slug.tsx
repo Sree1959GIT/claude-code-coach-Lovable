@@ -75,6 +75,7 @@ function DomainRunner() {
   const [mentorWidth, setMentorWidth] = useState(400);
   const [navOpen, setNavOpen] = useState(true);
   const [canvasOpen, setCanvasOpen] = useState(false);
+  const [canvasRect, setCanvasRect] = useState<WindowRect>(loadCanvasRect);
   const [focus, setFocus] = useState<HighlightTarget>(null);
   const draggingRef = useRef(false);
 
