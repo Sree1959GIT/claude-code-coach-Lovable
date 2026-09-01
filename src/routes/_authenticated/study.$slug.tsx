@@ -27,6 +27,29 @@ export const Route = createFileRoute("/_authenticated/study/$slug")({
 const MIN_MENTOR_W = 300;
 const MAX_MENTOR_W = 720;
 
+// D2 — persist floating window geometry for the lifetime of the browser tab.
+const CANVAS_RECT_KEY = "study_canvas_rect";
+const DEFAULT_CANVAS_RECT: WindowRect = { x: 120, y: 140, width: 600, height: 420 };
+
+function loadCanvasRect(): WindowRect {
+  if (typeof window === "undefined") return DEFAULT_CANVAS_RECT;
+  try {
+    const raw = sessionStorage.getItem(CANVAS_RECT_KEY);
+    if (!raw) return DEFAULT_CANVAS_RECT;
+    const p = JSON.parse(raw) as Partial<WindowRect>;
+    if (
+      typeof p.x === "number" && typeof p.y === "number" &&
+      typeof p.width === "number" && typeof p.height === "number" &&
+      p.width > 0 && p.height > 0
+    ) {
+      return { x: p.x, y: p.y, width: p.width, height: p.height };
+    }
+  } catch {
+    // ignore malformed state
+  }
+  return DEFAULT_CANVAS_RECT;
+}
+
 function DomainRunner() {
   const { slug } = Route.useParams();
   const { user } = useSession();
