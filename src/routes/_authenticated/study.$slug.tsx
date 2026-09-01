@@ -412,7 +412,15 @@ function DomainRunner() {
         open={canvasOpen}
         title="Study_Canvas"
         subtitle="Code_Workspace"
-        defaultRect={{ x: 120, y: 140, width: 600, height: 420 }}
+        rect={canvasRect}
+        onRectChange={(r) => {
+          setCanvasRect(r);
+          try {
+            sessionStorage.setItem(CANVAS_RECT_KEY, JSON.stringify(r));
+          } catch {
+            // storage unavailable — geometry persists in memory only
+          }
+        }}
         onClose={() => setCanvasOpen(false)}
       >
         <div className="p-4 font-mono text-[11px] leading-relaxed text-muted-foreground">
