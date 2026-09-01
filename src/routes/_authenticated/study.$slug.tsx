@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Code2, PanelLeftClose, PanelLeftOpen, UserRound } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { MentorCanvas, type HighlightTarget } from "@/components/MentorCanvas";
-import { FloatingWindow } from "@/components/FloatingWindow";
+import { FloatingWindow, type WindowRect } from "@/components/FloatingWindow";
 import { useSession } from "@/hooks/useSession";
 import {
   fetchDomainBySlug,
@@ -26,6 +26,29 @@ export const Route = createFileRoute("/_authenticated/study/$slug")({
 
 const MIN_MENTOR_W = 300;
 const MAX_MENTOR_W = 720;
+
+// D2 — persist floating window geometry for the lifetime of the browser tab.
+const CANVAS_RECT_KEY = "study_canvas_rect";
+const DEFAULT_CANVAS_RECT: WindowRect = { x: 120, y: 140, width: 600, height: 420 };
+
+function loadCanvasRect(): WindowRect {
+  if (typeof window === "undefined") return DEFAULT_CANVAS_RECT;
+  try {
+    const raw = sessionStorage.getItem(CANVAS_RECT_KEY);
+    if (!raw) return DEFAULT_CANVAS_RECT;
+    const p = JSON.parse(raw) as Partial<WindowRect>;
+    if (
+      typeof p.x === "number" && typeof p.y === "number" &&
+      typeof p.width === "number" && typeof p.height === "number" &&
+      p.width > 0 && p.height > 0
+    ) {
+      return { x: p.x, y: p.y, width: p.width, height: p.height };
+    }
+  } catch {
+    // ignore malformed state
+  }
+  return DEFAULT_CANVAS_RECT;
+}
 
 function DomainRunner() {
   const { slug } = Route.useParams();
@@ -52,6 +75,7 @@ function DomainRunner() {
   const [mentorWidth, setMentorWidth] = useState(400);
   const [navOpen, setNavOpen] = useState(true);
   const [canvasOpen, setCanvasOpen] = useState(false);
+  const [canvasRect, setCanvasRect] = useState<WindowRect>(loadCanvasRect);
   const [focus, setFocus] = useState<HighlightTarget>(null);
   const draggingRef = useRef(false);
 
@@ -388,7 +412,15 @@ function DomainRunner() {
         open={canvasOpen}
         title="Study_Canvas"
         subtitle="Code_Workspace"
-        defaultRect={{ x: 120, y: 140, width: 600, height: 420 }}
+        rect={canvasRect}
+        onRectChange={(r) => {
+          setCanvasRect(r);
+          try {
+            sessionStorage.setItem(CANVAS_RECT_KEY, JSON.stringify(r));
+          } catch {
+            // storage unavailable — geometry persists in memory only
+          }
+        }}
         onClose={() => setCanvasOpen(false)}
       >
         <div className="p-4 font-mono text-[11px] leading-relaxed text-muted-foreground">
