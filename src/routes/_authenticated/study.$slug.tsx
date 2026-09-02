@@ -5,6 +5,7 @@ import { Code2, PanelLeftClose, PanelLeftOpen, UserRound } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { MentorCanvas, type HighlightTarget } from "@/components/MentorCanvas";
 import { FloatingWindow, type WindowRect } from "@/components/FloatingWindow";
+import { StudyCanvasTabs, SAMPLE_CANVAS_FILES } from "@/components/StudyCanvasTabs";
 import { useSession } from "@/hooks/useSession";
 import {
   fetchDomainBySlug,
