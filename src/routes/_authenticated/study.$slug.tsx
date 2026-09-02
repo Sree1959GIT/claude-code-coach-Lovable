@@ -423,10 +423,7 @@ function DomainRunner() {
         }}
         onClose={() => setCanvasOpen(false)}
       >
-        <div className="p-4 font-mono text-[11px] leading-relaxed text-muted-foreground">
-          Canvas shell ready. Drag the title bar to move, pull the right, bottom or
-          corner edge to resize. Code tabs and execution arrive in the next sub-tasks.
-        </div>
+        <StudyCanvasTabs files={SAMPLE_CANVAS_FILES} />
       </FloatingWindow>
     </div>
 
