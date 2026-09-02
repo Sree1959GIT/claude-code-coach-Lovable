@@ -1,1 +1,0 @@
-ALTER FUNCTION public.set_updated_at() SECURITY INVOKER;
