@@ -1,11 +1,14 @@
 /**
- * Phase D3 (part 1) — Study Canvas multi-file reader shell.
+ * Phase D3 (part 2a) — Study Canvas multi-file reader shell + copy utilities.
  *
- * Layout only: a tab strip plus a read-only, line-numbered pane. No syntax
- * highlighting, copy utilities or execution yet (later D3/D4–D7 steps).
+ * Layout: tab strip + read-only, line-numbered pane. Syntax highlighting is
+ * intentionally left plain for the next step; copy file / copy selection with
+ * sonner toast feedback is implemented here.
  */
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Copy } from "lucide-react";
+import { toast } from "sonner";
 
 export type CanvasLanguage = "python" | "javascript";
 
@@ -23,12 +26,32 @@ const LANG_BADGE: Record<CanvasLanguage, string> = {
 export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
   const [active, setActive] = useState(0);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [selection, setSelection] = useState("");
 
   const current = files[Math.min(active, Math.max(0, files.length - 1))];
   const lines = useMemo(
     () => (current ? current.content.replace(/\n$/, "").split("\n") : []),
     [current],
   );
+
+  useEffect(() => {
+    function onSelectionChange() {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || !panelRef.current) {
+        setSelection("");
+        return;
+      }
+      const node = sel.anchorNode;
+      if (node && panelRef.current.contains(node)) {
+        setSelection(sel.toString());
+      } else {
+        setSelection("");
+      }
+    }
+    document.addEventListener("selectionchange", onSelectionChange);
+    return () => document.removeEventListener("selectionchange", onSelectionChange);
+  }, []);
 
   if (files.length === 0) {
     return (
@@ -47,6 +70,26 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
         : (active - 1 + files.length) % files.length;
     setActive(next);
     tabRefs.current[next]?.focus();
+  }
+
+  async function copyFile() {
+    if (!current) return;
+    try {
+      await navigator.clipboard.writeText(current.content);
+      toast.success(`Copied ${current.name}`);
+    } catch {
+      toast.error("Copy failed — clipboard unavailable");
+    }
+  }
+
+  async function copySelection() {
+    if (!selection) return;
+    try {
+      await navigator.clipboard.writeText(selection);
+      toast.success("Copied selection");
+    } catch {
+      toast.error("Copy failed — clipboard unavailable");
+    }
   }
 
   return (
@@ -86,7 +129,31 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
         })}
       </div>
 
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-1.5">
+        <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+          {current?.name}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={copySelection}
+            disabled={!selection}
+            aria-label="Copy selected text"
+            className="inline-flex items-center gap-1.5 border border-border bg-background px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-foreground transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Copy className="h-3 w-3" /> Copy_Selection
+          </button>
+          <button
+            onClick={copyFile}
+            aria-label="Copy entire file"
+            className="inline-flex items-center gap-1.5 border border-border bg-background px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-foreground transition-colors hover:border-primary"
+          >
+            <Copy className="h-3 w-3" /> Copy_File
+          </button>
+        </div>
+      </div>
+
       <div
+        ref={panelRef}
         role="tabpanel"
         id={`canvas-panel-${active}`}
         aria-labelledby={`canvas-tab-${active}`}

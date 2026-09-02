@@ -42,7 +42,7 @@
 - [x] **Phase D2:** Position/size persistence per browser session plus close and reopen via a "Study Canvas" button.
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] **Phase D3:** Implement multi-file tabs inside the Study Canvas window with read-only, syntax-highlighted code views (Python and JavaScript), code copying utilities, and text-selection copy hooks.
+- [ ] **Phase D3 (remaining):** Add read-only syntax highlighting for Python and JavaScript inside the Study Canvas tabs. Copy-file and copy-selection utilities are already in place.
 
 ---
 
