@@ -1,22 +1,28 @@
-# Phase D3 — Study Canvas multi-file tabs with read-only code views
+# Phase D3 (part 1) — Study Canvas file tabs shell
 
-Confirmation: per `AGENTS.md` Section 3, the current active task is **Phase D3 — implement multi-file tabs inside the Study Canvas window with read-only, syntax-highlighted code views (Python and JavaScript), code copying utilities, and text-selection copy hooks**. D1 and D2 (floating window shell, session persistence) are already complete; GitHub sync is current.
+Scope is deliberately narrow: the layout shell and tab strip for a multi-file reader inside the existing Study Canvas floating window. No execution, no syntax highlighting engine, no backend, no database.
 
-## Scope (this sub-task only)
+## What gets built
 
-- Add a tabbed file-viewer component rendered inside the existing `FloatingWindow` Study Canvas.
-- Each tab shows one file: filename label, language badge, read-only syntax-highlighted code (Python and JavaScript).
-- Copy utilities: a "Copy file" button per tab, plus copy of the user's current text selection.
-- Demo content: ship with 1–2 sample multi-file codebases (Python + JavaScript) so tabs are visible immediately; real codebase loading arrives in Phase E.
+- A tab strip across the top of the Study Canvas body, one tab per file, showing the filename and a small language marker (PY / JS).
+- The active tab renders its file content in a read-only, monospaced pane with line numbers, scrollable inside the window.
+- Clicking a tab switches files; the active tab is visually marked with the existing hairline/primary tokens.
+- Keyboard access: tabs are focusable, arrow-key navigation between tabs, correct `role="tablist"` / `role="tab"` / `role="tabpanel"` wiring.
+- A small placeholder footer strip inside the window reserved for future run controls — label only, no buttons that do anything.
+- Content comes from a static in-file sample set (one Python file, one JavaScript file) so the layout is visible immediately. This is a props-driven component: the file list is passed in, so Phase E content loading swaps the source without touching the layout.
+
+## Explicitly out of scope for this step
+
+- Syntax highlighting (colouring), copy-file and copy-selection actions — the rest of D3, next step.
+- Execution provider, Pyodide, workers, run/cancel, console pane (D4–D6).
+- `code_executions` telemetry and any database work (D7).
 
 ## Technical notes
 
-- New file: `src/components/StudyCanvasContent.tsx` (tabs + read-only code view + copy buttons).
-- Lightweight highlighting: a small tokenizer/regex-based highlighter for Python and JS keywords/strings/comments — no new heavy dependency; avoids SSR issues since the canvas is client-rendered.
-- Copy uses `navigator.clipboard.writeText` with a sonner toast confirmation; selection copy reads `window.getSelection()` within the code pane.
-- Only touch: `src/components/StudyCanvasContent.tsx` (new) and `src/routes/_authenticated/study.$slug.tsx` (render the content inside the existing `FloatingWindow` — one-line change, geometry/persistence logic untouched).
-- No styling system changes; reuse existing hairline-border / mono-font tokens. No database, no execution engine (D4–D7 stay pending).
+- New file `src/components/StudyCanvasTabs.tsx`: accepts `files: { name: string; language: "python" | "javascript"; content: string }[]`, keeps the active index in local state, renders tab strip + read-only pane.
+- `src/routes/_authenticated/study.$slug.tsx`: replace the placeholder paragraph inside the existing `FloatingWindow` with `<StudyCanvasTabs files={...} />`. The window geometry, persistence and open/close logic from D1/D2 are untouched.
+- No new dependencies. Styling reuses existing tokens (`border-border`, `bg-card`, `font-mono`, uppercase micro-labels) — no design system changes.
 
-## Handoff (per AGENTS.md Dynamic Handoff Rule)
+## Handoff
 
-- After implementation: check off Phase D3 in `AGENTS.md` Section 3 and set CURRENT ACTIVE TASK to **Phase D4 — execution provider interface + in-browser WASM runner (Pyodide for Python, isolated worker for JavaScript)**.
+After this step, `AGENTS.md` Section 3 keeps D3 open, with the remaining D3 work noted as: syntax highlighting for Python/JavaScript plus copy-file and copy-selection utilities.
