@@ -1,22 +1,29 @@
-# Phase D3 — Study Canvas multi-file tabs with read-only code views
+# Phase D3 (step 1) — Study Canvas tab layout shell only
 
-Confirmation: per `AGENTS.md` Section 3, the current active task is **Phase D3 — implement multi-file tabs inside the Study Canvas window with read-only, syntax-highlighted code views (Python and JavaScript), code copying utilities, and text-selection copy hooks**. D1 and D2 (floating window shell, session persistence) are already complete; GitHub sync is current.
+Current active task per `AGENTS.md` Section 3: **Phase D3 — multi-file tabs inside the Study Canvas window**. This step is deliberately narrowed to the tab layout shell only.
 
-## Scope (this sub-task only)
+## Scope (this step only)
 
-- Add a tabbed file-viewer component rendered inside the existing `FloatingWindow` Study Canvas.
-- Each tab shows one file: filename label, language badge, read-only syntax-highlighted code (Python and JavaScript).
-- Copy utilities: a "Copy file" button per tab, plus copy of the user's current text selection.
-- Demo content: ship with 1–2 sample multi-file codebases (Python + JavaScript) so tabs are visible immediately; real codebase loading arrives in Phase E.
+- Create a `StudyCanvasContent` component rendered inside the existing `FloatingWindow`.
+- A tab bar across the top of the canvas body: one tab per file, showing filename + a small language badge (PY / JS).
+- Clicking a tab switches the visible pane; active tab is visually distinct, inactive tabs sit muted.
+- The pane area renders placeholder body text per file ("content arrives next step") — enough to prove tab switching works.
+- Include 2–3 hardcoded demo file entries (e.g. `main.py`, `utils.py`, `agent.js`) so multiple tabs are visible immediately.
+
+## Explicitly NOT in this step
+
+- No syntax highlighting, no real code content.
+- No copy file / copy selection buttons.
+- No execution, run controls, or console pane (D4–D7).
+- No database or backend logic (E1+).
 
 ## Technical notes
 
-- New file: `src/components/StudyCanvasContent.tsx` (tabs + read-only code view + copy buttons).
-- Lightweight highlighting: a small tokenizer/regex-based highlighter for Python and JS keywords/strings/comments — no new heavy dependency; avoids SSR issues since the canvas is client-rendered.
-- Copy uses `navigator.clipboard.writeText` with a sonner toast confirmation; selection copy reads `window.getSelection()` within the code pane.
-- Only touch: `src/components/StudyCanvasContent.tsx` (new) and `src/routes/_authenticated/study.$slug.tsx` (render the content inside the existing `FloatingWindow` — one-line change, geometry/persistence logic untouched).
-- No styling system changes; reuse existing hairline-border / mono-font tokens. No database, no execution engine (D4–D7 stay pending).
+- New file: `src/components/StudyCanvasContent.tsx` — local `useState` for the active tab index; demo file list as a module-level constant.
+- One-line change in `src/routes/_authenticated/study.$slug.tsx`: replace the current placeholder `<div>` inside `<FloatingWindow>` with `<StudyCanvasContent />`. Geometry, drag/resize, and session persistence logic stay untouched.
+- Reuse existing design tokens (border-border, font-mono, uppercase tracking, bg-secondary for active tab); no new dependencies, no styling system changes.
 
-## Handoff (per AGENTS.md Dynamic Handoff Rule)
+## Follow-on steps (later prompts)
 
-- After implementation: check off Phase D3 in `AGENTS.md` Section 3 and set CURRENT ACTIVE TASK to **Phase D4 — execution provider interface + in-browser WASM runner (Pyodide for Python, isolated worker for JavaScript)**.
+- D3 step 2: read-only syntax-highlighted code views + copy file / copy selection.
+- Then D4 (execution provider interface + WASM runners) per the roadmap.
