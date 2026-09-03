@@ -1,14 +1,12 @@
 /**
- * Phase D3 (part 2a) — Study Canvas multi-file reader shell + copy utilities.
- *
- * Layout: tab strip + read-only, line-numbered pane. Syntax highlighting is
- * intentionally left plain for the next step; copy file / copy selection with
- * sonner toast feedback is implemented here.
+ * Phase D3 — Study Canvas multi-file reader: tabs, read-only syntax-highlighted
+ * pane (Python + JavaScript), copy file / copy selection with toast feedback.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
+import { TOKEN_CLASS, tokenizeLine, type LineState, type Token } from "@/lib/syntax-highlight";
 
 export type CanvasLanguage = "python" | "javascript";
 
@@ -34,6 +32,18 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
     () => (current ? current.content.replace(/\n$/, "").split("\n") : []),
     [current],
   );
+
+  // Highlight every line, threading multi-line string/comment state forward.
+  const highlighted = useMemo<Token[][]>(() => {
+    if (!current) return [];
+    let state: LineState = { block: null };
+    return lines.map((line) => {
+      const res = tokenizeLine(line, current.language, state);
+      state = res.state;
+      return res.tokens;
+    });
+  }, [lines, current]);
+
 
   useEffect(() => {
     function onSelectionChange() {
