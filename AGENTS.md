@@ -40,9 +40,11 @@
 - [x] **Stage 7 (Readiness Analysis):** Diagnostic models, pass forecasting bands, mock exam blueprints, custom mistake storage decks, and print layouts.
 - [x] **Phase D1:** Floating window shell — independent non-modal panel, draggable by title bar, resizable.
 - [x] **Phase D2:** Position/size persistence per browser session plus close and reopen via a "Study Canvas" button.
+- [x] **Phase D3:** Multi-file tabs with read-only, syntax-highlighted view (Python and JavaScript) plus copy file / copy selection.
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] **Phase D3 (remaining):** Add read-only syntax highlighting for Python and JavaScript inside the Study Canvas tabs. Copy-file and copy-selection utilities are already in place.
+- [ ] **Phase D4:** Build execution provider interface + in-browser WASM runner (Pyodide for Python, isolated worker for JavaScript) behind a swappable adapter.
+
 
 ---
 

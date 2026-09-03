@@ -39,6 +39,12 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-success: var(--success);
+  --color-code-keyword: var(--code-keyword);
+  --color-code-string: var(--code-string);
+  --color-code-comment: var(--code-comment);
+  --color-code-number: var(--code-number);
+  --color-code-function: var(--code-function);
+  --color-code-builtin: var(--code-builtin);
 
   --ease-out-terminal: cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -67,6 +73,14 @@
   --input: oklch(0.18 0.01 260 / 0.12);
   --ring: oklch(0.62 0.19 256);
   --success: oklch(0.55 0.15 150);
+
+  /* Study Canvas syntax tokens — light */
+  --code-keyword: oklch(0.52 0.19 300);
+  --code-string: oklch(0.5 0.13 150);
+  --code-comment: oklch(0.6 0.02 260);
+  --code-number: oklch(0.55 0.16 45);
+  --code-function: oklch(0.55 0.17 256);
+  --code-builtin: oklch(0.53 0.14 200);
 }
 
 .dark {
@@ -91,6 +105,14 @@
   --input: oklch(0.98 0.003 260 / 0.15);
   --ring: oklch(0.68 0.19 256);
   --success: oklch(0.75 0.16 155);
+
+  /* Study Canvas syntax tokens — dark */
+  --code-keyword: oklch(0.76 0.15 300);
+  --code-string: oklch(0.78 0.14 150);
+  --code-comment: oklch(0.6 0.02 260);
+  --code-number: oklch(0.78 0.14 60);
+  --code-function: oklch(0.75 0.14 256);
+  --code-builtin: oklch(0.78 0.11 200);
 }
 
 @layer base {
