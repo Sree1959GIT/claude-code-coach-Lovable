@@ -171,7 +171,7 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
       >
         <pre className="min-w-full font-mono text-[11px] leading-relaxed">
           <code className="block">
-            {lines.map((line, i) => (
+            {highlighted.map((tokens, i) => (
               <span key={i} className="flex">
                 <span
                   aria-hidden="true"
@@ -179,9 +179,18 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
                 >
                   {i + 1}
                 </span>
-                <span className="whitespace-pre px-3">{line || " "}</span>
+                <span className="whitespace-pre px-3">
+                  {tokens.length === 0
+                    ? " "
+                    : tokens.map((t, j) => (
+                        <span key={j} className={TOKEN_CLASS[t.kind]}>
+                          {t.value}
+                        </span>
+                      ))}
+                </span>
               </span>
             ))}
+
           </code>
         </pre>
       </div>
