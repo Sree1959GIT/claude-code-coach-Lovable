@@ -27,11 +27,22 @@ const LANG_BADGE: Record<CanvasLanguage, string> = {
   javascript: "JS",
 };
 
+type ConsoleLine = { stream: "stdout" | "stderr"; text: string };
+
+type RunState =
+  | { phase: "idle" }
+  | { phase: "running"; startedAt: number }
+  | { phase: "done"; result: ExecutionResult };
+
 export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
   const [active, setActive] = useState(0);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const panelRef = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState("");
+  const [runState, setRunState] = useState<RunState>({ phase: "idle" });
+  const [consoleLines, setConsoleLines] = useState<ConsoleLine[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
+  const consoleEndRef = useRef<HTMLDivElement>(null);
 
   const current = files[Math.min(active, Math.max(0, files.length - 1))];
   const lines = useMemo(
