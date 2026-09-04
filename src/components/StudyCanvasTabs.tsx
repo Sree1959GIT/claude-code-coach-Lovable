@@ -1,12 +1,18 @@
 /**
- * Phase D3 — Study Canvas multi-file reader: tabs, read-only syntax-highlighted
- * pane (Python + JavaScript), copy file / copy selection with toast feedback.
+ * Phase D3/D5 — Study Canvas multi-file reader: tabs, read-only syntax-
+ * highlighted pane (Python + JavaScript), copy utilities, and run controls
+ * (10s timeout, cancel, stdout/stderr/return-value console results pane).
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Copy } from "lucide-react";
+import { Copy, Play, Square, Terminal } from "lucide-react";
 import { toast } from "sonner";
 import { TOKEN_CLASS, tokenizeLine, type LineState, type Token } from "@/lib/syntax-highlight";
+import {
+  DEFAULT_TIMEOUT_MS,
+  getExecutionProvider,
+  type ExecutionResult,
+} from "@/lib/execution";
 
 export type CanvasLanguage = "python" | "javascript";
 
@@ -21,11 +27,22 @@ const LANG_BADGE: Record<CanvasLanguage, string> = {
   javascript: "JS",
 };
 
+type ConsoleLine = { stream: "stdout" | "stderr"; text: string };
+
+type RunState =
+  | { phase: "idle" }
+  | { phase: "running"; startedAt: number }
+  | { phase: "done"; result: ExecutionResult };
+
 export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
   const [active, setActive] = useState(0);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const panelRef = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState("");
+  const [runState, setRunState] = useState<RunState>({ phase: "idle" });
+  const [consoleLines, setConsoleLines] = useState<ConsoleLine[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
+  const consoleEndRef = useRef<HTMLDivElement>(null);
 
   const current = files[Math.min(active, Math.max(0, files.length - 1))];
   const lines = useMemo(
@@ -102,6 +119,59 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
     }
   }
 
+  // Auto-scroll the console as output streams in.
+  useEffect(() => {
+    consoleEndRef.current?.scrollIntoView({ block: "end" });
+  }, [consoleLines, runState.phase]);
+
+  async function runActiveFile() {
+    if (!current || runState.phase === "running") return;
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const startedAt = Date.now();
+    setConsoleLines([]);
+    setRunState({ phase: "running", startedAt });
+    try {
+      const provider = getExecutionProvider(current.language);
+      const result = await provider.run({
+        code: current.content,
+        timeoutMs: DEFAULT_TIMEOUT_MS,
+        signal: controller.signal,
+        onOutput: (chunk) =>
+          setConsoleLines((prev) => [
+            ...prev,
+            { stream: chunk.stream, text: chunk.text },
+          ]),
+      });
+      setRunState({ phase: "done", result });
+      if (result.cancelled) toast("Run cancelled");
+      else if (result.timedOut) toast.error(result.error ?? "Timed out");
+      else if (!result.ok) toast.error("Run failed — see console");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setRunState({
+        phase: "done",
+        result: {
+          ok: false,
+          value: null,
+          stdout: "",
+          stderr: "",
+          error: message,
+          durationMs: Date.now() - startedAt,
+          timedOut: false,
+          cancelled: false,
+        },
+      });
+      toast.error(message);
+    } finally {
+      abortRef.current = null;
+    }
+  }
+
+  function cancelRun() {
+    abortRef.current?.abort();
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div
@@ -144,6 +214,24 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
           {current?.name}
         </div>
         <div className="flex items-center gap-2">
+          {runState.phase === "running" ? (
+            <button
+              onClick={cancelRun}
+              aria-label="Cancel running code"
+              className="inline-flex items-center gap-1.5 border border-border bg-background px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-destructive transition-colors hover:border-destructive"
+            >
+              <Square className="h-3 w-3" /> Cancel
+            </button>
+          ) : (
+            <button
+              onClick={runActiveFile}
+              disabled={!current}
+              aria-label="Run active file"
+              className="inline-flex items-center gap-1.5 border border-border bg-background px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-foreground transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Play className="h-3 w-3" /> Run
+            </button>
+          )}
           <button
             onClick={copySelection}
             disabled={!selection}
@@ -195,8 +283,63 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
         </pre>
       </div>
 
-      <div className="shrink-0 border-t border-border bg-muted/30 px-3 py-1.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-        Run_Controls · Pending_D4
+      {/* Phase D5 — console results pane */}
+      <div className="flex h-36 shrink-0 flex-col border-t border-border bg-muted/30">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <Terminal className="h-3 w-3" />
+            Console · {current ? current.language : ""}
+          </span>
+          <span>
+            {runState.phase === "idle" && "Idle · 10s limit"}
+            {runState.phase === "running" && "Running…"}
+            {runState.phase === "done" &&
+              (() => {
+                const r = runState.result;
+                const status = r.cancelled
+                  ? "Cancelled"
+                  : r.timedOut
+                    ? "Timed_Out"
+                    : r.ok
+                      ? "OK"
+                      : "Error";
+                return `${status} · ${r.durationMs}ms`;
+              })()}
+          </span>
+        </div>
+        <div className="min-h-0 flex-1 overflow-auto px-3 py-2 font-mono text-[11px] leading-relaxed">
+          {runState.phase === "idle" && consoleLines.length === 0 && (
+            <p className="select-none text-[10px] uppercase tracking-widest text-muted-foreground">
+              No output yet — press Run to execute the active file.
+            </p>
+          )}
+          {consoleLines.map((line, i) => (
+            <pre
+              key={i}
+              className={`whitespace-pre-wrap ${
+                line.stream === "stderr" ? "text-destructive" : "text-foreground"
+              }`}
+            >
+              {line.text.replace(/\n$/, "")}
+            </pre>
+          ))}
+          {runState.phase === "done" && (
+            <div className="mt-1 space-y-0.5">
+              {runState.result.value !== null && (
+                <pre className="whitespace-pre-wrap text-primary">
+                  {"⇒ "}
+                  {runState.result.value}
+                </pre>
+              )}
+              {runState.result.error && (
+                <pre className="whitespace-pre-wrap text-destructive">
+                  {runState.result.error}
+                </pre>
+              )}
+            </div>
+          )}
+          <div ref={consoleEndRef} />
+        </div>
       </div>
     </div>
   );
