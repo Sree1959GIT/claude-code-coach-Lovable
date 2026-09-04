@@ -283,8 +283,63 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
         </pre>
       </div>
 
-      <div className="shrink-0 border-t border-border bg-muted/30 px-3 py-1.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-        Run_Controls · Pending_D4
+      {/* Phase D5 — console results pane */}
+      <div className="flex h-36 shrink-0 flex-col border-t border-border bg-muted/30">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <Terminal className="h-3 w-3" />
+            Console · {current ? current.language : ""}
+          </span>
+          <span>
+            {runState.phase === "idle" && "Idle · 10s limit"}
+            {runState.phase === "running" && "Running…"}
+            {runState.phase === "done" &&
+              (() => {
+                const r = runState.result;
+                const status = r.cancelled
+                  ? "Cancelled"
+                  : r.timedOut
+                    ? "Timed_Out"
+                    : r.ok
+                      ? "OK"
+                      : "Error";
+                return `${status} · ${r.durationMs}ms`;
+              })()}
+          </span>
+        </div>
+        <div className="min-h-0 flex-1 overflow-auto px-3 py-2 font-mono text-[11px] leading-relaxed">
+          {runState.phase === "idle" && consoleLines.length === 0 && (
+            <p className="select-none text-[10px] uppercase tracking-widest text-muted-foreground">
+              No output yet — press Run to execute the active file.
+            </p>
+          )}
+          {consoleLines.map((line, i) => (
+            <pre
+              key={i}
+              className={`whitespace-pre-wrap ${
+                line.stream === "stderr" ? "text-destructive" : "text-foreground"
+              }`}
+            >
+              {line.text.replace(/\n$/, "")}
+            </pre>
+          ))}
+          {runState.phase === "done" && (
+            <div className="mt-1 space-y-0.5">
+              {runState.result.value !== null && (
+                <pre className="whitespace-pre-wrap text-primary">
+                  {"⇒ "}
+                  {runState.result.value}
+                </pre>
+              )}
+              {runState.result.error && (
+                <pre className="whitespace-pre-wrap text-destructive">
+                  {runState.result.error}
+                </pre>
+              )}
+            </div>
+          )}
+          <div ref={consoleEndRef} />
+        </div>
       </div>
     </div>
   );
