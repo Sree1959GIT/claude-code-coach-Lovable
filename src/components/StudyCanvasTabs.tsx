@@ -157,7 +157,7 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
           stdout: "",
           stderr: "",
           error: message,
-          durationMs: Date.now() - (runState.phase === "running" ? runState.startedAt : Date.now()),
+          durationMs: Date.now() - startedAt,
           timedOut: false,
           cancelled: false,
         },
