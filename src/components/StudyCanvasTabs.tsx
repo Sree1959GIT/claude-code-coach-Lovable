@@ -214,6 +214,24 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
           {current?.name}
         </div>
         <div className="flex items-center gap-2">
+          {runState.phase === "running" ? (
+            <button
+              onClick={cancelRun}
+              aria-label="Cancel running code"
+              className="inline-flex items-center gap-1.5 border border-border bg-background px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-destructive transition-colors hover:border-destructive"
+            >
+              <Square className="h-3 w-3" /> Cancel
+            </button>
+          ) : (
+            <button
+              onClick={runActiveFile}
+              disabled={!current}
+              aria-label="Run active file"
+              className="inline-flex items-center gap-1.5 border border-border bg-background px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-foreground transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Play className="h-3 w-3" /> Run
+            </button>
+          )}
           <button
             onClick={copySelection}
             disabled={!selection}
