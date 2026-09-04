@@ -128,8 +128,9 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
     if (!current || runState.phase === "running") return;
     const controller = new AbortController();
     abortRef.current = controller;
+    const startedAt = Date.now();
     setConsoleLines([]);
-    setRunState({ phase: "running", startedAt: Date.now() });
+    setRunState({ phase: "running", startedAt });
     try {
       const provider = getExecutionProvider(current.language);
       const result = await provider.run({
