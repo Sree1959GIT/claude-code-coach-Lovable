@@ -119,6 +119,58 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
     }
   }
 
+  // Auto-scroll the console as output streams in.
+  useEffect(() => {
+    consoleEndRef.current?.scrollIntoView({ block: "end" });
+  }, [consoleLines, runState.phase]);
+
+  async function runActiveFile() {
+    if (!current || runState.phase === "running") return;
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setConsoleLines([]);
+    setRunState({ phase: "running", startedAt: Date.now() });
+    try {
+      const provider = getExecutionProvider(current.language);
+      const result = await provider.run({
+        code: current.content,
+        timeoutMs: DEFAULT_TIMEOUT_MS,
+        signal: controller.signal,
+        onOutput: (chunk) =>
+          setConsoleLines((prev) => [
+            ...prev,
+            { stream: chunk.stream, text: chunk.text },
+          ]),
+      });
+      setRunState({ phase: "done", result });
+      if (result.cancelled) toast("Run cancelled");
+      else if (result.timedOut) toast.error(result.error ?? "Timed out");
+      else if (!result.ok) toast.error("Run failed — see console");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setRunState({
+        phase: "done",
+        result: {
+          ok: false,
+          value: null,
+          stdout: "",
+          stderr: "",
+          error: message,
+          durationMs: Date.now() - (runState.phase === "running" ? runState.startedAt : Date.now()),
+          timedOut: false,
+          cancelled: false,
+        },
+      });
+      toast.error(message);
+    } finally {
+      abortRef.current = null;
+    }
+  }
+
+  function cancelRun() {
+    abortRef.current?.abort();
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div
