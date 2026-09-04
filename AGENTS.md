@@ -41,9 +41,10 @@
 - [x] **Phase D1:** Floating window shell — independent non-modal panel, draggable by title bar, resizable.
 - [x] **Phase D2:** Position/size persistence per browser session plus close and reopen via a "Study Canvas" button.
 - [x] **Phase D3:** Multi-file tabs with read-only, syntax-highlighted view (Python and JavaScript) plus copy file / copy selection.
+- [x] **Phase D4:** Execution provider interface + in-browser runners (Pyodide WASM for Python, isolated Blob worker for JavaScript) behind a swappable registry adapter.
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] **Phase D4:** Build execution provider interface + in-browser WASM runner (Pyodide for Python, isolated worker for JavaScript) behind a swappable adapter.
+- [ ] **Phase D5:** Build run controls: 10-second execution timeout, cancel routine, and stdout/stderr/return-value console results pane.
 
 
 ---
@@ -53,7 +54,7 @@
 
 ### Phase D — CodeCanvas (Shell & Execution Remainder)
 - [ ] **D3:** Implement multi-file tabs with read-only, syntax-highlighted view (Python and JavaScript) and copy file / copy selection.
-- [ ] **D4:** Build execution provider interface + in-browser WASM runner (Pyodide for Python, isolated worker for JavaScript) behind a swappable adapter.
+- [x] **D4:** Execution provider interface + in-browser WASM runner (Pyodide for Python, isolated worker for JavaScript) behind a swappable adapter.
 - [ ] **D5:** Build run controls: 10-second execution timeout, cancel routine, and stdout/stderr/return-value console results pane.
 - [ ] **D6:** Create diagnostic runtime error display with line numbers and stack traces, plus pre-run syntax validation hooks.
 - [ ] **D7:** Setup `code_executions` schema: database telemetry log table mapping timestamp, language, success/failure metrics, and output sizes (owner-scoped with RLS).
