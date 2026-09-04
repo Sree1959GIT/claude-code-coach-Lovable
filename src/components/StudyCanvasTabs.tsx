@@ -1,12 +1,18 @@
 /**
- * Phase D3 — Study Canvas multi-file reader: tabs, read-only syntax-highlighted
- * pane (Python + JavaScript), copy file / copy selection with toast feedback.
+ * Phase D3/D5 — Study Canvas multi-file reader: tabs, read-only syntax-
+ * highlighted pane (Python + JavaScript), copy utilities, and run controls
+ * (10s timeout, cancel, stdout/stderr/return-value console results pane).
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Copy } from "lucide-react";
+import { Copy, Play, Square, Terminal } from "lucide-react";
 import { toast } from "sonner";
 import { TOKEN_CLASS, tokenizeLine, type LineState, type Token } from "@/lib/syntax-highlight";
+import {
+  DEFAULT_TIMEOUT_MS,
+  getExecutionProvider,
+  type ExecutionResult,
+} from "@/lib/execution";
 
 export type CanvasLanguage = "python" | "javascript";
 
