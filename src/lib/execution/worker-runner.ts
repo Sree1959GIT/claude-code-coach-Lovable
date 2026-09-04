@@ -21,9 +21,12 @@ export type WorkerMessage =
   | { type: "done"; value: string | null }
   | { type: "error"; error: string };
 
-export function createBlobWorker(source: string): Worker {
+export function createBlobWorker(
+  source: string,
+  type: WorkerType = "classic",
+): Worker {
   const url = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
-  const worker = new Worker(url, { type: "module" });
+  const worker = new Worker(url, { type });
   // Safe to revoke immediately: the worker already holds the resource.
   URL.revokeObjectURL(url);
   return worker;
