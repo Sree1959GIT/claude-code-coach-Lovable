@@ -5,7 +5,12 @@ import { Code2, PanelLeftClose, PanelLeftOpen, UserRound } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { MentorCanvas, type HighlightTarget } from "@/components/MentorCanvas";
 import { FloatingWindow, type WindowRect } from "@/components/FloatingWindow";
-import { StudyCanvasTabs, SAMPLE_CANVAS_FILES } from "@/components/StudyCanvasTabs";
+import {
+  StudyCanvasTabs,
+  SAMPLE_CANVAS_FILES,
+  type CanvasFile,
+  type CanvasLanguage,
+} from "@/components/StudyCanvasTabs";
 import { useSession } from "@/hooks/useSession";
 import {
   fetchDomainBySlug,
@@ -13,6 +18,7 @@ import {
   recordAttempt,
   type QuestionOption,
 } from "@/lib/study";
+import { fetchCodebaseByConcept, toConceptTag } from "@/lib/codebases";
 import { logEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/study/$slug")({
