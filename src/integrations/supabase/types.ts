@@ -484,6 +484,39 @@ export type Database = {
         }
         Relationships: []
       }
+      codebases: {
+        Row: {
+          concept_tag: string
+          created_at: string
+          description: string | null
+          difficulty: string
+          files: Json
+          id: string
+          language: string
+          title: string
+        }
+        Insert: {
+          concept_tag: string
+          created_at?: string
+          description?: string | null
+          difficulty?: string
+          files?: Json
+          id?: string
+          language: string
+          title: string
+        }
+        Update: {
+          concept_tag?: string
+          created_at?: string
+          description?: string | null
+          difficulty?: string
+          files?: Json
+          id?: string
+          language?: string
+          title?: string
+        }
+        Relationships: []
+      }
       content_reviews: {
         Row: {
           claimed_at: string | null
