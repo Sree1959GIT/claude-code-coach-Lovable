@@ -20,6 +20,32 @@ import {
   getExecutionProvider,
   type ExecutionResult,
 } from "@/lib/execution";
+import { logCodeExecution } from "@/lib/executions.functions";
+
+const byteLength = (s: string) => new TextEncoder().encode(s).length;
+
+/** Phase D7 — fire-and-forget telemetry; never breaks the canvas. */
+function recordExecution(
+  file: CanvasFile,
+  providerId: string | null,
+  result: ExecutionResult,
+) {
+  void logCodeExecution({
+    data: {
+      language: file.language,
+      providerId,
+      fileName: file.name,
+      ok: result.ok,
+      timedOut: result.timedOut,
+      cancelled: result.cancelled,
+      durationMs: result.durationMs,
+      stdoutBytes: byteLength(result.stdout),
+      stderrBytes: byteLength(result.stderr),
+      errorMessage: result.error ? result.error.slice(0, 500) : null,
+    },
+  }).catch(() => {});
+}
+
 
 export type CanvasLanguage = "python" | "javascript";
 
