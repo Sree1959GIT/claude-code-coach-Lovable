@@ -20,6 +20,32 @@ import {
   getExecutionProvider,
   type ExecutionResult,
 } from "@/lib/execution";
+import { logCodeExecution } from "@/lib/executions.functions";
+
+const byteLength = (s: string) => new TextEncoder().encode(s).length;
+
+/** Phase D7 — fire-and-forget telemetry; never breaks the canvas. */
+function recordExecution(
+  file: CanvasFile,
+  providerId: string | null,
+  result: ExecutionResult,
+) {
+  void logCodeExecution({
+    data: {
+      language: file.language,
+      providerId,
+      fileName: file.name,
+      ok: result.ok,
+      timedOut: result.timedOut,
+      cancelled: result.cancelled,
+      durationMs: result.durationMs,
+      stdoutBytes: byteLength(result.stdout),
+      stderrBytes: byteLength(result.stderr),
+      errorMessage: result.error ? result.error.slice(0, 500) : null,
+    },
+  }).catch(() => {});
+}
+
 
 export type CanvasLanguage = "python" | "javascript";
 
@@ -182,6 +208,7 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
           ]),
       });
       setRunState({ phase: "done", result });
+      recordExecution(current, provider.id, result);
       const detail = result.error ?? result.stderr;
       setDiagnostic(
         !result.ok && !result.cancelled && !result.timedOut && detail
@@ -193,20 +220,20 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
       else if (!result.ok) toast.error("Run failed — see console");
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setRunState({
-        phase: "done",
-        result: {
-          ok: false,
-          value: null,
-          stdout: "",
-          stderr: "",
-          error: message,
-          durationMs: Date.now() - startedAt,
-          timedOut: false,
-          cancelled: false,
-        },
-      });
+      const failed: ExecutionResult = {
+        ok: false,
+        value: null,
+        stdout: "",
+        stderr: "",
+        error: message,
+        durationMs: Date.now() - startedAt,
+        timedOut: false,
+        cancelled: false,
+      };
+      setRunState({ phase: "done", result: failed });
+      recordExecution(current, null, failed);
       setDiagnostic(parseDiagnostic(message, current.language, lines.length));
+
       toast.error(message);
     } finally {
       abortRef.current = null;
