@@ -5,7 +5,12 @@ import { Code2, PanelLeftClose, PanelLeftOpen, UserRound } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { MentorCanvas, type HighlightTarget } from "@/components/MentorCanvas";
 import { FloatingWindow, type WindowRect } from "@/components/FloatingWindow";
-import { StudyCanvasTabs, SAMPLE_CANVAS_FILES } from "@/components/StudyCanvasTabs";
+import {
+  StudyCanvasTabs,
+  SAMPLE_CANVAS_FILES,
+  type CanvasFile,
+  type CanvasLanguage,
+} from "@/components/StudyCanvasTabs";
 import { useSession } from "@/hooks/useSession";
 import {
   fetchDomainBySlug,
@@ -13,6 +18,7 @@ import {
   recordAttempt,
   type QuestionOption,
 } from "@/lib/study";
+import { fetchCodebaseByConcept, toConceptTag } from "@/lib/codebases";
 import { logEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/study/$slug")({
@@ -86,6 +92,35 @@ function DomainRunner() {
 
   const questions = questionsQ.data ?? [];
   const q = questions[idx];
+
+  // Phase E2 — instant cached example lookup by concept tag. Cached for the
+  // session so revisiting a concept costs nothing; never generates anything.
+  const conceptTag = toConceptTag(q?.key_concept);
+  const codebaseQ = useQuery({
+    queryKey: ["codebase", conceptTag],
+    queryFn: () => fetchCodebaseByConcept(conceptTag!),
+    enabled: !!conceptTag,
+    staleTime: Infinity,
+    gcTime: 60 * 60 * 1000,
+  });
+
+  const canvasFiles = useMemo<CanvasFile[]>(() => {
+    const files = codebaseQ.data?.files ?? [];
+    const mapped = files
+      .filter((f) => f.language === "python" || f.language === "javascript")
+      .map((f) => ({
+        name: f.name,
+        language: f.language as CanvasLanguage,
+        content: f.content,
+      }));
+    return mapped.length > 0 ? mapped : SAMPLE_CANVAS_FILES;
+  }, [codebaseQ.data]);
+
+  const canvasSubtitle = codebaseQ.data
+    ? `Cached · ${codebaseQ.data.title}`
+    : conceptTag && codebaseQ.isLoading
+      ? "Loading_Example"
+      : "Code_Workspace";
 
   useEffect(() => {
     setSelected(null);
@@ -412,7 +447,7 @@ function DomainRunner() {
       <FloatingWindow
         open={canvasOpen}
         title="Study_Canvas"
-        subtitle="Code_Workspace"
+        subtitle={canvasSubtitle}
         rect={canvasRect}
         onRectChange={(r) => {
           setCanvasRect(r);
@@ -424,7 +459,7 @@ function DomainRunner() {
         }}
         onClose={() => setCanvasOpen(false)}
       >
-        <StudyCanvasTabs files={SAMPLE_CANVAS_FILES} />
+        <StudyCanvasTabs key={conceptTag ?? "default"} files={canvasFiles} />
       </FloatingWindow>
     </div>
 
