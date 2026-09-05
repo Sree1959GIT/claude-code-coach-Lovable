@@ -165,5 +165,9 @@ export function parseDiagnostic(
     }
   }
 
-  return { lines, frames, message: raw[0]?.trim() ?? error };
+  // Python puts the exception on the last line; V8 puts it first.
+  const nonEmpty = raw.map((l) => l.trim()).filter(Boolean);
+  const message =
+    (language === "python" ? nonEmpty[nonEmpty.length - 1] : nonEmpty[0]) ?? error;
+  return { lines, frames, message };
 }
