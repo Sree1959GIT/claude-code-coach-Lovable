@@ -71,6 +71,20 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
     });
   }, [lines, current]);
 
+  // Phase D6 — lines flagged by a runtime error or the pre-run syntax check.
+  const errorLines = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const issue of syntaxIssues) map.set(issue.line, issue.message);
+    if (diagnostic) for (const n of diagnostic.lines) map.set(n, diagnostic.message);
+    return map;
+  }, [syntaxIssues, diagnostic]);
+
+  // Clear diagnostics when switching files.
+  useEffect(() => {
+    setSyntaxIssues([]);
+    setDiagnostic(null);
+  }, [current?.name]);
+
 
   useEffect(() => {
     function onSelectionChange() {
