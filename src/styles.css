@@ -45,6 +45,7 @@
   --color-code-number: var(--code-number);
   --color-code-function: var(--code-function);
   --color-code-builtin: var(--code-builtin);
+  --color-code-error-bg: var(--code-error-bg);
 
   --ease-out-terminal: cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -81,6 +82,7 @@
   --code-number: oklch(0.55 0.16 45);
   --code-function: oklch(0.55 0.17 256);
   --code-builtin: oklch(0.53 0.14 200);
+  --code-error-bg: oklch(0.94 0.05 25);
 }
 
 .dark {
@@ -113,6 +115,7 @@
   --code-number: oklch(0.78 0.14 60);
   --code-function: oklch(0.75 0.14 256);
   --code-builtin: oklch(0.78 0.11 200);
+  --code-error-bg: oklch(0.32 0.08 25);
 }
 
 @layer base {
