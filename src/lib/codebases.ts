@@ -1,3 +1,4 @@
+import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 /** A single file inside a stored codebase example. */
