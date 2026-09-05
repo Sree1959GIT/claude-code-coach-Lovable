@@ -43,9 +43,10 @@
 - [x] **Phase D3:** Multi-file tabs with read-only, syntax-highlighted view (Python and JavaScript) plus copy file / copy selection.
 - [x] **Phase D4:** Execution provider interface + in-browser runners (Pyodide WASM for Python, isolated Blob worker for JavaScript) behind a swappable registry adapter.
 - [x] **Phase D5:** Run controls — Run/Cancel buttons, 10-second execution timeout, and streaming stdout/stderr/return-value console results pane.
+- [x] **Phase D6:** Diagnostic runtime error display with line numbers and stack traces, plus pre-run syntax validation hooks.
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] **Phase D6:** Create diagnostic runtime error display with line numbers and stack traces, plus pre-run syntax validation hooks.
+- [ ] **Phase D7:** Setup `code_executions` schema: database telemetry log table mapping timestamp, language, success/failure metrics, and output sizes (owner-scoped with RLS).
 
 
 ---
@@ -54,10 +55,10 @@
 *AI Note: Only implement the active task in Section 3. Do not jump ahead into lower phases.*
 
 ### Phase D — CodeCanvas (Shell & Execution Remainder)
-- [ ] **D3:** Implement multi-file tabs with read-only, syntax-highlighted view (Python and JavaScript) and copy file / copy selection.
+- [x] **D3:** Implement multi-file tabs with read-only, syntax-highlighted view (Python and JavaScript) and copy file / copy selection.
 - [x] **D4:** Execution provider interface + in-browser WASM runner (Pyodide for Python, isolated worker for JavaScript) behind a swappable adapter.
 - [x] **D5:** Build run controls: 10-second execution timeout, cancel routine, and stdout/stderr/return-value console results pane.
-- [ ] **D6:** Create diagnostic runtime error display with line numbers and stack traces, plus pre-run syntax validation hooks.
+- [x] **D6:** Create diagnostic runtime error display with line numbers and stack traces, plus pre-run syntax validation hooks.
 - [ ] **D7:** Setup `code_executions` schema: database telemetry log table mapping timestamp, language, success/failure metrics, and output sizes (owner-scoped with RLS).
 
 ### Phase E — CodeCanvas (Content & Multi-Agent Generation)

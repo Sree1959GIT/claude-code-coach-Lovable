@@ -1,13 +1,20 @@
 /**
- * Phase D3/D5 — Study Canvas multi-file reader: tabs, read-only syntax-
- * highlighted pane (Python + JavaScript), copy utilities, and run controls
- * (10s timeout, cancel, stdout/stderr/return-value console results pane).
+ * Phase D3/D5/D6 — Study Canvas multi-file reader: tabs, read-only syntax-
+ * highlighted pane (Python + JavaScript), copy utilities, run controls
+ * (10s timeout, cancel, console pane), plus pre-run syntax validation and
+ * diagnostic runtime error display with line numbers and stack traces.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Copy, Play, Square, Terminal } from "lucide-react";
+import { AlertTriangle, Copy, Play, Square, Terminal } from "lucide-react";
 import { toast } from "sonner";
 import { TOKEN_CLASS, tokenizeLine, type LineState, type Token } from "@/lib/syntax-highlight";
+import {
+  checkSyntax,
+  parseDiagnostic,
+  type Diagnostic,
+  type SyntaxIssue,
+} from "@/lib/execution/diagnostics";
 import {
   DEFAULT_TIMEOUT_MS,
   getExecutionProvider,
@@ -41,8 +48,11 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
   const [selection, setSelection] = useState("");
   const [runState, setRunState] = useState<RunState>({ phase: "idle" });
   const [consoleLines, setConsoleLines] = useState<ConsoleLine[]>([]);
+  const [syntaxIssues, setSyntaxIssues] = useState<SyntaxIssue[]>([]);
+  const [diagnostic, setDiagnostic] = useState<Diagnostic | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const consoleEndRef = useRef<HTMLDivElement>(null);
+
 
   const current = files[Math.min(active, Math.max(0, files.length - 1))];
   const lines = useMemo(
@@ -60,6 +70,20 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
       return res.tokens;
     });
   }, [lines, current]);
+
+  // Phase D6 — lines flagged by a runtime error or the pre-run syntax check.
+  const errorLines = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const issue of syntaxIssues) map.set(issue.line, issue.message);
+    if (diagnostic) for (const n of diagnostic.lines) map.set(n, diagnostic.message);
+    return map;
+  }, [syntaxIssues, diagnostic]);
+
+  // Clear diagnostics when switching files.
+  useEffect(() => {
+    setSyntaxIssues([]);
+    setDiagnostic(null);
+  }, [current?.name]);
 
 
   useEffect(() => {
@@ -126,6 +150,20 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
 
   async function runActiveFile() {
     if (!current || runState.phase === "running") return;
+
+    // Phase D6 — pre-run syntax validation gate.
+    const issues = checkSyntax(current.content, current.language);
+    setSyntaxIssues(issues);
+    setDiagnostic(null);
+    if (issues.length > 0) {
+      setConsoleLines([]);
+      setRunState({ phase: "idle" });
+      toast.warning(
+        `Syntax check failed — ${issues.length} issue${issues.length > 1 ? "s" : ""} found`,
+      );
+      return;
+    }
+
     const controller = new AbortController();
     abortRef.current = controller;
     const startedAt = Date.now();
@@ -144,6 +182,12 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
           ]),
       });
       setRunState({ phase: "done", result });
+      const detail = result.error ?? result.stderr;
+      setDiagnostic(
+        !result.ok && !result.cancelled && !result.timedOut && detail
+          ? parseDiagnostic(detail, current.language, lines.length)
+          : null,
+      );
       if (result.cancelled) toast("Run cancelled");
       else if (result.timedOut) toast.error(result.error ?? "Timed out");
       else if (!result.ok) toast.error("Run failed — see console");
@@ -162,11 +206,13 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
           cancelled: false,
         },
       });
+      setDiagnostic(parseDiagnostic(message, current.language, lines.length));
       toast.error(message);
     } finally {
       abortRef.current = null;
     }
   }
+
 
   function cancelRun() {
     abortRef.current?.abort();
@@ -259,25 +305,37 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
       >
         <pre className="min-w-full font-mono text-[11px] leading-relaxed">
           <code className="block">
-            {highlighted.map((tokens, i) => (
-              <span key={i} className="flex">
+            {highlighted.map((tokens, i) => {
+              const errorMessage = errorLines.get(i + 1);
+              return (
                 <span
-                  aria-hidden="true"
-                  className="sticky left-0 w-10 shrink-0 select-none border-r border-border bg-muted/30 px-2 text-right text-muted-foreground"
+                  key={i}
+                  className={`flex ${errorMessage ? "bg-code-error-bg" : ""}`}
+                  title={errorMessage}
                 >
-                  {i + 1}
+                  <span
+                    aria-hidden="true"
+                    className={`sticky left-0 w-10 shrink-0 select-none border-r border-border px-2 text-right ${
+                      errorMessage
+                        ? "bg-code-error-bg font-semibold text-destructive"
+                        : "bg-muted/30 text-muted-foreground"
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="whitespace-pre px-3">
+                    {tokens.length === 0
+                      ? " "
+                      : tokens.map((t, j) => (
+                          <span key={j} className={TOKEN_CLASS[t.kind]}>
+                            {t.value}
+                          </span>
+                        ))}
+                  </span>
                 </span>
-                <span className="whitespace-pre px-3">
-                  {tokens.length === 0
-                    ? " "
-                    : tokens.map((t, j) => (
-                        <span key={j} className={TOKEN_CLASS[t.kind]}>
-                          {t.value}
-                        </span>
-                      ))}
-                </span>
-              </span>
-            ))}
+              );
+            })}
+
 
           </code>
         </pre>
@@ -308,11 +366,25 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
           </span>
         </div>
         <div className="min-h-0 flex-1 overflow-auto px-3 py-2 font-mono text-[11px] leading-relaxed">
-          {runState.phase === "idle" && consoleLines.length === 0 && (
+          {runState.phase === "idle" && consoleLines.length === 0 && syntaxIssues.length === 0 && (
             <p className="select-none text-[10px] uppercase tracking-widest text-muted-foreground">
               No output yet — press Run to execute the active file.
             </p>
           )}
+          {/* Phase D6 — pre-run syntax warnings */}
+          {syntaxIssues.length > 0 && (
+            <div className="mb-1 border border-destructive/40 p-2">
+              <p className="mb-1 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-destructive">
+                <AlertTriangle className="h-3 w-3" /> Syntax_Check · Run_Blocked
+              </p>
+              {syntaxIssues.map((issue, i) => (
+                <pre key={i} className="whitespace-pre-wrap text-destructive">
+                  {`line ${issue.line} · ${issue.message}`}
+                </pre>
+              ))}
+            </div>
+          )}
+
           {consoleLines.map((line, i) => (
             <pre
               key={i}
@@ -336,6 +408,23 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
                   {runState.result.error}
                 </pre>
               )}
+              {/* Phase D6 — parsed stack trace with line numbers */}
+              {diagnostic && diagnostic.frames.length > 0 && (
+                <div className="mt-1 border-l-2 border-destructive/50 pl-2">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Stack_Trace
+                    {diagnostic.lines.length > 0
+                      ? ` · line${diagnostic.lines.length > 1 ? "s" : ""} ${diagnostic.lines.join(", ")}`
+                      : ""}
+                  </p>
+                  {diagnostic.frames.map((frame, i) => (
+                    <pre key={i} className="whitespace-pre-wrap text-muted-foreground">
+                      {frame}
+                    </pre>
+                  ))}
+                </div>
+              )}
+
             </div>
           )}
           <div ref={consoleEndRef} />
