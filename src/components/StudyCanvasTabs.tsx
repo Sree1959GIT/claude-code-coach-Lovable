@@ -1,13 +1,20 @@
 /**
- * Phase D3/D5 — Study Canvas multi-file reader: tabs, read-only syntax-
- * highlighted pane (Python + JavaScript), copy utilities, and run controls
- * (10s timeout, cancel, stdout/stderr/return-value console results pane).
+ * Phase D3/D5/D6 — Study Canvas multi-file reader: tabs, read-only syntax-
+ * highlighted pane (Python + JavaScript), copy utilities, run controls
+ * (10s timeout, cancel, console pane), plus pre-run syntax validation and
+ * diagnostic runtime error display with line numbers and stack traces.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Copy, Play, Square, Terminal } from "lucide-react";
+import { AlertTriangle, Copy, Play, Square, Terminal } from "lucide-react";
 import { toast } from "sonner";
 import { TOKEN_CLASS, tokenizeLine, type LineState, type Token } from "@/lib/syntax-highlight";
+import {
+  checkSyntax,
+  parseDiagnostic,
+  type Diagnostic,
+  type SyntaxIssue,
+} from "@/lib/execution/diagnostics";
 import {
   DEFAULT_TIMEOUT_MS,
   getExecutionProvider,
@@ -41,8 +48,11 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
   const [selection, setSelection] = useState("");
   const [runState, setRunState] = useState<RunState>({ phase: "idle" });
   const [consoleLines, setConsoleLines] = useState<ConsoleLine[]>([]);
+  const [syntaxIssues, setSyntaxIssues] = useState<SyntaxIssue[]>([]);
+  const [diagnostic, setDiagnostic] = useState<Diagnostic | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const consoleEndRef = useRef<HTMLDivElement>(null);
+
 
   const current = files[Math.min(active, Math.max(0, files.length - 1))];
   const lines = useMemo(
