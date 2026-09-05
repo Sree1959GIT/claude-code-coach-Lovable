@@ -408,6 +408,23 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
                   {runState.result.error}
                 </pre>
               )}
+              {/* Phase D6 — parsed stack trace with line numbers */}
+              {diagnostic && diagnostic.frames.length > 0 && (
+                <div className="mt-1 border-l-2 border-destructive/50 pl-2">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Stack_Trace
+                    {diagnostic.lines.length > 0
+                      ? ` · line${diagnostic.lines.length > 1 ? "s" : ""} ${diagnostic.lines.join(", ")}`
+                      : ""}
+                  </p>
+                  {diagnostic.frames.map((frame, i) => (
+                    <pre key={i} className="whitespace-pre-wrap text-muted-foreground">
+                      {frame}
+                    </pre>
+                  ))}
+                </div>
+              )}
+
             </div>
           )}
           <div ref={consoleEndRef} />
