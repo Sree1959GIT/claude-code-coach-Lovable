@@ -305,25 +305,37 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
       >
         <pre className="min-w-full font-mono text-[11px] leading-relaxed">
           <code className="block">
-            {highlighted.map((tokens, i) => (
-              <span key={i} className="flex">
+            {highlighted.map((tokens, i) => {
+              const errorMessage = errorLines.get(i + 1);
+              return (
                 <span
-                  aria-hidden="true"
-                  className="sticky left-0 w-10 shrink-0 select-none border-r border-border bg-muted/30 px-2 text-right text-muted-foreground"
+                  key={i}
+                  className={`flex ${errorMessage ? "bg-code-error-bg" : ""}`}
+                  title={errorMessage}
                 >
-                  {i + 1}
+                  <span
+                    aria-hidden="true"
+                    className={`sticky left-0 w-10 shrink-0 select-none border-r border-border px-2 text-right ${
+                      errorMessage
+                        ? "bg-code-error-bg font-semibold text-destructive"
+                        : "bg-muted/30 text-muted-foreground"
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="whitespace-pre px-3">
+                    {tokens.length === 0
+                      ? " "
+                      : tokens.map((t, j) => (
+                          <span key={j} className={TOKEN_CLASS[t.kind]}>
+                            {t.value}
+                          </span>
+                        ))}
+                  </span>
                 </span>
-                <span className="whitespace-pre px-3">
-                  {tokens.length === 0
-                    ? " "
-                    : tokens.map((t, j) => (
-                        <span key={j} className={TOKEN_CLASS[t.kind]}>
-                          {t.value}
-                        </span>
-                      ))}
-                </span>
-              </span>
-            ))}
+              );
+            })}
+
 
           </code>
         </pre>
