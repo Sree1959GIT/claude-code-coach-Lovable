@@ -436,6 +436,87 @@ export type Database = {
           },
         ]
       }
+      code_executions: {
+        Row: {
+          cancelled: boolean
+          created_at: string
+          duration_ms: number
+          error_message: string | null
+          file_name: string | null
+          id: string
+          language: string
+          ok: boolean
+          provider_id: string | null
+          stderr_bytes: number
+          stdout_bytes: number
+          timed_out: boolean
+          user_id: string
+        }
+        Insert: {
+          cancelled?: boolean
+          created_at?: string
+          duration_ms?: number
+          error_message?: string | null
+          file_name?: string | null
+          id?: string
+          language: string
+          ok?: boolean
+          provider_id?: string | null
+          stderr_bytes?: number
+          stdout_bytes?: number
+          timed_out?: boolean
+          user_id: string
+        }
+        Update: {
+          cancelled?: boolean
+          created_at?: string
+          duration_ms?: number
+          error_message?: string | null
+          file_name?: string | null
+          id?: string
+          language?: string
+          ok?: boolean
+          provider_id?: string | null
+          stderr_bytes?: number
+          stdout_bytes?: number
+          timed_out?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      codebases: {
+        Row: {
+          concept_tag: string
+          created_at: string
+          description: string | null
+          difficulty: string
+          files: Json
+          id: string
+          language: string
+          title: string
+        }
+        Insert: {
+          concept_tag: string
+          created_at?: string
+          description?: string | null
+          difficulty?: string
+          files?: Json
+          id?: string
+          language: string
+          title: string
+        }
+        Update: {
+          concept_tag?: string
+          created_at?: string
+          description?: string | null
+          difficulty?: string
+          files?: Json
+          id?: string
+          language?: string
+          title?: string
+        }
+        Relationships: []
+      }
       content_reviews: {
         Row: {
           claimed_at: string | null
