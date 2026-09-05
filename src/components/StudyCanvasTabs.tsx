@@ -136,6 +136,20 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
 
   async function runActiveFile() {
     if (!current || runState.phase === "running") return;
+
+    // Phase D6 — pre-run syntax validation gate.
+    const issues = checkSyntax(current.content, current.language);
+    setSyntaxIssues(issues);
+    setDiagnostic(null);
+    if (issues.length > 0) {
+      setConsoleLines([]);
+      setRunState({ phase: "idle" });
+      toast.warning(
+        `Syntax check failed — ${issues.length} issue${issues.length > 1 ? "s" : ""} found`,
+      );
+      return;
+    }
+
     const controller = new AbortController();
     abortRef.current = controller;
     const startedAt = Date.now();
@@ -154,6 +168,12 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
           ]),
       });
       setRunState({ phase: "done", result });
+      const detail = result.error ?? result.stderr;
+      setDiagnostic(
+        !result.ok && !result.cancelled && !result.timedOut && detail
+          ? parseDiagnostic(detail, current.language, lines.length)
+          : null,
+      );
       if (result.cancelled) toast("Run cancelled");
       else if (result.timedOut) toast.error(result.error ?? "Timed out");
       else if (!result.ok) toast.error("Run failed — see console");
@@ -172,11 +192,13 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
           cancelled: false,
         },
       });
+      setDiagnostic(parseDiagnostic(message, current.language, lines.length));
       toast.error(message);
     } finally {
       abortRef.current = null;
     }
   }
+
 
   function cancelRun() {
     abortRef.current?.abort();
