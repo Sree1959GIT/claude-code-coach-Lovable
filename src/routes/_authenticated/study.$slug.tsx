@@ -93,6 +93,35 @@ function DomainRunner() {
   const questions = questionsQ.data ?? [];
   const q = questions[idx];
 
+  // Phase E2 — instant cached example lookup by concept tag. Cached for the
+  // session so revisiting a concept costs nothing; never generates anything.
+  const conceptTag = toConceptTag(q?.key_concept);
+  const codebaseQ = useQuery({
+    queryKey: ["codebase", conceptTag],
+    queryFn: () => fetchCodebaseByConcept(conceptTag!),
+    enabled: !!conceptTag,
+    staleTime: Infinity,
+    gcTime: 60 * 60 * 1000,
+  });
+
+  const canvasFiles = useMemo<CanvasFile[]>(() => {
+    const files = codebaseQ.data?.files ?? [];
+    const mapped = files
+      .filter((f) => f.language === "python" || f.language === "javascript")
+      .map((f) => ({
+        name: f.name,
+        language: f.language as CanvasLanguage,
+        content: f.content,
+      }));
+    return mapped.length > 0 ? mapped : SAMPLE_CANVAS_FILES;
+  }, [codebaseQ.data]);
+
+  const canvasSubtitle = codebaseQ.data
+    ? `Cached · ${codebaseQ.data.title}`
+    : conceptTag && codebaseQ.isLoading
+      ? "Loading_Example"
+      : "Code_Workspace";
+
   useEffect(() => {
     setSelected(null);
     setRevealed(false);
