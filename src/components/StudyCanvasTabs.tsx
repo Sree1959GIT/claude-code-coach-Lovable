@@ -208,6 +208,7 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
           ]),
       });
       setRunState({ phase: "done", result });
+      recordExecution(current, provider.id, result);
       const detail = result.error ?? result.stderr;
       setDiagnostic(
         !result.ok && !result.cancelled && !result.timedOut && detail
@@ -219,20 +220,20 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
       else if (!result.ok) toast.error("Run failed — see console");
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setRunState({
-        phase: "done",
-        result: {
-          ok: false,
-          value: null,
-          stdout: "",
-          stderr: "",
-          error: message,
-          durationMs: Date.now() - startedAt,
-          timedOut: false,
-          cancelled: false,
-        },
-      });
+      const failed: ExecutionResult = {
+        ok: false,
+        value: null,
+        stdout: "",
+        stderr: "",
+        error: message,
+        durationMs: Date.now() - startedAt,
+        timedOut: false,
+        cancelled: false,
+      };
+      setRunState({ phase: "done", result: failed });
+      recordExecution(current, null, failed);
       setDiagnostic(parseDiagnostic(message, current.language, lines.length));
+
       toast.error(message);
     } finally {
       abortRef.current = null;
