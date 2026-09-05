@@ -45,3 +45,35 @@ export function parseCodebaseFiles(value: unknown): CodebaseFile[] {
 export function toCodebase(row: CodebaseRow): Codebase {
   return { ...row, files: parseCodebaseFiles(row.files) };
 }
+
+/**
+ * Phase E2 — turn a free-form question `key_concept` into a canonical
+ * concept tag ("Agent Loop" → "agent_loop").
+ */
+export function toConceptTag(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const tag = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return tag.length > 0 ? tag : null;
+}
+
+/**
+ * Phase E2 — look up a pre-built example by concept tag. Returns `null`
+ * when nothing is cached for that concept; no generation ever happens here.
+ */
+export async function fetchCodebaseByConcept(
+  conceptTag: string,
+): Promise<Codebase | null> {
+  const { data, error } = await supabase
+    .from("codebases")
+    .select("*")
+    .eq("concept_tag", conceptTag)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? toCodebase(data as CodebaseRow) : null;
+}
