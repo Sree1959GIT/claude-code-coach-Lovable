@@ -1,0 +1,11 @@
+INSERT INTO public.codebases (concept_tag, language, difficulty, title, description, files) VALUES
+('prompt_caching', 'python', 'intermediate', 'Prompt Caching Breakpoints', 'Shows how a stable system prefix is cached and reused across turns while only the tail of the conversation is re-sent.',
+ jsonb_build_array(jsonb_build_object(
+   'name','prompt_caching.py','language','python','content',
+   E'"""Prompt caching: keep a stable prefix, vary only the tail."""\n\nSYSTEM_PREFIX = "You are a Claude Code architect." * 20  # large, stable\n\ncache = {}\n\n\ndef build_request(user_turn, history):\n    key = hash(SYSTEM_PREFIX)\n    cached = key in cache\n    if not cached:\n        cache[key] = len(SYSTEM_PREFIX)\n    prefix_tokens = cache[key] // 4\n    tail = history[-2:] + [user_turn]\n    tail_tokens = sum(len(t) for t in tail) // 4\n    return {\n        "cache_hit": cached,\n        "cached_prefix_tokens": prefix_tokens,\n        "new_tokens": tail_tokens,\n    }\n\n\nhistory = ["hello", "hi there", "explain caching"]\nfor turn in ["first call", "second call", "third call"]:\n    print(build_request(turn, history))\n'
+ ))),
+('tool_routing', 'javascript', 'intermediate', 'Tool Routing Table', 'Routes a model request to the right tool by intent, with a safe fallback when no tool matches.',
+ jsonb_build_array(jsonb_build_object(
+   'name','toolRouting.js','language','javascript','content',
+   E'// Route an intent to a tool, with a safe fallback.\n\nconst TOOLS = {\n  search: { match: /find|search|lookup/i, run: (q) => `searching: ${q}` },\n  calc: { match: /sum|add|calculate/i, run: (q) => `calculating: ${q}` },\n  code: { match: /write|refactor|debug/i, run: (q) => `coding: ${q}` },\n};\n\nfunction route(query) {\n  for (const [name, tool] of Object.entries(TOOLS)) {\n    if (tool.match.test(query)) return { tool: name, output: tool.run(query) };\n  }\n  return { tool: null, output: "no tool matched - answering directly" };\n}\n\nconst queries = [\n  "search the changelog for retries",\n  "add these two numbers",\n  "refactor this handler",\n  "how are you?",\n];\n\nfor (const q of queries) console.log(q, "=>", route(q));\n'
+ )));
