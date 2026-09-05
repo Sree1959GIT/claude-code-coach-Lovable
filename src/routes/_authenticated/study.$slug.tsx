@@ -447,7 +447,7 @@ function DomainRunner() {
       <FloatingWindow
         open={canvasOpen}
         title="Study_Canvas"
-        subtitle="Code_Workspace"
+        subtitle={canvasSubtitle}
         rect={canvasRect}
         onRectChange={(r) => {
           setCanvasRect(r);
@@ -459,7 +459,7 @@ function DomainRunner() {
         }}
         onClose={() => setCanvasOpen(false)}
       >
-        <StudyCanvasTabs files={SAMPLE_CANVAS_FILES} />
+        <StudyCanvasTabs key={conceptTag ?? "default"} files={canvasFiles} />
       </FloatingWindow>
     </div>
 
