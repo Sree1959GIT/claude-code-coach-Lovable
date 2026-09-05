@@ -366,11 +366,25 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
           </span>
         </div>
         <div className="min-h-0 flex-1 overflow-auto px-3 py-2 font-mono text-[11px] leading-relaxed">
-          {runState.phase === "idle" && consoleLines.length === 0 && (
+          {runState.phase === "idle" && consoleLines.length === 0 && syntaxIssues.length === 0 && (
             <p className="select-none text-[10px] uppercase tracking-widest text-muted-foreground">
               No output yet — press Run to execute the active file.
             </p>
           )}
+          {/* Phase D6 — pre-run syntax warnings */}
+          {syntaxIssues.length > 0 && (
+            <div className="mb-1 border border-destructive/40 p-2">
+              <p className="mb-1 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-destructive">
+                <AlertTriangle className="h-3 w-3" /> Syntax_Check · Run_Blocked
+              </p>
+              {syntaxIssues.map((issue, i) => (
+                <pre key={i} className="whitespace-pre-wrap text-destructive">
+                  {`line ${issue.line} · ${issue.message}`}
+                </pre>
+              ))}
+            </div>
+          )}
+
           {consoleLines.map((line, i) => (
             <pre
               key={i}
