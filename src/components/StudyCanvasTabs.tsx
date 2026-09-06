@@ -333,6 +333,24 @@ export function StudyCanvasTabs({
           >
             <Copy className="h-3 w-3" /> Copy_File
           </button>
+          {/* Phase E3 — background queue of extra cached examples */}
+          {moreState !== "unavailable" && (
+            <button
+              onClick={onLoadMore}
+              disabled={moreState !== "idle"}
+              aria-label="Load more codebases in the background"
+              className="inline-flex items-center gap-1.5 border border-border bg-background px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-foreground transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Layers className="h-3 w-3" />
+              {moreState === "loading"
+                ? "Queuing…"
+                : moreState === "loaded"
+                  ? `+${moreCount}_Loaded`
+                  : moreState === "empty"
+                    ? "No_More"
+                    : "More_Codebases"}
+            </button>
+          )}
         </div>
       </div>
 
