@@ -503,7 +503,13 @@ function DomainRunner() {
         }}
         onClose={() => setCanvasOpen(false)}
       >
-        <StudyCanvasTabs key={conceptTag ?? "default"} files={canvasFiles} />
+        <StudyCanvasTabs
+          key={conceptTag ?? "default"}
+          files={canvasFiles}
+          moreState={moreState}
+          moreCount={moreQ.data?.length ?? 0}
+          onLoadMore={() => setMoreRequested(true)}
+        />
       </FloatingWindow>
     </div>
 
