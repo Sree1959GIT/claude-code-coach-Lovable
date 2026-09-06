@@ -104,20 +104,60 @@ function DomainRunner() {
     gcTime: 60 * 60 * 1000,
   });
 
+  // Phase E3 — "More Codebases": queued in the background on demand, so the
+  // primary example stays interactive while extra tabs stream in.
+  const [moreRequested, setMoreRequested] = useState(false);
+  useEffect(() => setMoreRequested(false), [conceptTag]);
+
+  const moreQ = useQuery({
+    queryKey: ["codebases-more", conceptTag, codebaseQ.data?.id ?? null],
+    queryFn: () =>
+      fetchMoreCodebases(conceptTag, {
+        excludeIds: codebaseQ.data ? [codebaseQ.data.id] : [],
+        limit: 3,
+      }),
+    enabled: moreRequested && !codebaseQ.isLoading,
+    staleTime: Infinity,
+    gcTime: 60 * 60 * 1000,
+  });
+
   const canvasFiles = useMemo<CanvasFile[]>(() => {
-    const files = codebaseQ.data?.files ?? [];
-    const mapped = files
-      .filter((f) => f.language === "python" || f.language === "javascript")
-      .map((f) => ({
-        name: f.name,
-        language: f.language as CanvasLanguage,
-        content: f.content,
-      }));
-    return mapped.length > 0 ? mapped : SAMPLE_CANVAS_FILES;
-  }, [codebaseQ.data]);
+    const toCanvas = (f: { name: string; language: string; content: string }, prefix?: string) => ({
+      name: prefix ? `${prefix}/${f.name}` : f.name,
+      language: f.language as CanvasLanguage,
+      content: f.content,
+    });
+    const isRunnable = (f: { language: string }) =>
+      f.language === "python" || f.language === "javascript";
+
+    const primary = (codebaseQ.data?.files ?? []).filter(isRunnable).map((f) => toCanvas(f));
+    const base = primary.length > 0 ? primary : SAMPLE_CANVAS_FILES;
+
+    const extras: CanvasFile[] = [];
+    for (const cb of moreQ.data ?? []) {
+      for (const f of cb.files.filter(isRunnable)) {
+        extras.push(toCanvas(f, cb.concept_tag));
+      }
+    }
+
+    const seen = new Set(base.map((f) => f.name));
+    return [...base, ...extras.filter((f) => !seen.has(f.name) && seen.add(f.name))];
+  }, [codebaseQ.data, moreQ.data]);
+
+  const moreState = !conceptTag
+    ? ("unavailable" as const)
+    : moreQ.isFetching
+      ? ("loading" as const)
+      : moreQ.data
+        ? moreQ.data.length > 0
+          ? ("loaded" as const)
+          : ("empty" as const)
+        : ("idle" as const);
 
   const canvasSubtitle = codebaseQ.data
-    ? `Cached · ${codebaseQ.data.title}`
+    ? `Cached · ${codebaseQ.data.title}${
+        moreQ.data && moreQ.data.length > 0 ? ` · +${moreQ.data.length}_More` : ""
+      }`
     : conceptTag && codebaseQ.isLoading
       ? "Loading_Example"
       : "Code_Workspace";
