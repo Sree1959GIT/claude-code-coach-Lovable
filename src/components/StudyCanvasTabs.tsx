@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Copy, Play, Square, Terminal } from "lucide-react";
+import { AlertTriangle, Copy, Layers, Play, Square, Terminal } from "lucide-react";
 import { toast } from "sonner";
 import { TOKEN_CLASS, tokenizeLine, type LineState, type Token } from "@/lib/syntax-highlight";
 import {
@@ -67,7 +67,20 @@ type RunState =
   | { phase: "running"; startedAt: number }
   | { phase: "done"; result: ExecutionResult };
 
-export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
+/** Phase E3 — state of the background "More Codebases" queue. */
+export type MoreCodebasesState = "unavailable" | "idle" | "loading" | "loaded" | "empty";
+
+export function StudyCanvasTabs({
+  files,
+  moreState = "unavailable",
+  moreCount = 0,
+  onLoadMore,
+}: {
+  files: CanvasFile[];
+  moreState?: MoreCodebasesState;
+  moreCount?: number;
+  onLoadMore?: () => void;
+}) {
   const [active, setActive] = useState(0);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -320,6 +333,24 @@ export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
           >
             <Copy className="h-3 w-3" /> Copy_File
           </button>
+          {/* Phase E3 — background queue of extra cached examples */}
+          {moreState !== "unavailable" && (
+            <button
+              onClick={onLoadMore}
+              disabled={moreState !== "idle"}
+              aria-label="Load more codebases in the background"
+              className="inline-flex items-center gap-1.5 border border-border bg-background px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-foreground transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Layers className="h-3 w-3" />
+              {moreState === "loading"
+                ? "Queuing…"
+                : moreState === "loaded"
+                  ? `+${moreCount}_Loaded`
+                  : moreState === "empty"
+                    ? "No_More"
+                    : "More_Codebases"}
+            </button>
+          )}
         </div>
       </div>
 
