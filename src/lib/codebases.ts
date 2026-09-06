@@ -78,3 +78,51 @@ export async function fetchCodebaseByConcept(
   if (error) throw error;
   return data ? toCodebase(data as CodebaseRow) : null;
 }
+
+/**
+ * Phase E3 — background "More Codebases" queue. Fetches up to `limit`
+ * additional cached examples: first any other rows sharing the concept tag,
+ * then related rows from other concepts. Read-only and non-blocking; the
+ * caller keeps showing the primary example while this resolves.
+ */
+export async function fetchMoreCodebases(
+  conceptTag: string | null,
+  options: { excludeIds?: string[]; limit?: number } = {},
+): Promise<Codebase[]> {
+  const limit = options.limit ?? 3;
+  const exclude = new Set(options.excludeIds ?? []);
+  const collected: Codebase[] = [];
+
+  const push = (rows: CodebaseRow[] | null) => {
+    for (const row of rows ?? []) {
+      if (exclude.has(row.id) || collected.length >= limit) continue;
+      exclude.add(row.id);
+      collected.push(toCodebase(row));
+    }
+  };
+
+  if (conceptTag) {
+    const { data, error } = await supabase
+      .from("codebases")
+      .select("*")
+      .eq("concept_tag", conceptTag)
+      .order("created_at", { ascending: true })
+      .limit(limit + exclude.size);
+    if (error) throw error;
+    push(data as CodebaseRow[] | null);
+  }
+
+  if (collected.length < limit) {
+    const query = supabase
+      .from("codebases")
+      .select("*")
+      .order("created_at", { ascending: true })
+      .limit(limit + exclude.size + 3);
+    if (conceptTag) query.neq("concept_tag", conceptTag);
+    const { data, error } = await query;
+    if (error) throw error;
+    push(data as CodebaseRow[] | null);
+  }
+
+  return collected.slice(0, limit);
+}
