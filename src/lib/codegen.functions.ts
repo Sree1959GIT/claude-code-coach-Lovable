@@ -1,7 +1,7 @@
 /**
- * Phase E4 — client-callable entry point for the code generation loop.
- * Admin-only, preview-only: the draft is returned to the caller, never saved.
- * Persistence + fail-safe retries land in E5.
+ * Phase E4/E5 — client-callable entry point for the code generation loop.
+ * Admin-only. E5 adds the quality filter: the loop retries broken examples,
+ * and a draft is only written to `codebases` when it passes verification.
  */
 
 import { createServerFn } from "@tanstack/react-start";
@@ -13,6 +13,19 @@ type Input = {
   conceptLabel?: string | null;
   language: "python" | "javascript";
   difficulty: "beginner" | "intermediate" | "advanced";
+  /** Persist the result when (and only when) it passes verification. */
+  persist?: boolean;
+  maxAttempts?: number;
+};
+
+export type CodegenSaveOutcome = {
+  saved: boolean;
+  id: string | null;
+  reason: string | null;
+};
+
+export type GenerateCodebaseResult = CodegenResult & {
+  save: CodegenSaveOutcome | null;
 };
 
 export const generateCodebaseDraft = createServerFn({ method: "POST" })
@@ -33,9 +46,20 @@ export const generateCodebaseDraft = createServerFn({ method: "POST" })
       typeof input.conceptLabel === "string" && input.conceptLabel.trim()
         ? input.conceptLabel.trim().slice(0, 200)
         : conceptTag.replace(/_/g, " ");
-    return { conceptTag, conceptLabel: label, language, difficulty };
+    const maxAttempts =
+      typeof input.maxAttempts === "number" && Number.isFinite(input.maxAttempts)
+        ? Math.min(Math.max(Math.trunc(input.maxAttempts), 1), 5)
+        : undefined;
+    return {
+      conceptTag,
+      conceptLabel: label,
+      language,
+      difficulty,
+      persist: input.persist === true,
+      maxAttempts,
+    };
   })
-  .handler(async ({ data, context }): Promise<CodegenResult> => {
+  .handler(async ({ data, context }): Promise<GenerateCodebaseResult> => {
     const { data: isAdmin, error: roleErr } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,
       _role: "admin",
@@ -47,6 +71,33 @@ export const generateCodebaseDraft = createServerFn({ method: "POST" })
     const { data: rows } = await supabaseAdmin.from("codebases").select("concept_tag");
     const existingTags = Array.from(new Set((rows ?? []).map((r) => r.concept_tag)));
 
-    const { runCodegenLoop } = await import("./codegen.server");
-    return runCodegenLoop({ ...data, existingTags });
+    const { runCodegenLoop, persistVerifiedDraft } = await import("./codegen.server");
+    const { persist, ...loopArgs } = data;
+    const result = await runCodegenLoop({ ...loopArgs, existingTags });
+
+    if (!persist) return { ...result, save: null };
+    if (!result.draft) {
+      return {
+        ...result,
+        save: {
+          saved: false,
+          id: null,
+          reason: result.error ?? "Discarded — no verified example was produced.",
+        },
+      };
+    }
+    // Fail-safe: a save error must never break the generation response.
+    try {
+      return { ...result, save: await persistVerifiedDraft(result.draft) };
+    } catch (err) {
+      return {
+        ...result,
+        save: {
+          saved: false,
+          id: null,
+          reason: err instanceof Error ? err.message : "Save failed",
+        },
+      };
+    }
   });
+
