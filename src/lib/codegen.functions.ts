@@ -24,7 +24,8 @@ export const generateCodebaseDraft = createServerFn({ method: "POST" })
       .replace(/[^a-z0-9]+/g, "_")
       .replace(/^_+|_+$/g, "");
     if (!conceptTag) throw new Error("Pick a concept.");
-    const language = input.language === "python" ? "python" : "javascript";
+    const language: "python" | "javascript" =
+      input.language === "python" ? "python" : "javascript";
     const difficulty = (["beginner", "intermediate", "advanced"] as const).includes(input.difficulty)
       ? input.difficulty
       : "intermediate";

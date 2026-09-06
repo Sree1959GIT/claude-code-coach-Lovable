@@ -19,12 +19,28 @@ export type CodegenDifficulty = "beginner" | "intermediate" | "advanced";
 
 export type CodegenAgent = "research" | "sme" | "verifier" | "documentation";
 
+export type ResearchBrief = {
+  gap: string;
+  learningGoals: string[];
+  mustCover: string[];
+  misconceptions: string[];
+};
+
+export type CodegenStepOutput = {
+  brief?: ResearchBrief;
+  citations?: string[];
+  title?: string;
+  files?: string[];
+  ok?: boolean;
+  notes?: string[];
+};
+
 export type CodegenStep = {
   agent: CodegenAgent;
   status: "ok" | "error";
   summary: string;
   durationMs: number;
-  output?: unknown;
+  output?: CodegenStepOutput;
   error?: string;
 };
 
@@ -110,13 +126,6 @@ async function callJson<T>(args: { system: string; user: string; label: string }
 }
 
 /* ------------------------------------------------------------- 1. research */
-
-type ResearchBrief = {
-  gap: string;
-  learningGoals: string[];
-  mustCover: string[];
-  misconceptions: string[];
-};
 
 async function researchAgent(args: CodegenArgs): Promise<{
   brief: ResearchBrief;
