@@ -67,7 +67,20 @@ type RunState =
   | { phase: "running"; startedAt: number }
   | { phase: "done"; result: ExecutionResult };
 
-export function StudyCanvasTabs({ files }: { files: CanvasFile[] }) {
+/** Phase E3 — state of the background "More Codebases" queue. */
+export type MoreCodebasesState = "unavailable" | "idle" | "loading" | "loaded" | "empty";
+
+export function StudyCanvasTabs({
+  files,
+  moreState = "unavailable",
+  moreCount = 0,
+  onLoadMore,
+}: {
+  files: CanvasFile[];
+  moreState?: MoreCodebasesState;
+  moreCount?: number;
+  onLoadMore?: () => void;
+}) {
   const [active, setActive] = useState(0);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const panelRef = useRef<HTMLDivElement>(null);
