@@ -18,7 +18,11 @@ import {
   recordAttempt,
   type QuestionOption,
 } from "@/lib/study";
-import { fetchCodebaseByConcept, toConceptTag } from "@/lib/codebases";
+import {
+  fetchCodebaseByConcept,
+  fetchMoreCodebases,
+  toConceptTag,
+} from "@/lib/codebases";
 import { logEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/study/$slug")({
