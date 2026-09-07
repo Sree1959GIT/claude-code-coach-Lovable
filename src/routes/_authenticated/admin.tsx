@@ -29,6 +29,7 @@ import { EnrichPanel } from "@/components/admin/EnrichPanel";
 import { CitationPanel } from "@/components/admin/CitationPanel";
 import { CalibrationPanel } from "@/components/admin/CalibrationPanel";
 import { AgenticAuthoringPanel } from "@/components/admin/AgenticAuthoringPanel";
+import { CodeGenPanel } from "@/components/admin/CodeGenPanel";
 
 
 
@@ -872,6 +873,15 @@ function AdminPage() {
                 value on the question. Preview first, then apply.
               </p>
               <CalibrationPanel />
+            </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">12 · Code_Generation</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Runs the four-agent code example loop and streams each agent's live status. Verified examples are saved
+                to the shared codebase library.
+              </p>
+              <CodeGenPanel />
             </section>
 
 
