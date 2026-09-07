@@ -16,7 +16,10 @@ type Input = {
   /** Persist the result when (and only when) it passes verification. */
   persist?: boolean;
   maxAttempts?: number;
+  /** Phase E6 — tracking row created by `startCodeGenJob`. */
+  jobId?: string | null;
 };
+
 
 export type CodegenSaveOutcome = {
   saved: boolean;
