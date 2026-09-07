@@ -16,12 +16,13 @@ const btn =
 const field =
   "border border-border bg-background px-2 py-1.5 font-mono text-[11px] focus:outline-none focus:border-primary";
 
-const AGENTS = ["research", "sme", "verifier", "documentation"] as const;
+const AGENTS = ["research", "sme", "verifier", "documentation", "advice"] as const;
 const AGENT_LABEL: Record<string, string> = {
   research: "01 · Research",
   sme: "02 · SME",
   verifier: "03 · Verifier",
   documentation: "04 · Documentation",
+  advice: "05 · Advice",
 };
 
 function statusTone(status: string) {

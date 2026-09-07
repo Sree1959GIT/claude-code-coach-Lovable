@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Copy, Layers, Play, Square, Terminal } from "lucide-react";
+import { AlertTriangle, BookOpen, Code2, Copy, Layers, Play, Square, Terminal } from "lucide-react";
 import { toast } from "sonner";
 import { TOKEN_CLASS, tokenizeLine, type LineState, type Token } from "@/lib/syntax-highlight";
 import {
@@ -21,6 +21,8 @@ import {
   type ExecutionResult,
 } from "@/lib/execution";
 import { logCodeExecution } from "@/lib/executions.functions";
+import { AdviceMatrix } from "@/components/AdviceMatrix";
+import { hasAdvice, type CodeAdvice } from "@/lib/advice";
 
 const byteLength = (s: string) => new TextEncoder().encode(s).length;
 
@@ -72,11 +74,14 @@ export type MoreCodebasesState = "unavailable" | "idle" | "loading" | "loaded" |
 
 export function StudyCanvasTabs({
   files,
+  advice,
   moreState = "unavailable",
   moreCount = 0,
   onLoadMore,
 }: {
   files: CanvasFile[];
+  /** Phase E7 — structured advice breakdown matrices for this example. */
+  advice?: CodeAdvice | null;
   moreState?: MoreCodebasesState;
   moreCount?: number;
   onLoadMore?: () => void;
@@ -91,6 +96,23 @@ export function StudyCanvasTabs({
   const [diagnostic, setDiagnostic] = useState<Diagnostic | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const consoleEndRef = useRef<HTMLDivElement>(null);
+  // Phase E7 — code pane vs. advice breakdown matrices.
+  const adviceAvailable = hasAdvice(advice);
+  const [view, setView] = useState<"code" | "advice">("code");
+  const [focusLine, setFocusLine] = useState<number | null>(null);
+  const lineRefs = useRef<(HTMLSpanElement | null)[]>([]);
+
+  useEffect(() => {
+    if (!adviceAvailable) setView("code");
+  }, [adviceAvailable]);
+
+  function jumpToLine(line: number) {
+    setView("code");
+    setFocusLine(line);
+    requestAnimationFrame(() => {
+      lineRefs.current[line - 1]?.scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+  }
 
 
   const current = files[Math.min(active, Math.max(0, files.length - 1))];
@@ -318,6 +340,21 @@ export function StudyCanvasTabs({
               <Play className="h-3 w-3" /> Run
             </button>
           )}
+          {adviceAvailable && (
+            <button
+              onClick={() => setView((v) => (v === "code" ? "advice" : "code"))}
+              aria-label="Toggle advice breakdown"
+              aria-pressed={view === "advice"}
+              className={`inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[9px] uppercase tracking-widest transition-colors ${
+                view === "advice"
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border bg-background text-foreground hover:border-primary"
+              }`}
+            >
+              {view === "advice" ? <Code2 className="h-3 w-3" /> : <BookOpen className="h-3 w-3" />}
+              {view === "advice" ? "Code" : "Advice"}
+            </button>
+          )}
           <button
             onClick={copySelection}
             disabled={!selection}
@@ -361,6 +398,13 @@ export function StudyCanvasTabs({
         aria-labelledby={`canvas-tab-${active}`}
         className="min-h-0 flex-1 overflow-auto bg-card"
       >
+        {view === "advice" && advice ? (
+          <AdviceMatrix
+            advice={advice}
+            activeFile={current?.name}
+            onJumpToLine={jumpToLine}
+          />
+        ) : (
         <pre className="min-w-full font-mono text-[11px] leading-relaxed">
           <code className="block">
             {highlighted.map((tokens, i) => {
@@ -368,7 +412,16 @@ export function StudyCanvasTabs({
               return (
                 <span
                   key={i}
-                  className={`flex ${errorMessage ? "bg-code-error-bg" : ""}`}
+                  ref={(el) => {
+                    lineRefs.current[i] = el;
+                  }}
+                  className={`flex ${
+                    errorMessage
+                      ? "bg-code-error-bg"
+                      : focusLine === i + 1
+                        ? "bg-primary/10"
+                        : ""
+                  }`}
                   title={errorMessage}
                 >
                   <span
@@ -397,6 +450,7 @@ export function StudyCanvasTabs({
 
           </code>
         </pre>
+        )}
       </div>
 
       {/* Phase D5 — console results pane */}

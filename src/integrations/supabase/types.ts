@@ -537,6 +537,7 @@ export type Database = {
       }
       codebases: {
         Row: {
+          advice: Json
           concept_tag: string
           created_at: string
           description: string | null
@@ -547,6 +548,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          advice?: Json
           concept_tag: string
           created_at?: string
           description?: string | null
@@ -557,6 +559,7 @@ export type Database = {
           title: string
         }
         Update: {
+          advice?: Json
           concept_tag?: string
           created_at?: string
           description?: string | null

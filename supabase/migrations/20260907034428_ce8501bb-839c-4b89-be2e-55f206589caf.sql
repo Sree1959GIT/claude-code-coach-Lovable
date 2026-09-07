@@ -1,0 +1,1 @@
+ALTER TABLE public.codebases ADD COLUMN IF NOT EXISTS advice jsonb NOT NULL DEFAULT '{}'::jsonb;

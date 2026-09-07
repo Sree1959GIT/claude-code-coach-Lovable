@@ -10,6 +10,7 @@
 import { checkSyntax } from "./execution/diagnostics";
 import type { CodebaseFile } from "./codebases";
 import { retrieveChunks } from "./retrieval.server";
+import { EMPTY_ADVICE, normalizeAdvice, type CodeAdvice } from "./advice";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-3.7-flash";
@@ -17,7 +18,13 @@ const MODEL = "google/gemini-3.7-flash";
 export type CodegenLanguage = "python" | "javascript";
 export type CodegenDifficulty = "beginner" | "intermediate" | "advanced";
 
-export type CodegenAgent = "research" | "sme" | "verifier" | "documentation";
+export type CodegenAgent =
+  | "research"
+  | "sme"
+  | "verifier"
+  | "documentation"
+  /** Phase E7 — structured advice breakdown matrices. */
+  | "advice";
 
 export type ResearchBrief = {
   gap: string;
@@ -53,6 +60,8 @@ export type CodegenDraft = {
   files: CodebaseFile[];
   /** Documentation agent output: line-level walkthrough + misconceptions. */
   walkthrough: string;
+  /** Phase E7 — structured advice breakdown matrices. */
+  advice: CodeAdvice;
   /** Verifier verdict; false means E5 should retry or discard. */
   verified: boolean;
   verifierNotes: string[];
@@ -314,6 +323,62 @@ async function documentationAgent(args: {
   return text.trim();
 }
 
+/* -------------------------------------------------- 5. advice (Phase E7) */
+
+/**
+ * Phase E7 — turn the example plus the documentation prose into structured
+ * advice matrices the UI can render: a line-by-line walkthrough keyed to real
+ * file lines, design tradeoffs, misconception checks, concept linkages and
+ * follow-up questions. Never throws: advice is additive, so a failure here
+ * must not discard a verified example.
+ */
+async function adviceAgent(args: {
+  conceptLabel: string;
+  files: CodebaseFile[];
+  brief: ResearchBrief;
+  walkthrough: string;
+}): Promise<CodeAdvice> {
+  const numbered = args.files
+    .map(
+      (f) =>
+        `--- ${f.name} (${f.language}) ---\n` +
+        f.content
+          .split("\n")
+          .map((line, i) => `${i + 1}| ${line}`)
+          .join("\n"),
+    )
+    .join("\n\n")
+    .slice(0, 14_000);
+
+  const raw = await callJson<unknown>({
+    label: "Advice agent",
+    system:
+      "You are the Advice agent for a certification tutor. Given a runnable teaching example with " +
+      "numbered lines, produce STRUCTURED advice. Every walkthrough entry must cite a real file name " +
+      "and real line numbers from the listing. Be concrete and short. Return ONLY JSON, no fences.",
+    user: [
+      `Concept: ${args.conceptLabel}`,
+      `Learning goals: ${args.brief.learningGoals.join("; ")}`,
+      `Known misconceptions: ${args.brief.misconceptions.join("; ")}`,
+      args.walkthrough ? `Documentation notes:\n${args.walkthrough.slice(0, 4000)}` : "",
+      "",
+      "CODE (line-numbered):",
+      numbered,
+      "",
+      'JSON shape: {"summary":string,' +
+        '"walkthrough":[{"file":string,"line":number,"endLine":number,"label":string,"explanation":string}],' +
+        '"tradeoffs":[{"decision":string,"chosen":string,"alternative":string,"why":string}],' +
+        '"misconceptions":[{"claim":string,"reality":string,"check":string}],' +
+        '"conceptLinks":string[],"followUps":string[]}',
+      "Cover 5-12 walkthrough entries, 2-4 tradeoffs, 2-4 misconceptions.",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  });
+
+  return normalizeAdvice(raw);
+}
+
 /* ------------------------------------------------------------------- loop */
 
 const now = () => Date.now();
@@ -451,6 +516,39 @@ export async function runCodegenLoop(
     });
   }
 
+  // 5. Advice matrices (Phase E7) — additive; a failure never discards the draft.
+  let advice: CodeAdvice = { ...EMPTY_ADVICE };
+  t = now();
+  try {
+    advice = await adviceAgent({
+      conceptLabel: args.conceptLabel,
+      files: sme.files,
+      brief: research.brief,
+      walkthrough,
+    });
+    await emit({
+      agent: "advice",
+      status: "ok",
+      summary: `${advice.walkthrough.length} walk step(s), ${advice.tradeoffs.length} tradeoff(s), ${advice.misconceptions.length} misconception check(s)`,
+      durationMs: now() - t,
+      output: {
+        notes: [
+          ...advice.conceptLinks.map((c) => `link: ${c}`),
+          ...advice.followUps.map((q) => `follow-up: ${q}`),
+        ],
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Advice generation failed";
+    await emit({
+      agent: "advice",
+      status: "error",
+      summary: message,
+      durationMs: now() - t,
+      error: message,
+    });
+  }
+
   return {
     steps,
     draft: {
@@ -461,6 +559,7 @@ export async function runCodegenLoop(
       difficulty: args.difficulty,
       files: sme.files,
       walkthrough,
+      advice,
       verified: verdict.ok,
       verifierNotes: verdict.notes,
       citations: research.citations,
@@ -495,6 +594,7 @@ export async function persistVerifiedDraft(
       title: draft.title,
       description: draft.description,
       files: draft.files,
+      advice: draft.advice as unknown as never,
     })
     .select("id")
     .single();
@@ -575,5 +675,6 @@ export function nextAgentAfter(step: CodegenStep): CodegenAgent | null {
   if (step.agent === "research") return "sme";
   if (step.agent === "sme") return "verifier";
   if (step.agent === "verifier") return step.status === "ok" ? "documentation" : "sme";
+  if (step.agent === "documentation") return "advice";
   return null;
 }
