@@ -484,6 +484,57 @@ export type Database = {
         }
         Relationships: []
       }
+      code_gen_jobs: {
+        Row: {
+          attempts: number
+          concept_label: string | null
+          concept_tag: string
+          created_at: string
+          created_by: string | null
+          current_agent: string | null
+          difficulty: string
+          error: string | null
+          id: string
+          language: string
+          saved_codebase_id: string | null
+          status: string
+          steps: Json
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          concept_label?: string | null
+          concept_tag: string
+          created_at?: string
+          created_by?: string | null
+          current_agent?: string | null
+          difficulty?: string
+          error?: string | null
+          id?: string
+          language: string
+          saved_codebase_id?: string | null
+          status?: string
+          steps?: Json
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          concept_label?: string | null
+          concept_tag?: string
+          created_at?: string
+          created_by?: string | null
+          current_agent?: string | null
+          difficulty?: string
+          error?: string | null
+          id?: string
+          language?: string
+          saved_codebase_id?: string | null
+          status?: string
+          steps?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       codebases: {
         Row: {
           concept_tag: string
