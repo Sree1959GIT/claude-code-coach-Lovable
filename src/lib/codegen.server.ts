@@ -502,3 +502,78 @@ export async function persistVerifiedDraft(
   if (error) return { saved: false, id: null, reason: error.message };
   return { saved: true, id: data?.id ?? null, reason: null };
 }
+
+/* ------------------------------------------------- Phase E6 — job tracking */
+
+export type CodeGenJobStatus = "queued" | "running" | "succeeded" | "failed";
+
+/** Create the tracking row for a run, so the UI can poll it while agents work. */
+export async function createCodeGenJob(args: {
+  userId: string;
+  conceptTag: string;
+  conceptLabel: string;
+  language: CodegenLanguage;
+  difficulty: CodegenDifficulty;
+}): Promise<string | null> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("code_gen_jobs")
+      .insert({
+        created_by: args.userId,
+        concept_tag: args.conceptTag,
+        concept_label: args.conceptLabel,
+        language: args.language,
+        difficulty: args.difficulty,
+        status: "queued",
+        steps: [],
+      })
+      .select("id")
+      .single();
+    if (error) return null;
+    return data?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Patch a tracking row. Never throws — telemetry must not break a run. */
+export async function updateCodeGenJob(
+  jobId: string | null,
+  patch: {
+    status?: CodeGenJobStatus;
+    currentAgent?: CodegenAgent | null;
+    steps?: CodegenStep[];
+    attempts?: number;
+    error?: string | null;
+    savedCodebaseId?: string | null;
+  },
+): Promise<void> {
+  if (!jobId) return;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
+      .from("code_gen_jobs")
+      .update({
+        ...(patch.status ? { status: patch.status } : {}),
+        ...(patch.currentAgent !== undefined ? { current_agent: patch.currentAgent } : {}),
+        ...(patch.steps ? { steps: patch.steps as unknown as never } : {}),
+        ...(patch.attempts !== undefined ? { attempts: patch.attempts } : {}),
+        ...(patch.error !== undefined ? { error: patch.error } : {}),
+        ...(patch.savedCodebaseId !== undefined
+          ? { saved_codebase_id: patch.savedCodebaseId }
+          : {}),
+      })
+      .eq("id", jobId);
+  } catch {
+    // ignore
+  }
+}
+
+/** The agent that logically runs after the one that just finished. */
+export function nextAgentAfter(step: CodegenStep): CodegenAgent | null {
+  if (step.agent === "research") return "sme";
+  if (step.agent === "sme") return "verifier";
+  if (step.agent === "verifier") return step.status === "ok" ? "documentation" : "sme";
+  return null;
+}
