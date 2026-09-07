@@ -318,12 +318,21 @@ async function documentationAgent(args: {
 
 const now = () => Date.now();
 
+/** Phase E5 — how many SME attempts the quality filter will spend. */
+export const MAX_CODEGEN_ATTEMPTS = 3;
+
 /**
- * Run the full four-agent loop. Never throws: a failed stage is recorded in
- * `steps` and surfaced through `error`, so callers can show partial progress.
+ * Run the full four-agent loop with the Phase E5 quality filter:
+ * SME → Verifier is retried up to `maxAttempts` times, each retry carrying the
+ * verifier's complaints back to the SME. Broken attempts are discarded, never
+ * returned as a usable draft. Never throws: a failed stage is recorded in
+ * `steps` and surfaced through `error`.
  */
-export async function runCodegenLoop(args: CodegenArgs): Promise<CodegenResult> {
+export async function runCodegenLoop(
+  args: CodegenArgs & { maxAttempts?: number },
+): Promise<CodegenResult> {
   const steps: CodegenStep[] = [];
+  const maxAttempts = Math.min(Math.max(args.maxAttempts ?? MAX_CODEGEN_ATTEMPTS, 1), 5);
 
   // 1. Research
   let research: Awaited<ReturnType<typeof researchAgent>>;
@@ -343,35 +352,66 @@ export async function runCodegenLoop(args: CodegenArgs): Promise<CodegenResult> 
     return { steps, draft: null, error: message };
   }
 
-  // 2. SME
-  let sme: Awaited<ReturnType<typeof smeAgent>>;
-  t = now();
-  try {
-    sme = await smeAgent(args, research);
+  // 2 + 3. SME → Verifier, retried until the example passes the quality filter.
+  let sme: Awaited<ReturnType<typeof smeAgent>> | null = null;
+  let verdict: VerifierVerdict = { ok: false, notes: ["No example was produced."] };
+  let lastError: string | null = null;
+  let repairNote: string | undefined;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    t = now();
+    let candidate: Awaited<ReturnType<typeof smeAgent>>;
+    try {
+      candidate = await smeAgent(args, research, repairNote);
+      steps.push({
+        agent: "sme",
+        status: "ok",
+        summary: `Attempt ${attempt}/${maxAttempts} — ${candidate.files.length} file(s) written`,
+        durationMs: now() - t,
+        output: { title: candidate.title, files: candidate.files.map((f) => f.name) },
+      });
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : "SME generation failed";
+      steps.push({
+        agent: "sme",
+        status: "error",
+        summary: `Attempt ${attempt}/${maxAttempts} — ${lastError}`,
+        durationMs: now() - t,
+        error: lastError,
+      });
+      repairNote = lastError;
+      continue;
+    }
+
+    t = now();
+    const attemptVerdict = verifyFiles(candidate.files);
     steps.push({
-      agent: "sme",
-      status: "ok",
-      summary: `${sme.files.length} file(s) written`,
+      agent: "verifier",
+      status: attemptVerdict.ok ? "ok" : "error",
+      summary: attemptVerdict.ok
+        ? `Attempt ${attempt}/${maxAttempts} — passes verification`
+        : `Attempt ${attempt}/${maxAttempts} — ${attemptVerdict.notes.length} issue(s), discarding`,
       durationMs: now() - t,
-      output: { title: sme.title, files: sme.files.map((f) => f.name) },
+      output: attemptVerdict,
+      ...(attemptVerdict.ok ? {} : { error: attemptVerdict.notes[0] }),
     });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "SME generation failed";
-    steps.push({ agent: "sme", status: "error", summary: message, durationMs: now() - t, error: message });
-    return { steps, draft: null, error: message };
+
+    sme = candidate;
+    verdict = attemptVerdict;
+    if (attemptVerdict.ok) {
+      lastError = null;
+      break;
+    }
+    lastError = `Example failed verification: ${attemptVerdict.notes.slice(0, 3).join("; ")}`;
+    repairNote = attemptVerdict.notes.slice(0, 5).join("; ");
+    sme = null; // discard the broken attempt
   }
 
-  // 3. Verifier
-  t = now();
-  const verdict = verifyFiles(sme.files);
-  steps.push({
-    agent: "verifier",
-    status: verdict.ok ? "ok" : "error",
-    summary: verdict.ok ? "Example passes static verification" : `${verdict.notes.length} issue(s) found`,
-    durationMs: now() - t,
-    output: verdict,
-    ...(verdict.ok ? {} : { error: verdict.notes[0] }),
-  });
+  if (!sme || !verdict.ok) {
+    const message =
+      lastError ?? `No example passed verification after ${maxAttempts} attempt(s).`;
+    return { steps, draft: null, error: message };
+  }
 
   // 4. Documentation
   let walkthrough = "";
@@ -415,4 +455,38 @@ export async function runCodegenLoop(args: CodegenArgs): Promise<CodegenResult> 
     },
     error: null,
   };
+}
+
+/**
+ * Phase E5 — the save gate. A draft only reaches the `codebases` table when it
+ * re-passes verification here; a broken script is discarded with a reason.
+ */
+export async function persistVerifiedDraft(
+  draft: CodegenDraft,
+): Promise<{ saved: boolean; id: string | null; reason: string | null }> {
+  const verdict = verifyFiles(draft.files);
+  if (!draft.verified || !verdict.ok) {
+    return {
+      saved: false,
+      id: null,
+      reason: `Discarded — ${(verdict.notes[0] ?? draft.verifierNotes[0]) ?? "failed verification"}`,
+    };
+  }
+
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("codebases")
+    .insert({
+      concept_tag: draft.conceptTag,
+      language: draft.language,
+      difficulty: draft.difficulty,
+      title: draft.title,
+      description: draft.description,
+      files: draft.files,
+    })
+    .select("id")
+    .single();
+
+  if (error) return { saved: false, id: null, reason: error.message };
+  return { saved: true, id: data?.id ?? null, reason: null };
 }

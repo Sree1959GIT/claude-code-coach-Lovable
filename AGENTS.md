@@ -48,10 +48,11 @@
 - [x] **Phase E2:** Cached example lookup — questions load their pre-built codebase instantly by concept tag, with a sample fallback.
 - [x] **Phase E3:** "More Codebases" demand toggle — background queue of up to 3 extra cached examples, surfaced as extra tabs.
 - [x] **Phase E4:** Code multi-agent generation loop — Research (library-grounded gap brief) → SME (runnable example) → Verifier (static/sandbox-constraint check) → Documentation (line-by-line walkthrough), with a per-step trace.
+- [x] **Phase E5:** Code quality execution filter — SME→Verifier retried up to 3x with verifier feedback, broken attempts discarded, and a save gate that re-verifies before writing to `codebases`.
 - [x] **Phase E1:** `codebases` schema — concept tags, language flags, difficulty scales, jsonb file payloads, public read grants, and two seeded examples.
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] Phase E5: Build code quality execution filter: fail-safe retries that discard errors and prevent broken scripts from saving to the database.
+- [ ] Phase E6: Add background generation UI stream tracker showing live step-by-step agent statuses from `code_gen_jobs`.
 
 
 ---
@@ -71,7 +72,7 @@
 - [x] **E2:** Implement primary cached example system: look up and load pre-built codebases instantly by concept tag with zero generation delays.
 - [x] **E3:** Add "More Codebases" demand toggle: queue 2–3 background examples asynchronously so learning flows uninterrupted.
 - [x] **E4:** Build code multi-agent generation loop script: Research (gaps) → SME (generate) → Verifier (execute) → Documentation (explain).
-- [ ] **E5:** Build code quality execution filter: fail-safe retries that discard errors and prevent broken scripts from saving to database.
+- [x] **E5:** Build code quality execution filter: fail-safe retries that discard errors and prevent broken scripts from saving to database.
 - [ ] **E6:** Add background generation UI stream tracker showing live step-by-step agent statuses from `code_gen_jobs`.
 - [ ] **E7:** Structure advice breakdown matrices: detailed line-by-line code walks, design tradeoffs, and misconception checks.
 - [ ] **E8:** Connect advice matrices directly into Mentor agent prompts for dynamically adjusted conversational depth.
