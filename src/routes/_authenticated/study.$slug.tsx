@@ -506,6 +506,7 @@ function DomainRunner() {
         <StudyCanvasTabs
           key={conceptTag ?? "default"}
           files={canvasFiles}
+          advice={codebaseQ.data?.advice ?? null}
           moreState={moreState}
           moreCount={moreQ.data?.length ?? 0}
           onLoadMore={() => setMoreRequested(true)}
