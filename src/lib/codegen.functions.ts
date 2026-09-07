@@ -26,7 +26,10 @@ export type CodegenSaveOutcome = {
 
 export type GenerateCodebaseResult = CodegenResult & {
   save: CodegenSaveOutcome | null;
+  /** Phase E6 — tracking row the UI polls for live agent statuses. */
+  jobId: string | null;
 };
+
 
 export const generateCodebaseDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
