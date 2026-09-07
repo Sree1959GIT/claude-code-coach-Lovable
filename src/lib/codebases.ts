@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { normalizeAdvice, type CodeAdvice } from "./advice";
 
 /** A single file inside a stored codebase example. */
 export type CodebaseFile = {
@@ -12,8 +13,10 @@ export type CodebaseFile = {
 export type CodebaseRow = Database["public"]["Tables"]["codebases"]["Row"];
 
 /** A codebase example with its `files` payload parsed into a typed array. */
-export type Codebase = Omit<CodebaseRow, "files"> & {
+export type Codebase = Omit<CodebaseRow, "files" | "advice"> & {
   files: CodebaseFile[];
+  /** Phase E7 — structured advice breakdown matrices. */
+  advice: CodeAdvice;
 };
 
 export const CODEBASE_LANGUAGES = ["python", "javascript"] as const;
@@ -44,7 +47,11 @@ export function parseCodebaseFiles(value: unknown): CodebaseFile[] {
 
 /** Normalise a raw database row into a typed codebase. */
 export function toCodebase(row: CodebaseRow): Codebase {
-  return { ...row, files: parseCodebaseFiles(row.files) };
+  return {
+    ...row,
+    files: parseCodebaseFiles(row.files),
+    advice: normalizeAdvice(row.advice),
+  };
 }
 
 /**
