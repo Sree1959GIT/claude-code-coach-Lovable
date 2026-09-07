@@ -329,9 +329,21 @@ export const MAX_CODEGEN_ATTEMPTS = 3;
  * `steps` and surfaced through `error`.
  */
 export async function runCodegenLoop(
-  args: CodegenArgs & { maxAttempts?: number },
+  args: CodegenArgs & {
+    maxAttempts?: number;
+    /** Phase E6 — called as soon as each agent step completes, for live UI. */
+    onStep?: (step: CodegenStep, all: CodegenStep[]) => void | Promise<void>;
+  },
 ): Promise<CodegenResult> {
   const steps: CodegenStep[] = [];
+  const emit = async (step: CodegenStep) => {
+    steps.push(step);
+    try {
+      await args.onStep?.(step, steps);
+    } catch {
+      // Progress reporting must never break the generation loop.
+    }
+  };
   const maxAttempts = Math.min(Math.max(args.maxAttempts ?? MAX_CODEGEN_ATTEMPTS, 1), 5);
 
   // 1. Research
@@ -339,7 +351,7 @@ export async function runCodegenLoop(
   let t = now();
   try {
     research = await researchAgent(args);
-    steps.push({
+    await emit({
       agent: "research",
       status: "ok",
       summary: research.brief.gap || "Gap identified",
@@ -348,7 +360,7 @@ export async function runCodegenLoop(
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Research failed";
-    steps.push({ agent: "research", status: "error", summary: message, durationMs: now() - t, error: message });
+    await emit({ agent: "research", status: "error", summary: message, durationMs: now() - t, error: message });
     return { steps, draft: null, error: message };
   }
 
@@ -363,7 +375,7 @@ export async function runCodegenLoop(
     let candidate: Awaited<ReturnType<typeof smeAgent>>;
     try {
       candidate = await smeAgent(args, research, repairNote);
-      steps.push({
+      await emit({
         agent: "sme",
         status: "ok",
         summary: `Attempt ${attempt}/${maxAttempts} — ${candidate.files.length} file(s) written`,
@@ -372,7 +384,7 @@ export async function runCodegenLoop(
       });
     } catch (err) {
       lastError = err instanceof Error ? err.message : "SME generation failed";
-      steps.push({
+      await emit({
         agent: "sme",
         status: "error",
         summary: `Attempt ${attempt}/${maxAttempts} — ${lastError}`,
@@ -385,7 +397,7 @@ export async function runCodegenLoop(
 
     t = now();
     const attemptVerdict = verifyFiles(candidate.files);
-    steps.push({
+    await emit({
       agent: "verifier",
       status: attemptVerdict.ok ? "ok" : "error",
       summary: attemptVerdict.ok
@@ -422,7 +434,7 @@ export async function runCodegenLoop(
       files: sme.files,
       brief: research.brief,
     });
-    steps.push({
+    await emit({
       agent: "documentation",
       status: "ok",
       summary: `${walkthrough.length} characters of explanation`,
@@ -430,7 +442,7 @@ export async function runCodegenLoop(
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Documentation failed";
-    steps.push({
+    await emit({
       agent: "documentation",
       status: "error",
       summary: message,
