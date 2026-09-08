@@ -203,15 +203,8 @@ export function StudyCanvasTabs({
     return () => document.removeEventListener("selectionchange", onSelectionChange);
   }, []);
 
-  if (files.length === 0) {
-    return (
-      <div className="p-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-        No_Files_Loaded
-      </div>
-    );
-  }
-
   function onKeyDown(e: React.KeyboardEvent) {
+    if (files.length === 0) return;
     if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
     e.preventDefault();
     const next =
