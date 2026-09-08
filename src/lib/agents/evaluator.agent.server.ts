@@ -11,6 +11,8 @@ import type { RetrievalResult } from "./retrieval.agent.server";
 import { retrievalSystemMessage } from "./retrieval.agent.server";
 import type { ChatMessage, QuestionContext } from "./explainer.agent.server";
 import { questionContextMessage, splitBrief } from "./explainer.agent.server";
+import { adviceSystemMessage } from "./advice-prompt.server";
+
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
 export const EVALUATOR_MODEL = "google/gemini-3.6-flash";
