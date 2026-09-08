@@ -318,9 +318,48 @@ export function StudyCanvasTabs({
     abortRef.current?.abort();
   }
 
+  const SECTIONS: { id: CanvasSection; label: string; Icon: typeof Code2 }[] = [
+    { id: "code", label: "Code", Icon: Code2 },
+    { id: "video", label: "Video", Icon: Video },
+    { id: "docs", label: "Docs", Icon: FileText },
+  ];
+
   return (
     <div className="flex h-full min-h-0 flex-col">
+      {/* Phase E9 — code / video / docs sections for the active question */}
       <div
+        role="tablist"
+        aria-label="Canvas sections"
+        className="flex shrink-0 items-center gap-1 border-b border-border bg-muted/50 px-2 py-1"
+      >
+        {SECTIONS.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            role="tab"
+            aria-selected={section === id}
+            onClick={() => setSection(id)}
+            className={`inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[9px] uppercase tracking-widest transition-colors ${
+              section === id
+                ? "border-primary bg-primary/10 text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Icon className="h-3 w-3" /> {label}
+          </button>
+        ))}
+        {context && (
+          <span className="ml-auto truncate font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+            Q{context.index}/{context.total}
+            {context.conceptTag ? ` · ${context.conceptTag}` : ""}
+            {fsrs ? ` · ${fsrs.status}` : ""}
+          </span>
+        )}
+      </div>
+
+      {section === "code" && (
+        <>
+      <div
+
         role="tablist"
         aria-label="Canvas files"
         onKeyDown={onKeyDown}
