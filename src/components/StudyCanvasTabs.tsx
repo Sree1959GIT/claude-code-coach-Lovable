@@ -6,7 +6,18 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, BookOpen, Code2, Copy, Layers, Play, Square, Terminal } from "lucide-react";
+import {
+  AlertTriangle,
+  BookOpen,
+  Code2,
+  Copy,
+  FileText,
+  Layers,
+  Play,
+  Square,
+  Terminal,
+  Video,
+} from "lucide-react";
 import { toast } from "sonner";
 import { TOKEN_CLASS, tokenizeLine, type LineState, type Token } from "@/lib/syntax-highlight";
 import {
@@ -22,6 +33,10 @@ import {
 } from "@/lib/execution";
 import { logCodeExecution } from "@/lib/executions.functions";
 import { AdviceMatrix } from "@/components/AdviceMatrix";
+import { CanvasContextPanel } from "@/components/CanvasContextPanel";
+import { VideoModal } from "@/components/VideoModal";
+import { matchResources, thumbnailFor, type LearnResource } from "@/lib/resources";
+import type { CanvasFsrs, CanvasQuestionContext } from "@/lib/canvas-context";
 import { hasAdvice, type CodeAdvice } from "@/lib/advice";
 
 const byteLength = (s: string) => new TextEncoder().encode(s).length;
@@ -72,12 +87,18 @@ type RunState =
 /** Phase E3 — state of the background "More Codebases" queue. */
 export type MoreCodebasesState = "unavailable" | "idle" | "loading" | "loaded" | "empty";
 
+/** Phase E9 — top-level canvas sections. */
+type CanvasSection = "code" | "video" | "docs";
+
 export function StudyCanvasTabs({
   files,
   advice,
   moreState = "unavailable",
   moreCount = 0,
   onLoadMore,
+  context,
+  fsrs,
+  fsrsLoading,
 }: {
   files: CanvasFile[];
   /** Phase E7 — structured advice breakdown matrices for this example. */
@@ -85,6 +106,11 @@ export function StudyCanvasTabs({
   moreState?: MoreCodebasesState;
   moreCount?: number;
   onLoadMore?: () => void;
+  /** Phase E9 — active question context profile. */
+  context?: CanvasQuestionContext | null;
+  /** Phase E9 — FSRS state for the active question. */
+  fsrs?: CanvasFsrs | null;
+  fsrsLoading?: boolean;
 }) {
   const [active, setActive] = useState(0);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -101,6 +127,18 @@ export function StudyCanvasTabs({
   const [view, setView] = useState<"code" | "advice">("code");
   const [focusLine, setFocusLine] = useState<number | null>(null);
   const lineRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  // Phase E9 — code / video / docs sections tied to the active question.
+  const [section, setSection] = useState<CanvasSection>("code");
+  const [video, setVideo] = useState<LearnResource | null>(null);
+
+  const matched = useMemo(
+    () =>
+      matchResources([context?.keyConcept, context?.domain, advice?.summary], 8),
+    [context?.keyConcept, context?.domain, advice?.summary],
+  );
+  const videos = useMemo(() => matched.filter((r) => r.videoId), [matched]);
+  const docs = useMemo(() => matched.filter((r) => !r.videoId && r.url), [matched]);
+
 
   useEffect(() => {
     if (!adviceAvailable) setView("code");
@@ -165,15 +203,8 @@ export function StudyCanvasTabs({
     return () => document.removeEventListener("selectionchange", onSelectionChange);
   }, []);
 
-  if (files.length === 0) {
-    return (
-      <div className="p-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-        No_Files_Loaded
-      </div>
-    );
-  }
-
   function onKeyDown(e: React.KeyboardEvent) {
+    if (files.length === 0) return;
     if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
     e.preventDefault();
     const next =
@@ -280,9 +311,48 @@ export function StudyCanvasTabs({
     abortRef.current?.abort();
   }
 
+  const SECTIONS: { id: CanvasSection; label: string; Icon: typeof Code2 }[] = [
+    { id: "code", label: "Code", Icon: Code2 },
+    { id: "video", label: "Video", Icon: Video },
+    { id: "docs", label: "Docs", Icon: FileText },
+  ];
+
   return (
     <div className="flex h-full min-h-0 flex-col">
+      {/* Phase E9 — code / video / docs sections for the active question */}
       <div
+        role="tablist"
+        aria-label="Canvas sections"
+        className="flex shrink-0 items-center gap-1 border-b border-border bg-muted/50 px-2 py-1"
+      >
+        {SECTIONS.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            role="tab"
+            aria-selected={section === id}
+            onClick={() => setSection(id)}
+            className={`inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[9px] uppercase tracking-widest transition-colors ${
+              section === id
+                ? "border-primary bg-primary/10 text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Icon className="h-3 w-3" /> {label}
+          </button>
+        ))}
+        {context && (
+          <span className="ml-auto truncate font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+            Q{context.index}/{context.total}
+            {context.conceptTag ? ` · ${context.conceptTag}` : ""}
+            {fsrs ? ` · ${fsrs.status}` : ""}
+          </span>
+        )}
+      </div>
+
+      {section === "code" && (
+        <>
+      <div
+
         role="tablist"
         aria-label="Canvas files"
         onKeyDown={onKeyDown}
@@ -398,7 +468,11 @@ export function StudyCanvasTabs({
         aria-labelledby={`canvas-tab-${active}`}
         className="min-h-0 flex-1 overflow-auto bg-card"
       >
-        {view === "advice" && advice ? (
+        {files.length === 0 ? (
+          <div className="p-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+            No_Files_Loaded
+          </div>
+        ) : view === "advice" && advice ? (
           <AdviceMatrix
             advice={advice}
             activeFile={current?.name}
@@ -542,6 +616,59 @@ export function StudyCanvasTabs({
           <div ref={consoleEndRef} />
         </div>
       </div>
+        </>
+      )}
+
+      {section === "video" && (
+        <div className="min-h-0 flex-1 overflow-auto bg-card p-3">
+          {videos.length === 0 ? (
+            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              No_Videos_Matched
+            </p>
+          ) : (
+            <ul className="grid grid-cols-2 gap-2">
+              {videos.map((r) => (
+                <li key={r.videoId}>
+                  <button
+                    onClick={() => setVideo(r)}
+                    className="w-full border border-border text-left hover:border-primary"
+                  >
+                    {thumbnailFor(r) && (
+                      <img
+                        src={thumbnailFor(r)!}
+                        alt={r.title}
+                        loading="lazy"
+                        className="aspect-video w-full object-cover"
+                      />
+                    )}
+                    <span className="block px-2 py-1.5">
+                      <span className="block truncate text-[11px]">{r.title}</span>
+                      <span className="block font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                        {r.source}
+                        {r.start ? ` · ${Math.floor(r.start / 60)}:${String(r.start % 60).padStart(2, "0")}` : ""}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {section === "docs" && (
+        <div className="min-h-0 flex-1 overflow-auto bg-card">
+          <CanvasContextPanel
+            context={context}
+            fsrs={fsrs}
+            fsrsLoading={fsrsLoading}
+            advice={advice}
+            docs={docs}
+          />
+        </div>
+      )}
+
+      <VideoModal resource={video} onClose={() => setVideo(null)} />
     </div>
   );
 }

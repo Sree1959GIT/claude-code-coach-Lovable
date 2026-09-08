@@ -23,6 +23,10 @@ import {
   fetchMoreCodebases,
   toConceptTag,
 } from "@/lib/codebases";
+import {
+  fetchQuestionMastery,
+  type CanvasQuestionContext,
+} from "@/lib/canvas-context";
 import { logEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/study/$slug")({
@@ -166,6 +170,15 @@ function DomainRunner() {
       ? "Loading_Example"
       : "Code_Workspace";
 
+  // Phase E9 — FSRS state for the active question, refreshed after each answer.
+  const masteryQ = useQuery({
+    queryKey: ["question-mastery", q?.id, user?.id],
+    queryFn: () => fetchQuestionMastery(q!.id),
+    enabled: !!q?.id && !!user?.id,
+    staleTime: 30_000,
+  });
+
+
   useEffect(() => {
     setSelected(null);
     setRevealed(false);
@@ -219,6 +232,7 @@ function DomainRunner() {
       });
       qc.invalidateQueries({ queryKey: ["my_progress"] });
       qc.invalidateQueries({ queryKey: ["my_attempts"] });
+      qc.invalidateQueries({ queryKey: ["question-mastery", q.id] });
     } catch (err) {
       console.error(err);
     }
@@ -227,6 +241,25 @@ function DomainRunner() {
   const optionsSorted = useMemo(
     () => (q ? [...q.options].sort((a, b) => a.sort_order - b.sort_order) : []),
     [q],
+  );
+
+  // Phase E9 — the canvas mirrors the active question's context profile.
+  const canvasContext = useMemo<CanvasQuestionContext | null>(
+    () =>
+      q
+        ? {
+            questionId: q.id,
+            domain: domainQ.data?.title ?? null,
+            keyConcept: q.key_concept ?? null,
+            conceptTag,
+            difficulty: q.difficulty ?? null,
+            index: Math.min(idx + 1, questions.length),
+            total: questions.length,
+            selectedOption: selected?.label ?? null,
+            revealed,
+          }
+        : null,
+    [q, domainQ.data?.title, conceptTag, idx, questions.length, selected?.label, revealed],
   );
 
   const mentorContext = useMemo(
@@ -521,6 +554,9 @@ function DomainRunner() {
           moreState={moreState}
           moreCount={moreQ.data?.length ?? 0}
           onLoadMore={() => setMoreRequested(true)}
+          context={canvasContext}
+          fsrs={masteryQ.data ?? null}
+          fsrsLoading={masteryQ.isLoading}
         />
       </FloatingWindow>
     </div>
