@@ -54,9 +54,10 @@
 - [x] **Phase E1:** `codebases` schema — concept tags, language flags, difficulty scales, jsonb file payloads, public read grants, and two seeded examples.
 
 - [x] **Phase E8:** Advice matrices feed the Mentor agent prompts, adjusting conversational depth.
+- [x] **Phase E9:** Study Canvas tabs tied to the active question context profile and FSRS metrics, with Code / Video / Docs sections.
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] Phase E9: Integration wire-up: tie code canvas tabs directly to active question context profiles and FSRS metrics.
+- [ ] Phase F1: Model routing optimization: cheap models check caches first, scaling up selectively by membership tiers.
 
 
 
@@ -81,7 +82,7 @@
 - [x] **E6:** Add background generation UI stream tracker showing live step-by-step agent statuses from `code_gen_jobs`.
 - [x] **E7:** Structure advice breakdown matrices: detailed line-by-line code walks, design tradeoffs, and misconception checks.
 - [x] **E8:** Connect advice matrices directly into Mentor agent prompts for dynamically adjusted conversational depth.
-- [ ] **E9:** Integration wire-up: tie code canvas tabs directly to active question context profiles and FSRS metrics.
+- [x] **E9:** Integration wire-up: tie code canvas tabs directly to active question context profiles and FSRS metrics.
 
 ### Phase F — Cost, BYOK, and Observability
 - [ ] **F1:** Model routing optimization: cheap models check caches first, scaling up selectively by membership tiers.
