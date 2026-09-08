@@ -133,12 +133,7 @@ export function StudyCanvasTabs({
 
   const matched = useMemo(
     () =>
-      matchResources(
-        [context?.keyConcept, context?.domain, advice?.summary]
-          .filter(Boolean)
-          .join(" "),
-        8,
-      ),
+      matchResources([context?.keyConcept, context?.domain, advice?.summary], 8),
     [context?.keyConcept, context?.domain, advice?.summary],
   );
   const videos = useMemo(() => matched.filter((r) => r.videoId), [matched]);
