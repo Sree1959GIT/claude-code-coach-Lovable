@@ -23,6 +23,10 @@ import {
   fetchMoreCodebases,
   toConceptTag,
 } from "@/lib/codebases";
+import {
+  fetchQuestionMastery,
+  type CanvasQuestionContext,
+} from "@/lib/canvas-context";
 import { logEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/study/$slug")({
