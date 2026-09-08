@@ -243,6 +243,25 @@ function DomainRunner() {
     [q],
   );
 
+  // Phase E9 — the canvas mirrors the active question's context profile.
+  const canvasContext = useMemo<CanvasQuestionContext | null>(
+    () =>
+      q
+        ? {
+            questionId: q.id,
+            domain: domainQ.data?.title ?? null,
+            keyConcept: q.key_concept ?? null,
+            conceptTag,
+            difficulty: q.difficulty ?? null,
+            index: Math.min(idx + 1, questions.length),
+            total: questions.length,
+            selectedOption: selected?.label ?? null,
+            revealed,
+          }
+        : null,
+    [q, domainQ.data?.title, conceptTag, idx, questions.length, selected?.label, revealed],
+  );
+
   const mentorContext = useMemo(
     () => ({
       scenario: q?.scenario ?? null,
