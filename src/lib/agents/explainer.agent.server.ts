@@ -24,7 +24,10 @@ export type QuestionContext = {
   domain?: string | null;
   options?: { label: string; text: string }[];
   selectedOption?: string | null;
+  /** Phase E8 — advice matrices of the active Study Canvas example. */
+  advice?: unknown;
 };
+
 
 export type ExplainerArgs = {
   messages: { role: "user" | "assistant"; content: string }[];
