@@ -10,6 +10,8 @@ import { logStep } from "../orchestrator.server";
 import type { RetrievalResult } from "./retrieval.agent.server";
 import { retrievalSystemMessage } from "./retrieval.agent.server";
 import { fetchGatewayStream } from "./gateway.server";
+import { adviceSystemMessage } from "./advice-prompt.server";
+
 
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
@@ -24,7 +26,10 @@ export type QuestionContext = {
   domain?: string | null;
   options?: { label: string; text: string }[];
   selectedOption?: string | null;
+  /** Phase E8 — advice matrices of the active Study Canvas example. */
+  advice?: unknown;
 };
+
 
 export type ExplainerArgs = {
   messages: { role: "user" | "assistant"; content: string }[];
@@ -96,15 +101,19 @@ export function questionContextMessage(ctx?: QuestionContext | null): string {
 /** Assemble the full message stack sent to the model. */
 export function buildExplainerMessages(args: ExplainerArgs): ChatMessage[] {
   const sources = args.retrieval ? retrievalSystemMessage(args.retrieval) : null;
+  // Phase E8 — advice matrices adjust conversational depth.
+  const advice = adviceSystemMessage(args.context?.advice);
   return [
     { role: "system", content: PERSONA },
     { role: "system", content: intentDirective(args.intent) },
     { role: "system", content: questionContextMessage(args.context) },
+    ...(advice ? [{ role: "system" as const, content: advice.content }] : []),
     ...(args.profileNote ? [{ role: "system" as const, content: args.profileNote }] : []),
     ...(sources ? [{ role: "system" as const, content: sources }] : []),
     ...args.messages.slice(-20),
   ];
 }
+
 
 function gatewayError(status: number, body: string): Error {
   if (status === 429) return new Error("Mentor is rate limited. Try again in a moment.");

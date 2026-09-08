@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/analytics";
 import { matchResources, thumbnailFor, type LearnResource } from "@/lib/resources";
 import { VideoModal } from "@/components/VideoModal";
+import type { CodeAdvice } from "@/lib/advice";
+
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -22,7 +24,10 @@ type QuestionContext = {
   options: { label: string; text: string }[];
   domain?: string;
   selectedOption?: string | null;
+  /** Phase E8 — advice matrices of the active Study Canvas example. */
+  advice?: CodeAdvice | null;
 };
+
 
 type Props = {
   open: boolean;

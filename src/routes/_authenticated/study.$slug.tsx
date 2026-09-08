@@ -237,9 +237,20 @@ function DomainRunner() {
       options: optionsSorted.map((o) => ({ label: o.label, text: o.text })),
       domain: domainQ.data?.title,
       selectedOption: selected?.label ?? null,
+      // Phase E8 — advice matrices tune the mentor's conversational depth.
+      advice: codebaseQ.data?.advice ?? null,
     }),
-    [q?.scenario, q?.stem, q?.key_concept, optionsSorted, domainQ.data?.title, selected?.label],
+    [
+      q?.scenario,
+      q?.stem,
+      q?.key_concept,
+      optionsSorted,
+      domainQ.data?.title,
+      selected?.label,
+      codebaseQ.data?.advice,
+    ],
   );
+
 
   const onHighlight = useCallback((t: HighlightTarget) => setFocus(t), []);
 
