@@ -6,7 +6,18 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, BookOpen, Code2, Copy, Layers, Play, Square, Terminal } from "lucide-react";
+import {
+  AlertTriangle,
+  BookOpen,
+  Code2,
+  Copy,
+  FileText,
+  Layers,
+  Play,
+  Square,
+  Terminal,
+  Video,
+} from "lucide-react";
 import { toast } from "sonner";
 import { TOKEN_CLASS, tokenizeLine, type LineState, type Token } from "@/lib/syntax-highlight";
 import {
@@ -22,6 +33,10 @@ import {
 } from "@/lib/execution";
 import { logCodeExecution } from "@/lib/executions.functions";
 import { AdviceMatrix } from "@/components/AdviceMatrix";
+import { CanvasContextPanel } from "@/components/CanvasContextPanel";
+import { VideoModal } from "@/components/VideoModal";
+import { matchResources, thumbnailFor, type LearnResource } from "@/lib/resources";
+import type { CanvasFsrs, CanvasQuestionContext } from "@/lib/canvas-context";
 import { hasAdvice, type CodeAdvice } from "@/lib/advice";
 
 const byteLength = (s: string) => new TextEncoder().encode(s).length;
