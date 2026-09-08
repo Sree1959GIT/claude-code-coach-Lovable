@@ -232,6 +232,7 @@ function DomainRunner() {
       });
       qc.invalidateQueries({ queryKey: ["my_progress"] });
       qc.invalidateQueries({ queryKey: ["my_attempts"] });
+      qc.invalidateQueries({ queryKey: ["question-mastery", q.id] });
     } catch (err) {
       console.error(err);
     }
