@@ -468,7 +468,11 @@ export function StudyCanvasTabs({
         aria-labelledby={`canvas-tab-${active}`}
         className="min-h-0 flex-1 overflow-auto bg-card"
       >
-        {view === "advice" && advice ? (
+        {files.length === 0 ? (
+          <div className="p-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+            No_Files_Loaded
+          </div>
+        ) : view === "advice" && advice ? (
           <AdviceMatrix
             advice={advice}
             activeFile={current?.name}
