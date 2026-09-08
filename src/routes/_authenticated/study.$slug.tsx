@@ -534,6 +534,9 @@ function DomainRunner() {
           moreState={moreState}
           moreCount={moreQ.data?.length ?? 0}
           onLoadMore={() => setMoreRequested(true)}
+          context={canvasContext}
+          fsrs={masteryQ.data ?? null}
+          fsrsLoading={masteryQ.isLoading}
         />
       </FloatingWindow>
     </div>
