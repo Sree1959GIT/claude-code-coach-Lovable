@@ -87,12 +87,18 @@ type RunState =
 /** Phase E3 — state of the background "More Codebases" queue. */
 export type MoreCodebasesState = "unavailable" | "idle" | "loading" | "loaded" | "empty";
 
+/** Phase E9 — top-level canvas sections. */
+type CanvasSection = "code" | "video" | "docs";
+
 export function StudyCanvasTabs({
   files,
   advice,
   moreState = "unavailable",
   moreCount = 0,
   onLoadMore,
+  context,
+  fsrs,
+  fsrsLoading,
 }: {
   files: CanvasFile[];
   /** Phase E7 — structured advice breakdown matrices for this example. */
@@ -100,6 +106,11 @@ export function StudyCanvasTabs({
   moreState?: MoreCodebasesState;
   moreCount?: number;
   onLoadMore?: () => void;
+  /** Phase E9 — active question context profile. */
+  context?: CanvasQuestionContext | null;
+  /** Phase E9 — FSRS state for the active question. */
+  fsrs?: CanvasFsrs | null;
+  fsrsLoading?: boolean;
 }) {
   const [active, setActive] = useState(0);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -116,6 +127,23 @@ export function StudyCanvasTabs({
   const [view, setView] = useState<"code" | "advice">("code");
   const [focusLine, setFocusLine] = useState<number | null>(null);
   const lineRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  // Phase E9 — code / video / docs sections tied to the active question.
+  const [section, setSection] = useState<CanvasSection>("code");
+  const [video, setVideo] = useState<LearnResource | null>(null);
+
+  const matched = useMemo(
+    () =>
+      matchResources(
+        [context?.keyConcept, context?.domain, advice?.summary]
+          .filter(Boolean)
+          .join(" "),
+        8,
+      ),
+    [context?.keyConcept, context?.domain, advice?.summary],
+  );
+  const videos = useMemo(() => matched.filter((r) => r.videoId), [matched]);
+  const docs = useMemo(() => matched.filter((r) => !r.videoId && r.url), [matched]);
+
 
   useEffect(() => {
     if (!adviceAvailable) setView("code");
