@@ -170,6 +170,15 @@ function DomainRunner() {
       ? "Loading_Example"
       : "Code_Workspace";
 
+  // Phase E9 — FSRS state for the active question, refreshed after each answer.
+  const masteryQ = useQuery({
+    queryKey: ["question-mastery", q?.id, user?.id],
+    queryFn: () => fetchQuestionMastery(q!.id),
+    enabled: !!q?.id && !!user?.id,
+    staleTime: 30_000,
+  });
+
+
   useEffect(() => {
     setSelected(null);
     setRevealed(false);
