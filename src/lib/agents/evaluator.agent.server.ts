@@ -58,15 +58,19 @@ export function evaluatorFocusMessage(ctx?: QuestionContext | null): string {
 /** Assemble the critic message stack. */
 export function buildEvaluatorMessages(args: EvaluatorArgs): ChatMessage[] {
   const sources = args.retrieval ? retrievalSystemMessage(args.retrieval) : null;
+  // Phase E8 — advice matrices adjust conversational depth.
+  const advice = adviceSystemMessage(args.context?.advice);
   return [
     { role: "system", content: CRITIC_PERSONA },
     { role: "system", content: questionContextMessage(args.context) },
     { role: "system", content: evaluatorFocusMessage(args.context) },
+    ...(advice ? [{ role: "system" as const, content: advice.content }] : []),
     ...(args.profileNote ? [{ role: "system" as const, content: args.profileNote }] : []),
     ...(sources ? [{ role: "system" as const, content: sources }] : []),
     ...args.messages.slice(-20),
   ];
 }
+
 
 function gatewayError(status: number, body: string): Error {
   if (status === 429) return new Error("Mentor is rate limited. Try again in a moment.");
