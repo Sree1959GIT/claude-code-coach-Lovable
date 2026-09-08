@@ -580,6 +580,59 @@ export function StudyCanvasTabs({
           <div ref={consoleEndRef} />
         </div>
       </div>
+        </>
+      )}
+
+      {section === "video" && (
+        <div className="min-h-0 flex-1 overflow-auto bg-card p-3">
+          {videos.length === 0 ? (
+            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              No_Videos_Matched
+            </p>
+          ) : (
+            <ul className="grid grid-cols-2 gap-2">
+              {videos.map((r) => (
+                <li key={r.videoId}>
+                  <button
+                    onClick={() => setVideo(r)}
+                    className="w-full border border-border text-left hover:border-primary"
+                  >
+                    {thumbnailFor(r) && (
+                      <img
+                        src={thumbnailFor(r)!}
+                        alt={r.title}
+                        loading="lazy"
+                        className="aspect-video w-full object-cover"
+                      />
+                    )}
+                    <span className="block px-2 py-1.5">
+                      <span className="block truncate text-[11px]">{r.title}</span>
+                      <span className="block font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                        {r.source}
+                        {r.start ? ` · ${Math.floor(r.start / 60)}:${String(r.start % 60).padStart(2, "0")}` : ""}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {section === "docs" && (
+        <div className="min-h-0 flex-1 overflow-auto bg-card">
+          <CanvasContextPanel
+            context={context}
+            fsrs={fsrs}
+            fsrsLoading={fsrsLoading}
+            advice={advice}
+            docs={docs}
+          />
+        </div>
+      )}
+
+      <VideoModal resource={video} onClose={() => setVideo(null)} />
     </div>
   );
 }
