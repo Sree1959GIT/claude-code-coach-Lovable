@@ -176,6 +176,8 @@ export function BulkImportPanel() {
           )}
         </div>
       )}
+
+      <ImportLogsPanel />
     </div>
   );
 }
