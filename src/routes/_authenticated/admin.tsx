@@ -30,6 +30,7 @@ import { CitationPanel } from "@/components/admin/CitationPanel";
 import { CalibrationPanel } from "@/components/admin/CalibrationPanel";
 import { AgenticAuthoringPanel } from "@/components/admin/AgenticAuthoringPanel";
 import { CodeGenPanel } from "@/components/admin/CodeGenPanel";
+import { SpiderPanel } from "@/components/admin/SpiderPanel";
 
 
 
@@ -882,6 +883,15 @@ function AdminPage() {
                 to the shared codebase library.
               </p>
               <CodeGenPanel />
+            </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">13 · Spider_Control_Desk</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Catalogue the exact source pages worth re-checking, set how often each should be re-crawled, and see
+                when each was last fetched and what came back. Crawls reuse stored credentials and feed the library.
+              </p>
+              <SpiderPanel />
             </section>
 
 
