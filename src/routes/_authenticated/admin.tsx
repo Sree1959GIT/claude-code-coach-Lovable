@@ -30,6 +30,7 @@ import { CitationPanel } from "@/components/admin/CitationPanel";
 import { CalibrationPanel } from "@/components/admin/CalibrationPanel";
 import { AgenticAuthoringPanel } from "@/components/admin/AgenticAuthoringPanel";
 import { CodeGenPanel } from "@/components/admin/CodeGenPanel";
+import { SpiderPanel } from "@/components/admin/SpiderPanel";
 
 
 
