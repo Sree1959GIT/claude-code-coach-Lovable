@@ -24,6 +24,7 @@ export function BulkImportPanel() {
     mutationFn: (dryRun: boolean) => runImport({ data: { text, format, dryRun, skipDuplicates } }),
     onSuccess: (res) => {
       setResult(res);
+      void queryClient.invalidateQueries({ queryKey: ["import-runs"] });
       if (res.dryRun) {
         toast.success(`Dry run: ${res.valid} of ${res.parsed} rows importable`);
       } else {
