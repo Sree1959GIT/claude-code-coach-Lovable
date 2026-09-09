@@ -56,9 +56,10 @@
 - [x] **Phase E8:** Advice matrices feed the Mentor agent prompts, adjusting conversational depth.
 - [x] **Phase E9:** Study Canvas tabs tied to the active question context profile and FSRS metrics, with Code / Video / Docs sections.
 - [x] **Phase G3:** Secure credentialed ingest mechanisms — process gated course assets using stored auth hashes (`src/lib/source-fetch.server.ts`).
+- [x] **Phase G1:** Import logs panel — every bulk submission recorded with per-row status and diagnostic message, viewable in the admin console.
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] Phase G1: Multi-item import logs panel: display granular per-row diagnostic errors for bulk content submissions.
+- [ ] Phase G2: Advanced spider control desk: catalog source URLs with targeted last-crawl timestamps.
 
 
 
@@ -86,7 +87,7 @@
 - [x] **E9:** Integration wire-up: tie code canvas tabs directly to active question context profiles and FSRS metrics.
 
 ### Phase G — Content Scale-Up Remainder
-- [ ] **G1:** Multi-item import logs panel: display granular per-row diagnostic errors for bulk content submissions.
+- [x] **G1:** Multi-item import logs panel: display granular per-row diagnostic errors for bulk content submissions.
 - [ ] **G2:** Advanced spider control desk: catalog source URLs with targeted last-crawl timestamps.
 - [x] **G3:** Secure credentialed ingest mechanisms: process gated course assets using stored auth hashes.
 - [ ] **G4:** Corpus defragmentation sweep: consolidate fragmented sections, strip empty structural artifacts, and re-embed.

@@ -7,6 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { importQuestions, type ImportResult } from "@/lib/import.functions";
 import { IMPORT_CSV_TEMPLATE } from "@/lib/question-import";
+import { ImportLogsPanel } from "@/components/admin/ImportLogsPanel";
 
 const btn =
   "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
@@ -23,6 +24,7 @@ export function BulkImportPanel() {
     mutationFn: (dryRun: boolean) => runImport({ data: { text, format, dryRun, skipDuplicates } }),
     onSuccess: (res) => {
       setResult(res);
+      void queryClient.invalidateQueries({ queryKey: ["import-runs"] });
       if (res.dryRun) {
         toast.success(`Dry run: ${res.valid} of ${res.parsed} rows importable`);
       } else {
@@ -174,6 +176,8 @@ export function BulkImportPanel() {
           )}
         </div>
       )}
+
+      <ImportLogsPanel />
     </div>
   );
 }
