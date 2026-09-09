@@ -689,6 +689,86 @@ export type Database = {
         }
         Relationships: []
       }
+      import_run_items: {
+        Row: {
+          created_at: string
+          domain_slug: string | null
+          id: string
+          message: string | null
+          row_number: number
+          run_id: string
+          status: string
+          stem: string | null
+        }
+        Insert: {
+          created_at?: string
+          domain_slug?: string | null
+          id?: string
+          message?: string | null
+          row_number: number
+          run_id: string
+          status: string
+          stem?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain_slug?: string | null
+          id?: string
+          message?: string | null
+          row_number?: number
+          run_id?: string
+          status?: string
+          stem?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_run_items_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "import_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_runs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          dry_run: boolean
+          error: string | null
+          format: string
+          id: string
+          imported: number
+          parsed: number
+          skipped: number
+          valid: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          dry_run?: boolean
+          error?: string | null
+          format: string
+          id?: string
+          imported?: number
+          parsed?: number
+          skipped?: number
+          valid?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          dry_run?: boolean
+          error?: string | null
+          format?: string
+          id?: string
+          imported?: number
+          parsed?: number
+          skipped?: number
+          valid?: number
+        }
+        Relationships: []
+      }
       job_runs: {
         Row: {
           created_at: string

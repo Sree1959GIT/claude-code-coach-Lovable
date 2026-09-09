@@ -93,8 +93,78 @@ export const importQuestions = createServerFn({ method: "POST" })
       toInsert.push({ row: r, domainId: domain.id });
     }
 
+    type LogItem = { row_number: number; status: string; domain_slug: string | null; stem: string | null; message: string | null };
+
+    async function logRun(summary: {
+      parsed: number;
+      valid: number;
+      imported: number;
+      skipped: number;
+      items: LogItem[];
+    }) {
+      try {
+        const { data: run, error } = await supabaseAdmin
+          .from("import_runs")
+          .insert({
+            created_by: context.userId,
+            format: data.format,
+            dry_run: data.dryRun,
+            parsed: summary.parsed,
+            valid: summary.valid,
+            imported: summary.imported,
+            skipped: summary.skipped,
+          })
+          .select("id")
+          .single();
+        if (error || !run) return;
+        if (summary.items.length) {
+          await supabaseAdmin
+            .from("import_run_items")
+            .insert(summary.items.slice(0, 500).map((i) => ({ ...i, run_id: run.id })));
+        }
+      } catch {
+        /* logging must never break an import */
+      }
+    }
+
+    /** One diagnostic line per submitted row, merging parse issues and outcomes. */
+    function buildItems(importedRows: Set<number>): LogItem[] {
+      const byRow = new Map<number, LogItem>();
+      for (const p of preview) {
+        byRow.set(p.row, {
+          row_number: p.row,
+          status: p.duplicate ? "duplicate" : "ok",
+          domain_slug: p.domainSlug,
+          stem: p.stem,
+          message: null,
+        });
+      }
+      for (const i of issues) {
+        const existing = byRow.get(i.row);
+        if (existing) {
+          existing.status = existing.status === "duplicate" ? "duplicate" : "error";
+          existing.message = existing.message ? `${existing.message} | ${i.message}` : i.message;
+        } else {
+          byRow.set(i.row, {
+            row_number: i.row,
+            status: "error",
+            domain_slug: null,
+            stem: null,
+            message: i.message,
+          });
+        }
+      }
+      if (!data.dryRun) {
+        for (const [row, item] of byRow) {
+          if (importedRows.has(row)) item.status = "imported";
+          else if (item.status === "ok") item.status = "skipped";
+        }
+      }
+      return [...byRow.values()].sort((a, b) => a.row_number - b.row_number);
+    }
+
     if (data.dryRun) {
-      return {
+      const result: ImportResult = {
         dryRun: true,
         parsed: rows.length,
         valid: toInsert.length,
@@ -103,9 +173,12 @@ export const importQuestions = createServerFn({ method: "POST" })
         issues,
         preview,
       };
+      await logRun({ ...result, items: buildItems(new Set()) });
+      return result;
     }
 
     let imported = 0;
+    const importedRows = new Set<number>();
     for (const item of toInsert) {
       const next = (maxSort.get(item.domainId) ?? 0) + 1;
       maxSort.set(item.domainId, next);
@@ -141,9 +214,10 @@ export const importQuestions = createServerFn({ method: "POST" })
         continue;
       }
       imported += 1;
+      importedRows.add(item.row.row);
     }
 
-    return {
+    const result: ImportResult = {
       dryRun: false,
       parsed: rows.length,
       valid: toInsert.length,
@@ -152,4 +226,6 @@ export const importQuestions = createServerFn({ method: "POST" })
       issues,
       preview,
     };
+    await logRun({ ...result, items: buildItems(importedRows) });
+    return result;
   });
