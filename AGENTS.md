@@ -58,7 +58,7 @@
 - [x] **Phase G3:** Secure credentialed ingest mechanisms — process gated course assets using stored auth hashes (`src/lib/source-fetch.server.ts`).
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] Phase G1: Multi-item import logs panel: display granular per-row diagnostic errors for bulk content submissions.
+- [ ] Phase G2: Advanced spider control desk: catalog source URLs with targeted last-crawl timestamps.
 
 
 
