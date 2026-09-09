@@ -55,9 +55,10 @@
 
 - [x] **Phase E8:** Advice matrices feed the Mentor agent prompts, adjusting conversational depth.
 - [x] **Phase E9:** Study Canvas tabs tied to the active question context profile and FSRS metrics, with Code / Video / Docs sections.
+- [x] **Phase G3:** Secure credentialed ingest mechanisms — process gated course assets using stored auth hashes (`src/lib/source-fetch.server.ts`).
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] Phase F1: Model routing optimization: cheap models check caches first, scaling up selectively by membership tiers.
+- [ ] Phase G1: Multi-item import logs panel: display granular per-row diagnostic errors for bulk content submissions.
 
 
 
@@ -84,6 +85,13 @@
 - [x] **E8:** Connect advice matrices directly into Mentor agent prompts for dynamically adjusted conversational depth.
 - [x] **E9:** Integration wire-up: tie code canvas tabs directly to active question context profiles and FSRS metrics.
 
+### Phase G — Content Scale-Up Remainder
+- [ ] **G1:** Multi-item import logs panel: display granular per-row diagnostic errors for bulk content submissions.
+- [ ] **G2:** Advanced spider control desk: catalog source URLs with targeted last-crawl timestamps.
+- [x] **G3:** Secure credentialed ingest mechanisms: process gated course assets using stored auth hashes.
+- [ ] **G4:** Corpus defragmentation sweep: consolidate fragmented sections, strip empty structural artifacts, and re-embed.
+- [ ] **G5:** Coverage parity report matrices: display visual domain gaps mapped straight against the certification exam blueprint.
+
 ### Phase F — Cost, BYOK, and Observability
 - [ ] **F1:** Model routing optimization: cheap models check caches first, scaling up selectively by membership tiers.
 - [ ] **F2:** Analytics tracking: map operational generation costs alongside strict cache hit/miss records.
@@ -92,12 +100,6 @@
 - [ ] **F5:** Validation gates: active API keys securely override proxy subscription balances seamlessly inside worker engines.
 - [ ] **F6:** Rate constraint guards: implement daily account quotas and throttling filters for mentor streams, generation actions, and TTS requests.
 
-### Phase G — Content Scale-Up Remainder
-- [ ] **G1:** Multi-item import logs panel: display granular per-row diagnostic errors for bulk content submissions.
-- [ ] **G2:** Advanced spider control desk: catalog source URLs with targeted last-crawl timestamps.
-- [ ] **G3:** Secure credentialed ingest mechanisms: process gated course assets using stored auth hashes.
-- [ ] **G4:** Corpus defragmentation sweep: consolidate fragmented sections, strip empty structural artifacts, and re-embed.
-- [ ] **G5:** Coverage parity report matrices: display visual domain gaps mapped straight against the certification exam blueprint.
 
 ### Phase H — Polish and Launch
 - [ ] **H1:** Layout reflow pass: polish multi-frame canvas drawers for seamless mobile responsive viewports.
