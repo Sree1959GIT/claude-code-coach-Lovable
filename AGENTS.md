@@ -57,10 +57,11 @@
 - [x] **Phase E9:** Study Canvas tabs tied to the active question context profile and FSRS metrics, with Code / Video / Docs sections.
 - [x] **Phase G3:** Secure credentialed ingest mechanisms — process gated course assets using stored auth hashes (`src/lib/source-fetch.server.ts`).
 - [x] **Phase G2:** Spider control desk — catalogued source URLs with crawl intervals, last-crawl timestamps, per-URL crawl results, and a Crawl_Due batch run (admin section 13).
+- [x] **Phase G4:** Corpus defragmentation sweep — consolidates fragmented sections, strips empty structural artifacts, renumbers and re-embeds changed chunks (admin section 14, dry-run then apply).
 - [x] **Phase G1:** Import logs panel — every bulk submission recorded with per-row status and diagnostic message, viewable in the admin console.
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] Phase G4: Corpus defragmentation sweep: consolidate fragmented sections, strip empty structural artifacts, and re-embed.
+- [ ] Phase G5: Coverage parity report matrices: display visual domain gaps mapped straight against the certification exam blueprint.
 
 
 
@@ -91,7 +92,7 @@
 - [x] **G1:** Multi-item import logs panel: display granular per-row diagnostic errors for bulk content submissions.
 - [x] **G2:** Advanced spider control desk: catalog source URLs with targeted last-crawl timestamps.
 - [x] **G3:** Secure credentialed ingest mechanisms: process gated course assets using stored auth hashes.
-- [ ] **G4:** Corpus defragmentation sweep: consolidate fragmented sections, strip empty structural artifacts, and re-embed.
+- [x] **G4:** Corpus defragmentation sweep: consolidate fragmented sections, strip empty structural artifacts, and re-embed.
 - [ ] **G5:** Coverage parity report matrices: display visual domain gaps mapped straight against the certification exam blueprint.
 
 ### Phase F — Cost, BYOK, and Observability
