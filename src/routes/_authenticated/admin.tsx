@@ -32,6 +32,7 @@ import { AgenticAuthoringPanel } from "@/components/admin/AgenticAuthoringPanel"
 import { CodeGenPanel } from "@/components/admin/CodeGenPanel";
 import { SpiderPanel } from "@/components/admin/SpiderPanel";
 import { DefragPanel } from "@/components/admin/DefragPanel";
+import { ParityPanel } from "@/components/admin/ParityPanel";
 
 
 
@@ -66,6 +67,7 @@ const SECTIONS: { code: string; title: string; body: string; status: "live" | "p
   { code: "10", title: "Citation coverage", body: "Per-domain share of questions linked to at least one library chunk.", status: "live" },
   { code: "11", title: "Difficulty calibration", body: "Recompute question difficulty from live first-attempt accuracy.", status: "live" },
   { code: "12", title: "Corpus defrag", body: "Consolidate fragmented library sections, strip empty artifacts and re-embed.", status: "live" },
+  { code: "13", title: "Coverage parity", body: "Question bank composition mapped against the exam blueprint weights.", status: "live" },
 ];
 
 
@@ -903,6 +905,15 @@ function AdminPage() {
                 changed. Run the dry run first to preview, then apply.
               </p>
               <DefragPanel />
+            </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">15 · Coverage_Parity</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Maps the live question bank against the certification blueprint weights: which domains are
+                under-served, by how many questions, and how their difficulty mix and citations stack up.
+              </p>
+              <ParityPanel />
             </section>
 
 
