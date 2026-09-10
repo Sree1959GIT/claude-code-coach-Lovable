@@ -260,7 +260,7 @@ export async function runCorpusDefrag(opts: {
   const sum = (pick: (r: DefragDocResult) => number) => results.reduce((n, r) => n + pick(r), 0);
   const summary = error
     ? `Sweep failed: ${error}`
-    : `${results.length} docs · ${sum((r) => r.chunksDelta ?? 0) || sum((r) => r.before) - sum((r) => r.after)} chunks removed · ${sum((r) => r.merged)} merged · ${sum((r) => r.reembedded)} re-embedded${dryRun ? " (dry run)" : ""}`;
+    : `${results.length} docs · ${sum((r) => r.before) - sum((r) => r.after)} chunks removed · ${sum((r) => r.merged)} merged · ${sum((r) => r.reembedded)} re-embedded${dryRun ? " (dry run)" : ""}`;
 
   if (!dryRun) {
     try {
