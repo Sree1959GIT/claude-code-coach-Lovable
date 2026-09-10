@@ -31,6 +31,7 @@ import { CalibrationPanel } from "@/components/admin/CalibrationPanel";
 import { AgenticAuthoringPanel } from "@/components/admin/AgenticAuthoringPanel";
 import { CodeGenPanel } from "@/components/admin/CodeGenPanel";
 import { SpiderPanel } from "@/components/admin/SpiderPanel";
+import { DefragPanel } from "@/components/admin/DefragPanel";
 
 
 
@@ -64,6 +65,7 @@ const SECTIONS: { code: string; title: string; body: string; status: "live" | "p
   { code: "09", title: "Explanations", body: "Grounded explanation drafts for options that have none.", status: "live" },
   { code: "10", title: "Citation coverage", body: "Per-domain share of questions linked to at least one library chunk.", status: "live" },
   { code: "11", title: "Difficulty calibration", body: "Recompute question difficulty from live first-attempt accuracy.", status: "live" },
+  { code: "12", title: "Corpus defrag", body: "Consolidate fragmented library sections, strip empty artifacts and re-embed.", status: "live" },
 ];
 
 
@@ -892,6 +894,15 @@ function AdminPage() {
                 when each was last fetched and what came back. Crawls reuse stored credentials and feed the library.
               </p>
               <SpiderPanel />
+            </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">14 · Corpus_Defrag</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Consolidates fragmented library sections, strips empty structural leftovers, and re-embeds whatever
+                changed. Run the dry run first to preview, then apply.
+              </p>
+              <DefragPanel />
             </section>
 
 
