@@ -4,9 +4,9 @@
  */
 
 import { retrieveChunks, type LibraryMatch } from "./retrieval.server";
-
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+import { routedCompletion, type MembershipTier } from "./model-routing.server";
 const MODEL = "google/gemini-2.5-flash";
+
 
 export type EnrichOptionInput = {
   optionId: string;
@@ -85,43 +85,36 @@ function buildUserPrompt(q: EnrichQuestionInput, context: string): string {
     .join("\n");
 }
 
-export async function enrichQuestionExplanations(q: EnrichQuestionInput): Promise<EnrichedQuestion> {
-  const apiKey = process.env["LOVABLE_API_KEY"];
-  if (!apiKey) throw new Error("Missing LOVABLE_API_KEY");
-
+export async function enrichQuestionExplanations(
+  q: EnrichQuestionInput,
+  opts?: { tier?: MembershipTier },
+): Promise<EnrichedQuestion> {
   const matches = await grounding(q);
   const context = matches
     .map((m, i) => `[${i + 1}] ${m.title}${m.url ? ` — ${m.url}` : ""}\n${m.content}`)
     .join("\n\n---\n\n")
     .slice(0, 10_000);
 
-  const res = await fetch(GATEWAY_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: "system", content: SYSTEM },
-        { role: "user", content: buildUserPrompt(q, context) },
-      ],
-      response_format: { type: "json_object" },
-    }),
+  // Phase F1: cache-first, tier-aware routing.
+  const routed = await routedCompletion({
+    task: "enrich_explanation",
+    tier: opts?.tier ?? "plus",
+    label: "Enrichment",
+    jsonMode: true,
+    messages: [
+      { role: "system", content: SYSTEM },
+      { role: "user", content: buildUserPrompt(q, context) },
+    ],
   });
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    if (res.status === 429) throw new Error("Enrichment is rate limited. Try again in a moment.");
-    if (res.status === 402) throw new Error("AI credits exhausted. Add credits in Lovable settings.");
-    throw new Error(`Enrichment failed: ${res.status} ${body.slice(0, 200)}`);
-  }
-
-  const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   let parsed: unknown;
   try {
-    parsed = JSON.parse(stripFences(json.choices?.[0]?.message?.content ?? ""));
+    parsed = JSON.parse(stripFences(routed.text));
   } catch {
     throw new Error("Enrichment returned malformed JSON. Try again.");
   }
+
+
 
   const raw = Array.isArray((parsed as { explanations?: unknown })?.explanations)
     ? ((parsed as { explanations: unknown[] }).explanations as Record<string, unknown>[])

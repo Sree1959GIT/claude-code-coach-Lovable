@@ -22,12 +22,15 @@ export type Learner = {
   displayName: string | null;
   joinedAt: string;
   roles: string[];
+  /** Phase F1 — model routing tier. */
+  tier: "free" | "plus" | "pro";
   attempts: number;
   correct: number;
   accuracy: number;
   masteryTracked: number;
   lastActiveAt: string | null;
 };
+
 
 export const listLearners = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -36,7 +39,7 @@ export const listLearners = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [profilesRes, rolesRes, attemptsRes, masteryRes] = await Promise.all([
-      supabaseAdmin.from("profiles").select("id, display_name, created_at"),
+      supabaseAdmin.from("profiles").select("id, display_name, created_at, membership_tier"),
       supabaseAdmin.from("user_roles").select("user_id, role"),
       supabaseAdmin.from("question_attempts").select("user_id, is_correct, created_at"),
       supabaseAdmin.from("user_mastery").select("user_id"),
@@ -75,6 +78,10 @@ export const listLearners = createServerFn({ method: "GET" })
           displayName: p.display_name,
           joinedAt: p.created_at,
           roles: (rolesBy.get(p.id) ?? []).sort(),
+          tier: ((p as { membership_tier?: string }).membership_tier ?? "free") as
+            | "free"
+            | "plus"
+            | "pro",
           attempts: s.attempts,
           correct: s.correct,
           accuracy: s.attempts ? Math.round((s.correct / s.attempts) * 100) : 0,
