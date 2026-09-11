@@ -18,6 +18,8 @@ import {
   runEvalsNow,
   setUserRole,
 } from "@/lib/admin.functions";
+import { setUserTier } from "@/lib/tiers.functions";
+
 
 
 import { QuestionEditor } from "@/components/admin/QuestionEditor";
