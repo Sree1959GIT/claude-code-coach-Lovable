@@ -80,6 +80,7 @@ function fmt(ts: string | null) {
 function LearnersTable() {
   const fetchLearners = useServerFn(listLearners);
   const changeRole = useServerFn(setUserRole);
+  const changeTier = useServerFn(setUserTier);
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-learners"],
@@ -90,6 +91,12 @@ function LearnersTable() {
   // C8 — grant/revoke content roles from the learners table.
   const roleMutation = useMutation({
     mutationFn: (args: { userId: string; role: "author" | "reviewer"; grant: boolean }) => changeRole({ data: args }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["admin-learners"] }),
+  });
+
+  // F1 — membership tier drives which model rung a learner's requests reach.
+  const tierMutation = useMutation({
+    mutationFn: (args: { userId: string; tier: "free" | "plus" | "pro" }) => changeTier({ data: args }),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["admin-learners"] }),
   });
 
@@ -109,6 +116,7 @@ function LearnersTable() {
           <tr className="border-b border-border bg-muted/40 text-left uppercase tracking-widest text-[10px] text-muted-foreground">
             <th className="px-3 py-2">Learner</th>
             <th className="px-3 py-2">Roles</th>
+            <th className="px-3 py-2">Tier</th>
             <th className="px-3 py-2 text-right">Attempts</th>
             <th className="px-3 py-2 text-right">Accuracy</th>
             <th className="px-3 py-2 text-right">Tracked</th>
@@ -119,7 +127,7 @@ function LearnersTable() {
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">
+              <td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">
                 No learner accounts yet.
               </td>
             </tr>
@@ -148,6 +156,23 @@ function LearnersTable() {
                   </div>
                 </td>
 
+                <td className="px-3 py-2">
+                  <select
+                    className="border border-border bg-background px-1 py-0.5 font-mono text-[10px] uppercase tracking-widest disabled:opacity-40"
+                    value={r.tier}
+                    disabled={tierMutation.isPending}
+                    onChange={(e) =>
+                      tierMutation.mutate({
+                        userId: r.userId,
+                        tier: e.target.value as "free" | "plus" | "pro",
+                      })
+                    }
+                  >
+                    <option value="free">free</option>
+                    <option value="plus">plus</option>
+                    <option value="pro">pro</option>
+                  </select>
+                </td>
                 <td className="px-3 py-2 text-right">{r.attempts}</td>
                 <td className="px-3 py-2 text-right">{r.attempts ? `${r.accuracy}%` : "—"}</td>
                 <td className="px-3 py-2 text-right">{r.masteryTracked}</td>
