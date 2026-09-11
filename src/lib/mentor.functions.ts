@@ -39,9 +39,8 @@ Your role:
 export const askMentor = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => AskInputSchema.parse(input))
-  .handler(async ({ data }) => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
+  .handler(async ({ data, context }) => {
+    const { getMembershipTier, routedCompletion } = await import("./model-routing.server");
 
     const contextBlock = data.context
       ? `Current question context (do NOT reveal the answer):
@@ -52,39 +51,22 @@ Options:
 ${(data.context.options ?? []).map((o) => `  ${o.label}. ${o.text}`).join("\n")}`
       : "No question context attached.";
 
-    const res = await fetch(`${GATEWAY_URL}/chat/completions`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3.6-flash",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "system", content: contextBlock },
-          ...data.messages,
-        ],
-      }),
+    // Phase F1: cache first, then the model rung this learner's tier unlocks.
+    const tier = await getMembershipTier(context.supabase as never, context.userId);
+    const result = await routedCompletion({
+      task: "mentor_chat",
+      tier,
+      label: "Mentor",
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: contextBlock },
+        ...data.messages,
+      ],
     });
 
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      if (res.status === 429) {
-        throw new Error("Mentor is rate limited. Try again in a moment.");
-      }
-      if (res.status === 402) {
-        throw new Error("AI credits exhausted. Add credits in Lovable settings.");
-      }
-      throw new Error(`Mentor call failed: ${res.status} ${body.slice(0, 200)}`);
-    }
-
-    const json = (await res.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    const text = json.choices?.[0]?.message?.content?.trim() ?? "";
-    return { text };
+    return { text: result.text, model: result.model, cached: result.cached, tier };
   });
+
 
 const TtsInputSchema = z.object({
   text: z.string().min(1).max(2000),

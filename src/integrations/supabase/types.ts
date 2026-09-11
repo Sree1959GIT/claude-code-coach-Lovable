@@ -303,6 +303,42 @@ export type Database = {
           },
         ]
       }
+      ai_response_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          hits: number
+          id: string
+          last_hit_at: string
+          model: string
+          response: string
+          task: string
+          tier: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          hits?: number
+          id?: string
+          last_hit_at?: string
+          model: string
+          response: string
+          task: string
+          tier?: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          hits?: number
+          id?: string
+          last_hit_at?: string
+          model?: string
+          response?: string
+          task?: string
+          tier?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
@@ -997,6 +1033,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          membership_tier: string
           updated_at: string
         }
         Insert: {
@@ -1004,6 +1041,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          membership_tier?: string
           updated_at?: string
         }
         Update: {
@@ -1011,6 +1049,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          membership_tier?: string
           updated_at?: string
         }
         Relationships: []

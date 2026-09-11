@@ -59,10 +59,11 @@
 - [x] **Phase G2:** Spider control desk — catalogued source URLs with crawl intervals, last-crawl timestamps, per-URL crawl results, and a Crawl_Due batch run (admin section 13).
 - [x] **Phase G4:** Corpus defragmentation sweep — consolidates fragmented sections, strips empty structural artifacts, renumbers and re-embeds changed chunks (admin section 14, dry-run then apply).
 - [x] **Phase G1:** Import logs panel — every bulk submission recorded with per-row status and diagnostic message, viewable in the admin console.
+- [x] **Phase F1:** Cache-first, tier-aware model routing (`ai_response_cache`, `profiles.membership_tier`, admin tier control).
 - [x] **Phase G5:** Coverage parity report matrices — bank composition vs. blueprint weights, per-domain shortfall, difficulty mix and citation share (admin section 15).
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] Phase F1: Model routing optimization: cheap models check caches first, scaling up selectively by membership tiers.
+- [ ] Phase F2: Analytics tracking: map operational generation costs alongside strict cache hit/miss records.
 
 
 
@@ -97,7 +98,7 @@
 - [x] **G5:** Coverage parity report matrices: display visual domain gaps mapped straight against the certification exam blueprint.
 
 ### Phase F — Cost, BYOK, and Observability
-- [ ] **F1:** Model routing optimization: cheap models check caches first, scaling up selectively by membership tiers.
+- [x] **F1:** Model routing optimization: cheap models check caches first, scaling up selectively by membership tiers.
 - [ ] **F2:** Analytics tracking: map operational generation costs alongside strict cache hit/miss records.
 - [ ] **F3:** Admin usage board: dashboard monitors cache optimization statistics, token economics, and popular concepts.
 - [ ] **F4:** Encrypted server-side BYOK storage vault for individual Anthropic and Google operational keys.
