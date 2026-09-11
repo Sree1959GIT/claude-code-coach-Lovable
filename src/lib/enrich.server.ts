@@ -4,9 +4,11 @@
  */
 
 import { retrieveChunks, type LibraryMatch } from "./retrieval.server";
+import { routedCompletion, type MembershipTier } from "./model-routing.server";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-2.5-flash";
+
 
 export type EnrichOptionInput = {
   optionId: string;
