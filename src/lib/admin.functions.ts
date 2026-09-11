@@ -22,12 +22,15 @@ export type Learner = {
   displayName: string | null;
   joinedAt: string;
   roles: string[];
+  /** Phase F1 — model routing tier. */
+  tier: "free" | "plus" | "pro";
   attempts: number;
   correct: number;
   accuracy: number;
   masteryTracked: number;
   lastActiveAt: string | null;
 };
+
 
 export const listLearners = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
