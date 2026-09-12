@@ -100,7 +100,7 @@
 
 ### Phase F — Cost, BYOK, and Observability
 - [x] **F1:** Model routing optimization: cheap models check caches first, scaling up selectively by membership tiers.
-- [ ] **F2:** Analytics tracking: map operational generation costs alongside strict cache hit/miss records.
+- [x] **F2:** Analytics tracking: map operational generation costs alongside strict cache hit/miss records.
 - [ ] **F3:** Admin usage board: dashboard monitors cache optimization statistics, token economics, and popular concepts.
 - [ ] **F4:** Encrypted server-side BYOK storage vault for individual Anthropic and Google operational keys.
 - [ ] **F5:** Validation gates: active API keys securely override proxy subscription balances seamlessly inside worker engines.
