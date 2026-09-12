@@ -245,34 +245,115 @@ export async function routedCompletion(req: RoutedRequest): Promise<RoutedResult
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("Missing LOVABLE_API_KEY");
 
+  const startedAt = Date.now();
+  const model = resolveModel(req.task, req.tier);
+  const promptChars = req.messages.map((m) => m.content).join("\n");
   const cacheKey = await cacheKeyFor(req);
+
   if (!req.noCache) {
     const hit = await readCache(cacheKey);
     if (hit) {
+      // Phase F2 — a hit costs nothing; record what it would have cost.
+      const pt = approxTokens(promptChars);
+      const ct = approxTokens(hit.text);
+      void logUsageEvent({
+        userId: req.userId ?? null,
+        task: req.task,
+        model: hit.model,
+        tier: req.tier,
+        cached: true,
+        cacheKey,
+        promptTokens: pt,
+        completionTokens: ct,
+        estimatedCredits: 0,
+        savedCredits: estimateCredits(model, pt, ct),
+        durationMs: Date.now() - startedAt,
+        ok: true,
+      });
       return { text: hit.text, model: hit.model, cached: true, cacheKey, tier: req.tier };
     }
   }
 
-  const model = resolveModel(req.task, req.tier);
-  const res = await fetch(GATEWAY_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
+  let res: Response;
+  try {
+    res = await fetch(GATEWAY_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        messages: req.messages,
+        ...(req.jsonMode ? { response_format: { type: "json_object" } } : {}),
+      }),
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "network error";
+    void logUsageEvent({
+      userId: req.userId ?? null,
+      task: req.task,
       model,
-      messages: req.messages,
-      ...(req.jsonMode ? { response_format: { type: "json_object" } } : {}),
-    }),
-  });
+      tier: req.tier,
+      cached: false,
+      cacheKey,
+      promptTokens: 0,
+      completionTokens: 0,
+      estimatedCredits: 0,
+      savedCredits: 0,
+      durationMs: Date.now() - startedAt,
+      ok: false,
+      error: message,
+    });
+    throw err;
+  }
 
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    if (res.status === 429) throw new Error(`${label} is rate limited. Try again in a moment.`);
-    if (res.status === 402) throw new Error("AI credits exhausted. Add credits in Lovable settings.");
-    throw new Error(`${label} call failed: ${res.status} ${body.slice(0, 200)}`);
+    const message =
+      res.status === 429
+        ? `${label} is rate limited. Try again in a moment.`
+        : res.status === 402
+          ? "AI credits exhausted. Add credits in Lovable settings."
+          : `${label} call failed: ${res.status} ${body.slice(0, 200)}`;
+    void logUsageEvent({
+      userId: req.userId ?? null,
+      task: req.task,
+      model,
+      tier: req.tier,
+      cached: false,
+      cacheKey,
+      promptTokens: 0,
+      completionTokens: 0,
+      estimatedCredits: 0,
+      savedCredits: 0,
+      durationMs: Date.now() - startedAt,
+      ok: false,
+      error: message,
+    });
+    throw new Error(message);
   }
 
-  const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+  const json = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+    usage?: { prompt_tokens?: number; completion_tokens?: number } | null;
+  };
   const text = json.choices?.[0]?.message?.content?.trim() ?? "";
+  const promptTokens = json.usage?.prompt_tokens ?? approxTokens(promptChars);
+  const completionTokens = json.usage?.completion_tokens ?? approxTokens(text);
+
+  void logUsageEvent({
+    userId: req.userId ?? null,
+    task: req.task,
+    model,
+    tier: req.tier,
+    cached: false,
+    cacheKey,
+    promptTokens,
+    completionTokens,
+    estimatedCredits: estimateCredits(model, promptTokens, completionTokens),
+    savedCredits: 0,
+    durationMs: Date.now() - startedAt,
+    ok: true,
+  });
+
   if (text && !req.noCache) {
     await writeCache({ cacheKey, task: req.task, model, tier: req.tier, response: text });
   }
