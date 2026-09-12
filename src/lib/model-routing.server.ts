@@ -84,7 +84,77 @@ export type RoutedRequest = {
   /** Skip the shared cache (personalised or time-sensitive turns). */
   noCache?: boolean;
   label?: string;
+  /** Phase F2 — attributes the cost record to a learner when known. */
+  userId?: string | null;
 };
+
+/**
+ * Phase F2 — operational cost model, in Lovable credits per 1k tokens.
+ * Approximate by design: it exists to compare tasks and to quantify what the
+ * shared cache saves, not to bill anyone.
+ */
+const CREDITS_PER_1K: Record<string, { in: number; out: number }> = {
+  "google/gemini-3.1-flash-lite": { in: 0.02, out: 0.06 },
+  "google/gemini-3.6-flash": { in: 0.05, out: 0.15 },
+  "google/gemini-3.7-flash": { in: 0.06, out: 0.18 },
+  "google/gemini-3.1-pro-preview": { in: 0.3, out: 0.9 },
+};
+const DEFAULT_RATE = { in: 0.05, out: 0.15 };
+
+export function estimateCredits(
+  model: string,
+  promptTokens: number,
+  completionTokens: number,
+): number {
+  const rate = CREDITS_PER_1K[model] ?? DEFAULT_RATE;
+  const credits = (promptTokens / 1000) * rate.in + (completionTokens / 1000) * rate.out;
+  return Math.round(credits * 10000) / 10000;
+}
+
+/** Rough token estimate (~4 chars/token) for records the gateway does not report. */
+function approxTokens(text: string): number {
+  return Math.max(1, Math.ceil(text.length / 4));
+}
+
+type UsageEvent = {
+  userId?: string | null;
+  task: RoutedTask;
+  model: string;
+  tier: MembershipTier;
+  cached: boolean;
+  cacheKey: string;
+  promptTokens: number;
+  completionTokens: number;
+  estimatedCredits: number;
+  savedCredits: number;
+  durationMs: number;
+  ok: boolean;
+  error?: string | null;
+};
+
+/** Fire-and-forget cost + cache hit/miss record. Never breaks a response. */
+export async function logUsageEvent(event: UsageEvent): Promise<void> {
+  try {
+    const db = await admin();
+    await db.from("ai_usage_events").insert({
+      user_id: event.userId ?? null,
+      task: event.task,
+      model: event.model,
+      tier: event.tier,
+      cached: event.cached,
+      cache_key: event.cacheKey,
+      prompt_tokens: event.promptTokens,
+      completion_tokens: event.completionTokens,
+      estimated_credits: event.estimatedCredits,
+      saved_credits: event.savedCredits,
+      duration_ms: event.durationMs,
+      ok: event.ok,
+      error: event.error ?? null,
+    });
+  } catch {
+    // Telemetry must never break a response.
+  }
+}
 
 export type RoutedResult = {
   text: string;
