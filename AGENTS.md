@@ -60,6 +60,7 @@
 - [x] **Phase G4:** Corpus defragmentation sweep — consolidates fragmented sections, strips empty structural artifacts, renumbers and re-embeds changed chunks (admin section 14, dry-run then apply).
 - [x] **Phase G1:** Import logs panel — every bulk submission recorded with per-row status and diagnostic message, viewable in the admin console.
 - [x] **Phase F1:** Cache-first, tier-aware model routing (`ai_response_cache`, `profiles.membership_tier`, admin tier control).
+- [x] **Phase F2:** AI usage analytics — `ai_usage_events` cost/cache-hit log written by every routed completion, plus admin-gated `getUsageSummary`.
 - [x] **Phase G5:** Coverage parity report matrices — bank composition vs. blueprint weights, per-domain shortfall, difficulty mix and citation share (admin section 15).
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
