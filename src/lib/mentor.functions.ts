@@ -57,6 +57,7 @@ ${(data.context.options ?? []).map((o) => `  ${o.label}. ${o.text}`).join("\n")}
       task: "mentor_chat",
       tier,
       label: "Mentor",
+      userId: context.userId,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "system", content: contextBlock },
