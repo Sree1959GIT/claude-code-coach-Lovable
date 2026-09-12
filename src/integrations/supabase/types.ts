@@ -339,6 +339,60 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_usage_events: {
+        Row: {
+          cache_key: string | null
+          cached: boolean
+          completion_tokens: number
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          estimated_credits: number
+          id: string
+          model: string
+          ok: boolean
+          prompt_tokens: number
+          saved_credits: number
+          task: string
+          tier: string
+          user_id: string | null
+        }
+        Insert: {
+          cache_key?: string | null
+          cached?: boolean
+          completion_tokens?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          estimated_credits?: number
+          id?: string
+          model: string
+          ok?: boolean
+          prompt_tokens?: number
+          saved_credits?: number
+          task: string
+          tier?: string
+          user_id?: string | null
+        }
+        Update: {
+          cache_key?: string | null
+          cached?: boolean
+          completion_tokens?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          estimated_credits?: number
+          id?: string
+          model?: string
+          ok?: boolean
+          prompt_tokens?: number
+          saved_credits?: number
+          task?: string
+          tier?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
