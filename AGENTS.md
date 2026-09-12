@@ -63,7 +63,7 @@
 - [x] **Phase G5:** Coverage parity report matrices — bank composition vs. blueprint weights, per-domain shortfall, difficulty mix and citation share (admin section 15).
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] Phase F2: Analytics tracking: map operational generation costs alongside strict cache hit/miss records.
+- [ ] Phase F3: Admin usage board: dashboard monitors cache optimization statistics, token economics, and popular concepts.
 
 
 
