@@ -1478,6 +1478,48 @@ export type Database = {
           },
         ]
       }
+      user_provider_keys: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          key_ciphertext: string
+          key_last4: string
+          label: string | null
+          last_verified_at: string | null
+          last_verify_status: string | null
+          provider: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key_ciphertext: string
+          key_last4: string
+          label?: string | null
+          last_verified_at?: string | null
+          last_verify_status?: string | null
+          provider: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key_ciphertext?: string
+          key_last4?: string
+          label?: string | null
+          last_verified_at?: string | null
+          last_verify_status?: string | null
+          provider?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
