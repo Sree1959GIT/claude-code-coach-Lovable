@@ -36,6 +36,7 @@ import { SpiderPanel } from "@/components/admin/SpiderPanel";
 import { DefragPanel } from "@/components/admin/DefragPanel";
 import { ParityPanel } from "@/components/admin/ParityPanel";
 import { UsagePanel } from "@/components/admin/UsagePanel";
+import { ByokPanel } from "@/components/admin/ByokPanel";
 
 
 
@@ -953,6 +954,17 @@ function AdminPage() {
               </p>
               <UsagePanel />
             </section>
+
+            <section className="mt-10">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">17 · BYOK_Key_Vault</h2>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                Store your own Anthropic or Google keys. They are encrypted before saving, verified against
+                the provider, and only ever displayed as the last four characters.
+              </p>
+              <ByokPanel />
+            </section>
+
+
 
 
 
