@@ -44,8 +44,20 @@ export type EvaluatorArgs = {
   intent?: AgentIntent;
   retrieval?: RetrievalResult | null;
   profileNote?: string | null;
+  /** Phase F5 — learner whose BYOK vault may override the proxy allowance. */
+  userId?: string | null;
   trace?: { db: Db; runId: string | null; userId: string; stepIndex: number };
 };
+
+/** Phase F5 — BYOK-aware endpoint/model for this learner, proxy otherwise. */
+async function resolveEvaluatorTarget(args: EvaluatorArgs) {
+  const { resolveInferenceTarget } = await import("../inference-target.server");
+  return resolveInferenceTarget({
+    userId: args.userId ?? args.trace?.userId ?? null,
+    proxyModel: EVALUATOR_MODEL,
+    rung: "standard",
+  });
+}
 
 /** Focus instruction naming the option under review. */
 export function evaluatorFocusMessage(ctx?: QuestionContext | null): string {
