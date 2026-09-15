@@ -126,17 +126,18 @@ function gatewayError(status: number, body: string): Error {
  * Throws a user-presentable error on gateway failure.
  */
 export async function streamExplainer(args: ExplainerArgs): Promise<ReadableStream<Uint8Array>> {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("Missing LOVABLE_API_KEY");
+  // Phase F5 — the learner's own active key overrides the proxy allowance.
+  const target = await resolveExplainerTarget(args);
+  if (!target.apiKey) throw new Error("Missing LOVABLE_API_KEY");
 
   return fetchGatewayStream({
-    url: `${GATEWAY_URL}/chat/completions`,
-    apiKey: key,
+    url: target.url,
+    apiKey: target.apiKey,
     label: "Mentor",
     body: {
-      model: EXPLAINER_MODEL,
+      model: target.model,
       stream: true,
-      stream_options: { include_usage: true },
+      ...(target.byok ? { max_tokens: 2048 } : { stream_options: { include_usage: true } }),
       messages: buildExplainerMessages(args),
     },
   });
