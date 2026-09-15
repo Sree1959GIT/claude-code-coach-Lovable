@@ -361,8 +361,12 @@ export async function routedCompletion(req: RoutedRequest): Promise<RoutedResult
     cacheKey,
     promptTokens,
     completionTokens,
-    estimatedCredits: estimateCredits(model, promptTokens, completionTokens),
-    savedCredits: 0,
+    // Phase F5 — a BYOK call spends the learner's own provider balance, so it
+    // costs zero Lovable credits and counts as a saving against the proxy rung.
+    estimatedCredits: target.byok ? 0 : estimateCredits(model, promptTokens, completionTokens),
+    savedCredits: target.byok
+      ? estimateCredits(proxyModel, promptTokens, completionTokens)
+      : 0,
     durationMs: Date.now() - startedAt,
     ok: true,
   });
