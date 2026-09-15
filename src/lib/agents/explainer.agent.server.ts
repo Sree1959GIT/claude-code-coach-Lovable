@@ -38,8 +38,23 @@ export type ExplainerArgs = {
   retrieval?: RetrievalResult | null;
   /** Extra system guidance (e.g. from the memory agent). */
   profileNote?: string | null;
+  /** Phase F5 — learner whose BYOK vault may override the proxy allowance. */
+  userId?: string | null;
   trace?: { db: Db; runId: string | null; userId: string; stepIndex: number };
 };
+
+/** Phase F5 — BYOK-aware endpoint/model for this learner, proxy otherwise. */
+export async function resolveExplainerTarget(args: {
+  userId?: string | null;
+  trace?: { userId: string } | undefined;
+}) {
+  const { resolveInferenceTarget } = await import("../inference-target.server");
+  return resolveInferenceTarget({
+    userId: args.userId ?? args.trace?.userId ?? null,
+    proxyModel: EXPLAINER_MODEL,
+    rung: "standard",
+  });
+}
 
 const PERSONA = `You are the SME Voice Mentor for the Claude Code Architect Foundation exam prep.
 
