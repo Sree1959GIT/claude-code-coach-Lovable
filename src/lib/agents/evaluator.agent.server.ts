@@ -124,19 +124,23 @@ export type EvaluatorResult = {
 /** Buffered variant, used for non-streaming callers and tracing. */
 export async function runEvaluatorAgent(args: EvaluatorArgs): Promise<EvaluatorResult> {
   const started = Date.now();
-  const key = process.env["LOVABLE_API_KEY"];
   let result: EvaluatorResult;
   let promptTokens = 0;
   let completionTokens = 0;
+  let usedModel = EVALUATOR_MODEL;
 
   try {
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const res = await fetch(`${GATEWAY_URL}/chat/completions`, {
+    // Phase F5 — BYOK key wins over the proxy allowance when one is active.
+    const target = await resolveEvaluatorTarget(args);
+    if (!target.apiKey) throw new Error("Missing LOVABLE_API_KEY");
+    usedModel = target.model;
+    const res = await fetch(target.url, {
       method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${target.apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: EVALUATOR_MODEL,
+        model: target.model,
         messages: buildEvaluatorMessages(args),
+        ...(target.byok ? { max_tokens: 2048 } : {}),
       }),
     });
     if (!res.ok) throw gatewayError(res.status, await res.text().catch(() => ""));
@@ -148,7 +152,7 @@ export async function runEvaluatorAgent(args: EvaluatorArgs): Promise<EvaluatorR
     const text = json.choices?.[0]?.message?.content?.trim() ?? "";
     promptTokens = json.usage?.prompt_tokens ?? 0;
     completionTokens = json.usage?.completion_tokens ?? 0;
-    result = { text, ...splitBrief(text), model: EVALUATOR_MODEL, error: null };
+    result = { text, ...splitBrief(text), model: usedModel, error: null };
   } catch (err) {
     result = {
       text: "",
