@@ -226,7 +226,7 @@ export async function runExplainerAgent(args: ExplainerArgs): Promise<ExplainerR
       stepIndex: args.trace.stepIndex,
       agent: "explainer",
       role: "teacher",
-      model: EXPLAINER_MODEL,
+      model: usedModel,
       input: {
         intent: args.intent ?? null,
         turns: args.messages.length,
