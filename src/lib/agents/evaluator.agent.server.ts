@@ -170,7 +170,7 @@ export async function runEvaluatorAgent(args: EvaluatorArgs): Promise<EvaluatorR
       stepIndex: args.trace.stepIndex,
       agent: "evaluator",
       role: "critic",
-      model: EVALUATOR_MODEL,
+      model: usedModel,
       input: {
         option: args.context?.selectedOption ?? null,
         turns: args.messages.length,
