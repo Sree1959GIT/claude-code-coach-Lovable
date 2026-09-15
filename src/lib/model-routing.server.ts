@@ -241,12 +241,20 @@ export async function writeCache(args: {
  * model produced it and whether it came from the cache.
  */
 export async function routedCompletion(req: RoutedRequest): Promise<RoutedResult> {
-  const label = req.label ?? "AI";
-  const apiKey = process.env["LOVABLE_API_KEY"];
-  if (!apiKey) throw new Error("Missing LOVABLE_API_KEY");
-
   const startedAt = Date.now();
-  const model = resolveModel(req.task, req.tier);
+  const proxyModel = resolveModel(req.task, req.tier);
+
+  // Phase F5 — an active vault key overrides the proxy balance gate.
+  const { resolveInferenceTarget } = await import("./inference-target.server");
+  const target = await resolveInferenceTarget({
+    userId: req.userId ?? null,
+    proxyModel,
+    rung: RUNG_BY_TIER[req.tier],
+  });
+  if (!target.apiKey) throw new Error("Missing LOVABLE_API_KEY");
+
+  const label = req.label ?? target.label;
+  const model = target.model;
   const promptChars = req.messages.map((m) => m.content).join("\n");
   const cacheKey = await cacheKeyFor(req);
 
@@ -266,7 +274,7 @@ export async function routedCompletion(req: RoutedRequest): Promise<RoutedResult
         promptTokens: pt,
         completionTokens: ct,
         estimatedCredits: 0,
-        savedCredits: estimateCredits(model, pt, ct),
+        savedCredits: estimateCredits(proxyModel, pt, ct),
         durationMs: Date.now() - startedAt,
         ok: true,
       });
@@ -276,13 +284,14 @@ export async function routedCompletion(req: RoutedRequest): Promise<RoutedResult
 
   let res: Response;
   try {
-    res = await fetch(GATEWAY_URL, {
+    res = await fetch(target.url, {
       method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${target.apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model,
         messages: req.messages,
         ...(req.jsonMode ? { response_format: { type: "json_object" } } : {}),
+        ...(target.byok ? { max_tokens: 2048 } : {}),
       }),
     });
   } catch (err) {
@@ -311,8 +320,12 @@ export async function routedCompletion(req: RoutedRequest): Promise<RoutedResult
       res.status === 429
         ? `${label} is rate limited. Try again in a moment.`
         : res.status === 402
-          ? "AI credits exhausted. Add credits in Lovable settings."
-          : `${label} call failed: ${res.status} ${body.slice(0, 200)}`;
+          ? target.byok
+            ? `${label} rejected the request for billing reasons. Check your provider account.`
+            : "AI credits exhausted. Add credits in Lovable settings."
+          : res.status === 401 && target.byok
+            ? `${label} rejected your API key. Re-check it in the BYOK vault.`
+            : `${label} call failed: ${res.status} ${body.slice(0, 200)}`;
     void logUsageEvent({
       userId: req.userId ?? null,
       task: req.task,
