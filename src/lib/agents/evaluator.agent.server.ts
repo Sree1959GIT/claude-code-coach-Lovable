@@ -94,18 +94,19 @@ function gatewayError(status: number, body: string): Error {
 
 /** Streaming variant for the mentor panel. */
 export async function streamEvaluator(args: EvaluatorArgs): Promise<ReadableStream<Uint8Array>> {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("Missing LOVABLE_API_KEY");
+  // Phase F5 — the learner's own active key overrides the proxy allowance.
+  const target = await resolveEvaluatorTarget(args);
+  if (!target.apiKey) throw new Error("Missing LOVABLE_API_KEY");
 
   const { fetchGatewayStream } = await import("./gateway.server");
   return fetchGatewayStream({
-    url: `${GATEWAY_URL}/chat/completions`,
-    apiKey: key,
+    url: target.url,
+    apiKey: target.apiKey,
     label: "Mentor",
     body: {
-      model: EVALUATOR_MODEL,
+      model: target.model,
       stream: true,
-      stream_options: { include_usage: true },
+      ...(target.byok ? { max_tokens: 2048 } : { stream_options: { include_usage: true } }),
       messages: buildEvaluatorMessages(args),
     },
   });
