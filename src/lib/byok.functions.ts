@@ -57,6 +57,8 @@ export const saveProviderKey = createServerFn({ method: "POST" })
       label: data.label ?? null,
       verify,
     });
+    const { invalidateInferenceTarget } = await import("./inference-target.server");
+    invalidateInferenceTarget(context.userId);
     return meta;
   });
 
@@ -87,6 +89,8 @@ export const setProviderKeyActive = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { setKeyActive } = await import("./byok.server");
     await setKeyActive(context.userId, data.provider, data.isActive);
+    const { invalidateInferenceTarget } = await import("./inference-target.server");
+    invalidateInferenceTarget(context.userId);
     return { ok: true };
   });
 
@@ -96,5 +100,7 @@ export const deleteProviderKey = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { removeKey } = await import("./byok.server");
     await removeKey(context.userId, data.provider);
+    const { invalidateInferenceTarget } = await import("./inference-target.server");
+    invalidateInferenceTarget(context.userId);
     return { ok: true };
   });

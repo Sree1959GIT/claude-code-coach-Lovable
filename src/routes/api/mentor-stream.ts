@@ -211,6 +211,8 @@ export const Route = createFileRoute("/api/mentor-stream")({
           intent: plan.intent,
           retrieval,
           profileNote: profile.note || null,
+          // Phase F5 — lets the agents route through this learner's own key.
+          userId,
           trace: trace(4),
         };
 

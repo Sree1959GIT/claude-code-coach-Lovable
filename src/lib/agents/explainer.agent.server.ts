@@ -38,8 +38,23 @@ export type ExplainerArgs = {
   retrieval?: RetrievalResult | null;
   /** Extra system guidance (e.g. from the memory agent). */
   profileNote?: string | null;
+  /** Phase F5 — learner whose BYOK vault may override the proxy allowance. */
+  userId?: string | null;
   trace?: { db: Db; runId: string | null; userId: string; stepIndex: number };
 };
+
+/** Phase F5 — BYOK-aware endpoint/model for this learner, proxy otherwise. */
+export async function resolveExplainerTarget(args: {
+  userId?: string | null;
+  trace?: { userId: string } | undefined;
+}) {
+  const { resolveInferenceTarget } = await import("../inference-target.server");
+  return resolveInferenceTarget({
+    userId: args.userId ?? args.trace?.userId ?? null,
+    proxyModel: EXPLAINER_MODEL,
+    rung: "standard",
+  });
+}
 
 const PERSONA = `You are the SME Voice Mentor for the Claude Code Architect Foundation exam prep.
 
@@ -126,17 +141,18 @@ function gatewayError(status: number, body: string): Error {
  * Throws a user-presentable error on gateway failure.
  */
 export async function streamExplainer(args: ExplainerArgs): Promise<ReadableStream<Uint8Array>> {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("Missing LOVABLE_API_KEY");
+  // Phase F5 — the learner's own active key overrides the proxy allowance.
+  const target = await resolveExplainerTarget(args);
+  if (!target.apiKey) throw new Error("Missing LOVABLE_API_KEY");
 
   return fetchGatewayStream({
-    url: `${GATEWAY_URL}/chat/completions`,
-    apiKey: key,
+    url: target.url,
+    apiKey: target.apiKey,
     label: "Mentor",
     body: {
-      model: EXPLAINER_MODEL,
+      model: target.model,
       stream: true,
-      stream_options: { include_usage: true },
+      ...(target.byok ? { max_tokens: 2048 } : { stream_options: { include_usage: true } }),
       messages: buildExplainerMessages(args),
     },
   });
@@ -164,19 +180,23 @@ export function splitBrief(text: string): { written: string; spoken: string } {
 /** Buffered variant, used for non-streaming callers and evaluation/tracing. */
 export async function runExplainerAgent(args: ExplainerArgs): Promise<ExplainerResult> {
   const started = Date.now();
-  const key = process.env["LOVABLE_API_KEY"];
   let result: ExplainerResult;
   let promptTokens = 0;
   let completionTokens = 0;
+  let usedModel = EXPLAINER_MODEL;
 
   try {
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const res = await fetch(`${GATEWAY_URL}/chat/completions`, {
+    // Phase F5 — BYOK key wins over the proxy allowance when one is active.
+    const target = await resolveExplainerTarget(args);
+    if (!target.apiKey) throw new Error("Missing LOVABLE_API_KEY");
+    usedModel = target.model;
+    const res = await fetch(target.url, {
       method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${target.apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: EXPLAINER_MODEL,
+        model: target.model,
         messages: buildExplainerMessages(args),
+        ...(target.byok ? { max_tokens: 2048 } : {}),
       }),
     });
     if (!res.ok) throw gatewayError(res.status, await res.text().catch(() => ""));
@@ -188,7 +208,7 @@ export async function runExplainerAgent(args: ExplainerArgs): Promise<ExplainerR
     const text = json.choices?.[0]?.message?.content?.trim() ?? "";
     promptTokens = json.usage?.prompt_tokens ?? 0;
     completionTokens = json.usage?.completion_tokens ?? 0;
-    result = { text, ...splitBrief(text), model: EXPLAINER_MODEL, error: null };
+    result = { text, ...splitBrief(text), model: usedModel, error: null };
   } catch (err) {
     result = {
       text: "",
@@ -206,7 +226,7 @@ export async function runExplainerAgent(args: ExplainerArgs): Promise<ExplainerR
       stepIndex: args.trace.stepIndex,
       agent: "explainer",
       role: "teacher",
-      model: EXPLAINER_MODEL,
+      model: usedModel,
       input: {
         intent: args.intent ?? null,
         turns: args.messages.length,
