@@ -44,8 +44,20 @@ export type EvaluatorArgs = {
   intent?: AgentIntent;
   retrieval?: RetrievalResult | null;
   profileNote?: string | null;
+  /** Phase F5 — learner whose BYOK vault may override the proxy allowance. */
+  userId?: string | null;
   trace?: { db: Db; runId: string | null; userId: string; stepIndex: number };
 };
+
+/** Phase F5 — BYOK-aware endpoint/model for this learner, proxy otherwise. */
+async function resolveEvaluatorTarget(args: EvaluatorArgs) {
+  const { resolveInferenceTarget } = await import("../inference-target.server");
+  return resolveInferenceTarget({
+    userId: args.userId ?? args.trace?.userId ?? null,
+    proxyModel: EVALUATOR_MODEL,
+    rung: "standard",
+  });
+}
 
 /** Focus instruction naming the option under review. */
 export function evaluatorFocusMessage(ctx?: QuestionContext | null): string {
@@ -82,18 +94,19 @@ function gatewayError(status: number, body: string): Error {
 
 /** Streaming variant for the mentor panel. */
 export async function streamEvaluator(args: EvaluatorArgs): Promise<ReadableStream<Uint8Array>> {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("Missing LOVABLE_API_KEY");
+  // Phase F5 — the learner's own active key overrides the proxy allowance.
+  const target = await resolveEvaluatorTarget(args);
+  if (!target.apiKey) throw new Error("Missing LOVABLE_API_KEY");
 
   const { fetchGatewayStream } = await import("./gateway.server");
   return fetchGatewayStream({
-    url: `${GATEWAY_URL}/chat/completions`,
-    apiKey: key,
+    url: target.url,
+    apiKey: target.apiKey,
     label: "Mentor",
     body: {
-      model: EVALUATOR_MODEL,
+      model: target.model,
       stream: true,
-      stream_options: { include_usage: true },
+      ...(target.byok ? { max_tokens: 2048 } : { stream_options: { include_usage: true } }),
       messages: buildEvaluatorMessages(args),
     },
   });
@@ -111,19 +124,23 @@ export type EvaluatorResult = {
 /** Buffered variant, used for non-streaming callers and tracing. */
 export async function runEvaluatorAgent(args: EvaluatorArgs): Promise<EvaluatorResult> {
   const started = Date.now();
-  const key = process.env["LOVABLE_API_KEY"];
   let result: EvaluatorResult;
   let promptTokens = 0;
   let completionTokens = 0;
+  let usedModel = EVALUATOR_MODEL;
 
   try {
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const res = await fetch(`${GATEWAY_URL}/chat/completions`, {
+    // Phase F5 — BYOK key wins over the proxy allowance when one is active.
+    const target = await resolveEvaluatorTarget(args);
+    if (!target.apiKey) throw new Error("Missing LOVABLE_API_KEY");
+    usedModel = target.model;
+    const res = await fetch(target.url, {
       method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${target.apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: EVALUATOR_MODEL,
+        model: target.model,
         messages: buildEvaluatorMessages(args),
+        ...(target.byok ? { max_tokens: 2048 } : {}),
       }),
     });
     if (!res.ok) throw gatewayError(res.status, await res.text().catch(() => ""));
@@ -135,7 +152,7 @@ export async function runEvaluatorAgent(args: EvaluatorArgs): Promise<EvaluatorR
     const text = json.choices?.[0]?.message?.content?.trim() ?? "";
     promptTokens = json.usage?.prompt_tokens ?? 0;
     completionTokens = json.usage?.completion_tokens ?? 0;
-    result = { text, ...splitBrief(text), model: EVALUATOR_MODEL, error: null };
+    result = { text, ...splitBrief(text), model: usedModel, error: null };
   } catch (err) {
     result = {
       text: "",
@@ -153,7 +170,7 @@ export async function runEvaluatorAgent(args: EvaluatorArgs): Promise<EvaluatorR
       stepIndex: args.trace.stepIndex,
       agent: "evaluator",
       role: "critic",
-      model: EVALUATOR_MODEL,
+      model: usedModel,
       input: {
         option: args.context?.selectedOption ?? null,
         turns: args.messages.length,
