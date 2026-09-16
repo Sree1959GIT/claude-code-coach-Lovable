@@ -510,19 +510,28 @@ function DomainRunner() {
           )}
         </main>
 
-        {/* Frame 3 — mentor (resizable, non-blocking) */}
+        {/* Frame 3 — mentor: resizable side frame on desktop, overlay drawer on mobile */}
         {mentorOpen && q && (
           <>
+            {!isMobile && (
+              <div
+                role="separator"
+                aria-orientation="vertical"
+                onMouseDown={() => {
+                  draggingRef.current = true;
+                  document.body.style.userSelect = "none";
+                }}
+                className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-primary"
+              />
+            )}
             <div
-              role="separator"
-              aria-orientation="vertical"
-              onMouseDown={() => {
-                draggingRef.current = true;
-                document.body.style.userSelect = "none";
-              }}
-              className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-primary"
-            />
-            <div style={{ width: mentorWidth }} className="shrink-0">
+              style={isMobile ? undefined : { width: mentorWidth }}
+              className={
+                isMobile
+                  ? "fixed inset-0 top-14 z-30 bg-background"
+                  : "shrink-0"
+              }
+            >
               <MentorCanvas
                 open={mentorOpen}
                 onClose={() => setMentorOpen(false)}
