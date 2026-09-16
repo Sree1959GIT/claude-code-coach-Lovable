@@ -1422,6 +1422,30 @@ export type Database = {
           },
         ]
       }
+      rate_events: {
+        Row: {
+          action: string
+          byok: boolean
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          byok?: boolean
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          byok?: boolean
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_mastery: {
         Row: {
           created_at: string

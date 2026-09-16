@@ -65,9 +65,10 @@
 - [x] **Phase F4:** Encrypted BYOK key vault — AES-256-GCM stored Anthropic/Google keys, provider verification, pause/remove, admin section 17.
 - [x] **Phase F5:** Validation gates — an active vault key overrides proxy balance routing across mentor, agent and routed completions.
 - [x] **Phase G5:** Coverage parity report matrices — bank composition vs. blueprint weights, per-domain shortfall, difficulty mix and citation share (admin section 15).
+- [x] **Phase F6:** Rate constraint guards — `rate_events` daily counters, tier-based quotas plus burst throttles on mentor chat/stream, codegen and TTS, BYOK exemption, and `getQuotaStatus`.
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] Phase F6: Rate constraint guards — implement daily account quotas and throttling filters for mentor streams, generation actions, and TTS requests.
+- [ ] Phase H1: Layout reflow pass — polish multi-frame canvas drawers for seamless mobile responsive viewports.
 
 
 
@@ -107,7 +108,7 @@
 - [x] **F3:** Admin usage board: dashboard monitors cache optimization statistics, token economics, and popular concepts.
 - [x] **F4:** Encrypted server-side BYOK storage vault for individual Anthropic and Google operational keys.
 - [x] **F5:** Validation gates: active API keys securely override proxy subscription balances seamlessly inside worker engines.
-- [ ] **F6:** Rate constraint guards: implement daily account quotas and throttling filters for mentor streams, generation actions, and TTS requests.
+- [x] **F6:** Rate constraint guards: implement daily account quotas and throttling filters for mentor streams, generation actions, and TTS requests.
 
 
 ### Phase H — Polish and Launch

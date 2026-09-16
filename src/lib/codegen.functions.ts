@@ -75,6 +75,14 @@ export const generateCodebaseDraft = createServerFn({ method: "POST" })
     if (roleErr) throw roleErr;
     if (!isAdmin) throw new Error("Forbidden");
 
+    // Phase F6 — generation runs are the most expensive action, so they are
+    // capped per day and throttled in short bursts (BYOK runs are exempt).
+    const { getMembershipTier } = await import("./model-routing.server");
+    const { enforceQuota, recordRateEvent } = await import("./rate-limit.server");
+    const tier = await getMembershipTier(context.supabase as never, context.userId);
+    const quota = await enforceQuota({ userId: context.userId, action: "codegen", tier });
+    void recordRateEvent({ userId: context.userId, action: "codegen", byok: quota.byok });
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin.from("codebases").select("concept_tag");
     const existingTags = Array.from(new Set((rows ?? []).map((r) => r.concept_tag)));
