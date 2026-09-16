@@ -54,6 +54,9 @@ ${(data.context.options ?? []).map((o) => `  ${o.label}. ${o.text}`).join("\n")}
 
     // Phase F1: cache first, then the model rung this learner's tier unlocks.
     const tier = await getMembershipTier(context.supabase as never, context.userId);
+    // Phase F6: daily quota + burst throttle (BYOK learners are exempt).
+    const quota = await enforceQuota({ userId: context.userId, action: "mentor", tier });
+    void recordRateEvent({ userId: context.userId, action: "mentor", byok: quota.byok });
     const result = await routedCompletion({
       task: "mentor_chat",
       tier,
