@@ -316,8 +316,17 @@ export const Route = createFileRoute("/api/mentor-stream")({
             "X-Mentor-Resources": encodeURIComponent(
               JSON.stringify(resourcePick.resources),
             ),
+            // Phase F6 — what is left of today's mentor allowance.
+            "X-Mentor-Quota": encodeURIComponent(
+              JSON.stringify({
+                limit: quota.limit,
+                remaining: Math.max(0, quota.remaining - 1),
+                resetAt: quota.resetAt,
+                byok: quota.byok,
+              }),
+            ),
             "Access-Control-Expose-Headers":
-              "X-Mentor-Citations, X-Mentor-Route, X-Mentor-Resources",
+              "X-Mentor-Citations, X-Mentor-Route, X-Mentor-Resources, X-Mentor-Quota",
           },
         });
       },
