@@ -8,6 +8,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export type WindowRect = { x: number; y: number; width: number; height: number };
 
@@ -60,6 +61,9 @@ export function FloatingWindow({
   }));
   const rect = controlledRect ?? uncontrolled;
   const dragRef = useRef<Drag | null>(null);
+  // H1 — on small/touch viewports the window docks as a full-width bottom sheet:
+  // no free positioning, no drag, no resize handles.
+  const isMobile = useIsMobile();
 
   const setRect = useCallback(
     (next: WindowRect) => {
@@ -112,15 +116,17 @@ export function FloatingWindow({
   if (!open) return null;
 
   function beginMove(e: React.PointerEvent) {
-    if (e.button !== 0) return;
+    if (isMobile || e.button !== 0) return;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
     dragRef.current = { kind: "move", startX: e.clientX, startY: e.clientY, rect };
     document.body.style.userSelect = "none";
   }
 
   function beginResize(edge: Edge) {
     return (e: React.PointerEvent) => {
-      if (e.button !== 0) return;
+      if (isMobile || e.button !== 0) return;
       e.stopPropagation();
+      e.currentTarget.setPointerCapture?.(e.pointerId);
       dragRef.current = { kind: "resize", edge, startX: e.clientX, startY: e.clientY, rect };
       document.body.style.userSelect = "none";
     };
@@ -129,13 +135,30 @@ export function FloatingWindow({
   return (
     <section
       aria-label={title}
-      style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
-      className="fixed z-40 flex flex-col border border-border bg-card shadow-lg"
+      style={
+        isMobile
+          ? undefined
+          : { left: rect.x, top: rect.y, width: rect.width, height: rect.height }
+      }
+      className={
+        isMobile
+          ? "fixed inset-x-0 bottom-0 z-40 flex max-h-[85dvh] h-[75dvh] flex-col border-t border-border bg-card shadow-lg"
+          : "fixed z-40 flex flex-col border border-border bg-card shadow-lg"
+      }
     >
       <header
         onPointerDown={beginMove}
-        className="flex shrink-0 cursor-grab items-center justify-between gap-3 border-b border-border bg-muted/40 px-3 py-2 active:cursor-grabbing"
+        style={isMobile ? undefined : { touchAction: "none" }}
+        className={`relative flex shrink-0 items-center justify-between gap-3 border-b border-border bg-muted/40 px-3 py-2 ${
+          isMobile ? "" : "cursor-grab active:cursor-grabbing"
+        }`}
       >
+        {isMobile && (
+          <span
+            aria-hidden="true"
+            className="absolute left-1/2 top-1 h-1 w-10 -translate-x-1/2 rounded-full bg-border"
+          />
+        )}
         <div className="min-w-0">
           <div className="truncate font-mono text-[10px] uppercase tracking-widest text-primary">
             {subtitle ?? "Floating_Window"}
@@ -146,36 +169,43 @@ export function FloatingWindow({
           onPointerDown={(e) => e.stopPropagation()}
           onClick={onClose}
           aria-label={`Close ${title}`}
-          className="text-muted-foreground hover:text-foreground"
+          className="-m-2 shrink-0 p-2 text-muted-foreground hover:text-foreground"
         >
           <X className="h-4 w-4" />
         </button>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-auto">{children}</div>
+      <div className="min-h-0 flex-1 overflow-auto overscroll-contain">{children}</div>
       {footer ? <div className="shrink-0 border-t border-border">{footer}</div> : null}
 
-      {/* Resize handles */}
-      <div
-        role="separator"
-        aria-orientation="vertical"
-        aria-label="Resize width"
-        onPointerDown={beginResize("e")}
-        className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize"
-      />
-      <div
-        role="separator"
-        aria-orientation="horizontal"
-        aria-label="Resize height"
-        onPointerDown={beginResize("s")}
-        className="absolute bottom-0 left-0 h-1.5 w-full cursor-row-resize"
-      />
-      <div
-        role="separator"
-        aria-label="Resize window"
-        onPointerDown={beginResize("se")}
-        className="absolute bottom-0 right-0 h-3 w-3 cursor-nwse-resize bg-border"
-      />
+      {/* Resize handles — pointer-driven, so they stay hidden on touch layouts */}
+      {!isMobile && (
+        <>
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize width"
+            onPointerDown={beginResize("e")}
+            style={{ touchAction: "none" }}
+            className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize"
+          />
+          <div
+            role="separator"
+            aria-orientation="horizontal"
+            aria-label="Resize height"
+            onPointerDown={beginResize("s")}
+            style={{ touchAction: "none" }}
+            className="absolute bottom-0 left-0 h-1.5 w-full cursor-row-resize"
+          />
+          <div
+            role="separator"
+            aria-label="Resize window"
+            onPointerDown={beginResize("se")}
+            style={{ touchAction: "none" }}
+            className="absolute bottom-0 right-0 h-3 w-3 cursor-nwse-resize bg-border"
+          />
+        </>
+      )}
     </section>
   );
 }

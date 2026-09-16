@@ -323,7 +323,7 @@ export function StudyCanvasTabs({
       <div
         role="tablist"
         aria-label="Canvas sections"
-        className="flex shrink-0 items-center gap-1 border-b border-border bg-muted/50 px-2 py-1"
+        className="flex shrink-0 flex-wrap items-center gap-1 border-b border-border bg-muted/50 px-2 py-1"
       >
         {SECTIONS.map(({ id, label, Icon }) => (
           <button
@@ -341,7 +341,7 @@ export function StudyCanvasTabs({
           </button>
         ))}
         {context && (
-          <span className="ml-auto truncate font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+          <span className="ml-auto min-w-0 truncate font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
             Q{context.index}/{context.total}
             {context.conceptTag ? ` · ${context.conceptTag}` : ""}
             {fsrs ? ` · ${fsrs.status}` : ""}
@@ -356,7 +356,7 @@ export function StudyCanvasTabs({
         role="tablist"
         aria-label="Canvas files"
         onKeyDown={onKeyDown}
-        className="flex shrink-0 overflow-x-auto border-b border-border bg-muted/30"
+        className="flex shrink-0 overflow-x-auto overscroll-x-contain border-b border-border bg-muted/30"
       >
         {files.map((f, i) => {
           const isActive = i === active;
@@ -387,11 +387,11 @@ export function StudyCanvasTabs({
         })}
       </div>
 
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-1.5">
-        <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-border bg-muted/30 px-3 py-1.5">
+        <div className="min-w-0 truncate font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
           {current?.name}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           {runState.phase === "running" ? (
             <button
               onClick={cancelRun}
@@ -528,7 +528,7 @@ export function StudyCanvasTabs({
       </div>
 
       {/* Phase D5 — console results pane */}
-      <div className="flex h-36 shrink-0 flex-col border-t border-border bg-muted/30">
+      <div className="flex h-28 shrink-0 flex-col border-t border-border bg-muted/30 sm:h-36">
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             <Terminal className="h-3 w-3" />
@@ -626,7 +626,7 @@ export function StudyCanvasTabs({
               No_Videos_Matched
             </p>
           ) : (
-            <ul className="grid grid-cols-2 gap-2">
+            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {videos.map((r) => (
                 <li key={r.videoId}>
                   <button
