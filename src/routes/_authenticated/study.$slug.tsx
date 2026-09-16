@@ -346,17 +346,17 @@ function DomainRunner() {
         </aside>
 
         {/* Frame 2 — question */}
-        <main className="flex min-w-0 flex-1 flex-col overflow-y-auto px-5 py-4">
-          <div className="mb-3 flex flex-wrap items-center gap-3">
+        <main className="flex min-w-0 flex-1 flex-col overflow-y-auto px-3 py-3 sm:px-5 sm:py-4">
+          <div className="mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
             <button
               onClick={() => setMentorOpen(true)}
-              className="inline-flex items-center gap-2 border-2 border-primary bg-primary px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-widest text-primary-foreground shadow-sm hover:opacity-90"
+              className="inline-flex items-center gap-2 border-2 border-primary bg-primary px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground shadow-sm hover:opacity-90 sm:px-4 sm:text-[11px]"
             >
               <UserRound className="h-4 w-4" /> Ask_Mentor
             </button>
             <button
               onClick={() => setCanvasOpen(true)}
-              className="inline-flex items-center gap-2 border-2 border-border px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-widest hover:border-primary"
+              className="inline-flex items-center gap-2 border-2 border-border px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:border-primary sm:px-4 sm:text-[11px]"
             >
               <Code2 className="h-4 w-4" /> Study_Canvas
             </button>
@@ -367,7 +367,7 @@ function DomainRunner() {
             >
               ← Study_Hub
             </Link>
-            <div className="ml-auto font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <div className="ml-auto min-w-0 truncate font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               {domainQ.data?.title} · Q{Math.min(idx + 1, questions.length)}/{questions.length}
             </div>
           </div>
