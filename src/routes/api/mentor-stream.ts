@@ -144,6 +144,33 @@ export const Route = createFileRoute("/api/mentor-stream")({
         const messages = (body.messages ?? []).slice(-20);
         if (!messages.length) return new Response("No messages", { status: 400 });
 
+        // --- 0. Phase F6: daily quota + burst throttle -------------------------
+        const { getMembershipTier } = await import("@/lib/model-routing.server");
+        const { checkQuota, recordRateEvent } = await import("@/lib/rate-limit.server");
+        const tier = await getMembershipTier(supabase as never, userId);
+        const quota = await checkQuota({ userId, action: "mentor", tier });
+        if (!quota.allowed) {
+          return new Response(quota.message ?? "Rate limit reached.", {
+            status: 429,
+            headers: {
+              "Content-Type": "text/plain",
+              ...(quota.retryAfterMs
+                ? { "Retry-After": String(Math.ceil(quota.retryAfterMs / 1000)) }
+                : {}),
+              "X-Mentor-Quota": encodeURIComponent(
+                JSON.stringify({
+                  limit: quota.limit,
+                  remaining: 0,
+                  resetAt: quota.resetAt,
+                  byok: quota.byok,
+                }),
+              ),
+              "Access-Control-Expose-Headers": "X-Mentor-Quota, Retry-After",
+            },
+          });
+        }
+        void recordRateEvent({ userId, action: "mentor", byok: quota.byok });
+
         const context = body.context ?? null;
         const lastUser = [...messages].reverse().find((m) => m.role === "user");
         const turn = lastUser?.content ?? "";
