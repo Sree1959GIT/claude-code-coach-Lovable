@@ -12,6 +12,7 @@ import {
   type CanvasLanguage,
 } from "@/components/StudyCanvasTabs";
 import { useSession } from "@/hooks/useSession";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   fetchDomainBySlug,
   fetchDomainQuestions,
