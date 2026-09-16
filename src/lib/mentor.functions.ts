@@ -69,7 +69,20 @@ ${(data.context.options ?? []).map((o) => `  ${o.label}. ${o.text}`).join("\n")}
       ],
     });
 
-    return { text: result.text, model: result.model, cached: result.cached, tier };
+    return {
+      text: result.text,
+      model: result.model,
+      cached: result.cached,
+      tier,
+      // Phase F6 — remaining allowance, so the UI can warn before the wall.
+      quota: {
+        action: quota.action,
+        limit: quota.limit,
+        remaining: Math.max(0, quota.remaining - 1),
+        resetAt: quota.resetAt,
+        byok: quota.byok,
+      },
+    };
   });
 
 
@@ -81,9 +94,16 @@ const TtsInputSchema = z.object({
 export const synthesizeSpeech = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => TtsInputSchema.parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
+
+    // Phase F6 — spoken answers are metered too.
+    const { getMembershipTier } = await import("./model-routing.server");
+    const { enforceQuota, recordRateEvent } = await import("./rate-limit.server");
+    const tier = await getMembershipTier(context.supabase as never, context.userId);
+    const quota = await enforceQuota({ userId: context.userId, action: "tts", tier });
+    void recordRateEvent({ userId: context.userId, action: "tts", byok: quota.byok });
 
     const res = await fetch(`${GATEWAY_URL}/audio/speech`, {
       method: "POST",
