@@ -136,5 +136,15 @@ export const synthesizeSpeech = createServerFn({ method: "POST" })
       bin += String.fromCharCode(...buf.subarray(i, i + chunk));
     }
     const b64 = btoa(bin);
-    return { audio: b64, mimeType: "audio/mpeg" };
+    return {
+      audio: b64,
+      mimeType: "audio/mpeg",
+      quota: {
+        action: quota.action,
+        limit: quota.limit,
+        remaining: Math.max(0, quota.remaining - 1),
+        resetAt: quota.resetAt,
+        byok: quota.byok,
+      },
+    };
   });
