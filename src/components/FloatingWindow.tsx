@@ -149,7 +149,7 @@ export function FloatingWindow({
       <header
         onPointerDown={beginMove}
         style={isMobile ? undefined : { touchAction: "none" }}
-        className={`flex shrink-0 items-center justify-between gap-3 border-b border-border bg-muted/40 px-3 py-2 ${
+        className={`relative flex shrink-0 items-center justify-between gap-3 border-b border-border bg-muted/40 px-3 py-2 ${
           isMobile ? "" : "cursor-grab active:cursor-grabbing"
         }`}
       >
