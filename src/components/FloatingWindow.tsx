@@ -61,6 +61,9 @@ export function FloatingWindow({
   }));
   const rect = controlledRect ?? uncontrolled;
   const dragRef = useRef<Drag | null>(null);
+  // H1 — on small/touch viewports the window docks as a full-width bottom sheet:
+  // no free positioning, no drag, no resize handles.
+  const isMobile = useIsMobile();
 
   const setRect = useCallback(
     (next: WindowRect) => {
