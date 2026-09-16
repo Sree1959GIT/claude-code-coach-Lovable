@@ -94,6 +94,8 @@ function DomainRunner() {
   const [canvasRect, setCanvasRect] = useState<WindowRect>(loadCanvasRect);
   const [focus, setFocus] = useState<HighlightTarget>(null);
   const draggingRef = useRef(false);
+  // H1 — on small viewports the mentor frame becomes a full-width overlay drawer.
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     logEvent("page_view", { page: "study_run", slug });
