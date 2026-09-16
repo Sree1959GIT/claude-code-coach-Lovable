@@ -41,6 +41,7 @@ export const askMentor = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => AskInputSchema.parse(input))
   .handler(async ({ data, context }) => {
     const { getMembershipTier, routedCompletion } = await import("./model-routing.server");
+    const { enforceQuota, recordRateEvent } = await import("./rate-limit.server");
 
     const contextBlock = data.context
       ? `Current question context (do NOT reveal the answer):
