@@ -328,13 +328,31 @@ export function StudyCanvasTabs({
       <div
         role="tablist"
         aria-label="Canvas sections"
+        onKeyDown={(e) => {
+          let next: number | null = null;
+          const i = SECTIONS.findIndex((s) => s.id === section);
+          if (e.key === "ArrowRight") next = (i + 1) % SECTIONS.length;
+          else if (e.key === "ArrowLeft") next = (i - 1 + SECTIONS.length) % SECTIONS.length;
+          else if (e.key === "Home") next = 0;
+          else if (e.key === "End") next = SECTIONS.length - 1;
+          if (next === null) return;
+          e.preventDefault();
+          setSection(SECTIONS[next].id);
+          sectionRefs.current[next]?.focus();
+        }}
         className="flex shrink-0 flex-wrap items-center gap-1 border-b border-border bg-muted/50 px-2 py-1"
       >
-        {SECTIONS.map(({ id, label, Icon }) => (
+        {SECTIONS.map(({ id, label, Icon }, i) => (
           <button
             key={id}
+            ref={(el) => {
+              sectionRefs.current[i] = el;
+            }}
             role="tab"
+            id={`${uid}-section-tab-${id}`}
             aria-selected={section === id}
+            aria-controls={`${uid}-section-panel-${id}`}
+            tabIndex={section === id ? 0 : -1}
             onClick={() => setSection(id)}
             className={`inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[9px] uppercase tracking-widest transition-colors ${
               section === id
