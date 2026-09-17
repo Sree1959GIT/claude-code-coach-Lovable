@@ -5,7 +5,7 @@
  * diagnostic runtime error display with line numbers and stack traces.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   BookOpen,
@@ -113,6 +113,9 @@ export function StudyCanvasTabs({
   fsrsLoading?: boolean;
 }) {
   const [active, setActive] = useState(0);
+  // H2 — deterministic, per-instance IDs so tab/panel links stay unique.
+  const uid = useId();
+  const sectionRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const panelRef = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState("");
