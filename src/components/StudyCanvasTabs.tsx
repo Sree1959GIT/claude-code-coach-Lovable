@@ -395,9 +395,9 @@ export function StudyCanvasTabs({
                 tabRefs.current[i] = el;
               }}
               role="tab"
-              id={`canvas-tab-${i}`}
+              id={`${uid}-canvas-tab-${i}`}
               aria-selected={isActive}
-              aria-controls={`canvas-panel-${i}`}
+              aria-controls={`${uid}-canvas-panel-${i}`}
               tabIndex={isActive ? 0 : -1}
               onClick={() => setActive(i)}
               className={`flex shrink-0 items-center gap-2 border-r border-border px-3 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${
