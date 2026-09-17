@@ -97,6 +97,29 @@ function DomainRunner() {
   // H1 — on small viewports the mentor frame becomes a full-width overlay drawer.
   const isMobile = useIsMobile();
 
+  // H2 — Ctrl/Cmd+Shift+C toggles the Study Canvas, unless the user is typing.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!(e.ctrlKey || e.metaKey) || !e.shiftKey) return;
+      if (e.key.toLowerCase() !== "c") return;
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (t.isContentEditable ||
+          t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.tagName === "SELECT")
+      ) {
+        return;
+      }
+      e.preventDefault();
+      setCanvasOpen((v) => !v);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+
   useEffect(() => {
     logEvent("page_view", { page: "study_run", slug });
   }, [slug]);
