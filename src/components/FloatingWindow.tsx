@@ -179,10 +179,15 @@ export function FloatingWindow({
           />
         )}
         <div className="min-w-0">
-          <div className="truncate font-mono text-[10px] uppercase tracking-widest text-primary">
+          <div
+            id={subtitleId}
+            className="truncate font-mono text-[10px] uppercase tracking-widest text-primary"
+          >
             {subtitle ?? "Floating_Window"}
           </div>
-          <div className="truncate text-sm font-semibold">{title}</div>
+          <div id={titleId} className="truncate text-sm font-semibold">
+            {title}
+          </div>
         </div>
         <button
           onPointerDown={(e) => e.stopPropagation()}
