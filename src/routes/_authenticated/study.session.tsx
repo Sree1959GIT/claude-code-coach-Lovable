@@ -5,6 +5,7 @@ import { PanelLeftClose, PanelLeftOpen, UserRound } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { MentorCanvas, type HighlightTarget } from "@/components/MentorCanvas";
 import { useSession } from "@/hooks/useSession";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { logEvent } from "@/lib/analytics";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -60,6 +61,8 @@ function SessionRunner() {
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [elapsed, setElapsed] = useState(0);
   const [mentorOpen, setMentorOpen] = useState(false);
+  // H2 — the mentor drawer is a modal overlay on small screens.
+  const isMobileSession = useIsMobile();
   const [mentorWidth, setMentorWidth] = useState(400);
   const [navOpen, setNavOpen] = useState(true);
   const [focus, setFocus] = useState<HighlightTarget>(null);
@@ -462,6 +465,7 @@ function SessionRunner() {
                 onClose={() => setMentorOpen(false)}
                 context={mentorContext}
                 onHighlight={onHighlight}
+                modal={isMobileSession}
               />
             </div>
           </>

@@ -6,9 +6,10 @@
  * it is open. Dragged by its title bar, resized from its edges/corner.
  */
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useFocusSurface } from "@/hooks/use-focus-surface";
 
 export type WindowRect = { x: number; y: number; width: number; height: number };
 
@@ -34,6 +35,7 @@ function clampToViewport(rect: WindowRect): WindowRect {
 
 export function FloatingWindow({
   open,
+  id,
   title,
   subtitle,
   defaultRect,
@@ -44,6 +46,7 @@ export function FloatingWindow({
   footer,
 }: {
   open: boolean;
+  id?: string;
   title: string;
   subtitle?: string;
   defaultRect?: Partial<WindowRect>;
@@ -64,6 +67,17 @@ export function FloatingWindow({
   // H1 — on small/touch viewports the window docks as a full-width bottom sheet:
   // no free positioning, no drag, no resize handles.
   const isMobile = useIsMobile();
+  // H2 — dialog semantics: modal drawer on mobile, non-modal panel on desktop.
+  const autoId = useId();
+  const surfaceId = id ?? `floating-window-${autoId}`;
+  const titleId = `${surfaceId}-title`;
+  const subtitleId = `${surfaceId}-subtitle`;
+  const surfaceRef = useFocusSurface<HTMLElement>({
+    open,
+    modal: isMobile,
+    onClose,
+  });
+
 
   const setRect = useCallback(
     (next: WindowRect) => {
@@ -134,7 +148,12 @@ export function FloatingWindow({
 
   return (
     <section
-      aria-label={title}
+      ref={surfaceRef}
+      id={surfaceId}
+      role="dialog"
+      aria-modal={isMobile || undefined}
+      aria-labelledby={titleId}
+      aria-describedby={subtitleId}
       style={
         isMobile
           ? undefined
@@ -160,10 +179,15 @@ export function FloatingWindow({
           />
         )}
         <div className="min-w-0">
-          <div className="truncate font-mono text-[10px] uppercase tracking-widest text-primary">
+          <div
+            id={subtitleId}
+            className="truncate font-mono text-[10px] uppercase tracking-widest text-primary"
+          >
             {subtitle ?? "Floating_Window"}
           </div>
-          <div className="truncate text-sm font-semibold">{title}</div>
+          <div id={titleId} className="truncate text-sm font-semibold">
+            {title}
+          </div>
         </div>
         <button
           onPointerDown={(e) => e.stopPropagation()}

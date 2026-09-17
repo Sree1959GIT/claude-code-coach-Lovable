@@ -5,7 +5,7 @@
  * diagnostic runtime error display with line numbers and stack traces.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   BookOpen,
@@ -113,6 +113,9 @@ export function StudyCanvasTabs({
   fsrsLoading?: boolean;
 }) {
   const [active, setActive] = useState(0);
+  // H2 — deterministic, per-instance IDs so tab/panel links stay unique.
+  const uid = useId();
+  const sectionRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const panelRef = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState("");
@@ -203,14 +206,16 @@ export function StudyCanvasTabs({
     return () => document.removeEventListener("selectionchange", onSelectionChange);
   }, []);
 
+  // H2 — arrow / Home / End navigation for the file tablist.
   function onKeyDown(e: React.KeyboardEvent) {
     if (files.length === 0) return;
-    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    let next: number | null = null;
+    if (e.key === "ArrowRight") next = (active + 1) % files.length;
+    else if (e.key === "ArrowLeft") next = (active - 1 + files.length) % files.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = files.length - 1;
+    if (next === null) return;
     e.preventDefault();
-    const next =
-      e.key === "ArrowRight"
-        ? (active + 1) % files.length
-        : (active - 1 + files.length) % files.length;
     setActive(next);
     tabRefs.current[next]?.focus();
   }
@@ -323,13 +328,31 @@ export function StudyCanvasTabs({
       <div
         role="tablist"
         aria-label="Canvas sections"
+        onKeyDown={(e) => {
+          let next: number | null = null;
+          const i = SECTIONS.findIndex((s) => s.id === section);
+          if (e.key === "ArrowRight") next = (i + 1) % SECTIONS.length;
+          else if (e.key === "ArrowLeft") next = (i - 1 + SECTIONS.length) % SECTIONS.length;
+          else if (e.key === "Home") next = 0;
+          else if (e.key === "End") next = SECTIONS.length - 1;
+          if (next === null) return;
+          e.preventDefault();
+          setSection(SECTIONS[next].id);
+          sectionRefs.current[next]?.focus();
+        }}
         className="flex shrink-0 flex-wrap items-center gap-1 border-b border-border bg-muted/50 px-2 py-1"
       >
-        {SECTIONS.map(({ id, label, Icon }) => (
+        {SECTIONS.map(({ id, label, Icon }, i) => (
           <button
             key={id}
+            ref={(el) => {
+              sectionRefs.current[i] = el;
+            }}
             role="tab"
+            id={`${uid}-section-tab-${id}`}
             aria-selected={section === id}
+            aria-controls={`${uid}-section-panel-${id}`}
+            tabIndex={section === id ? 0 : -1}
             onClick={() => setSection(id)}
             className={`inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[9px] uppercase tracking-widest transition-colors ${
               section === id
@@ -350,7 +373,12 @@ export function StudyCanvasTabs({
       </div>
 
       {section === "code" && (
-        <>
+        <div
+          role="tabpanel"
+          id={`${uid}-section-panel-code`}
+          aria-labelledby={`${uid}-section-tab-code`}
+          className="flex min-h-0 flex-1 flex-col"
+        >
       <div
 
         role="tablist"
@@ -367,9 +395,9 @@ export function StudyCanvasTabs({
                 tabRefs.current[i] = el;
               }}
               role="tab"
-              id={`canvas-tab-${i}`}
+              id={`${uid}-canvas-tab-${i}`}
               aria-selected={isActive}
-              aria-controls={`canvas-panel-${i}`}
+              aria-controls={`${uid}-canvas-panel-${i}`}
               tabIndex={isActive ? 0 : -1}
               onClick={() => setActive(i)}
               className={`flex shrink-0 items-center gap-2 border-r border-border px-3 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${
@@ -464,8 +492,9 @@ export function StudyCanvasTabs({
       <div
         ref={panelRef}
         role="tabpanel"
-        id={`canvas-panel-${active}`}
-        aria-labelledby={`canvas-tab-${active}`}
+        id={`${uid}-canvas-panel-${active}`}
+        aria-labelledby={`${uid}-canvas-tab-${active}`}
+        tabIndex={0}
         className="min-h-0 flex-1 overflow-auto bg-card"
       >
         {files.length === 0 ? (
@@ -534,7 +563,7 @@ export function StudyCanvasTabs({
             <Terminal className="h-3 w-3" />
             Console · {current ? current.language : ""}
           </span>
-          <span>
+          <span role="status" aria-live="polite">
             {runState.phase === "idle" && "Idle · 10s limit"}
             {runState.phase === "running" && "Running…"}
             {runState.phase === "done" &&
@@ -551,7 +580,12 @@ export function StudyCanvasTabs({
               })()}
           </span>
         </div>
-        <div className="min-h-0 flex-1 overflow-auto px-3 py-2 font-mono text-[11px] leading-relaxed">
+        <div
+          aria-live="polite"
+          aria-atomic="false"
+          aria-label="Console output"
+          className="min-h-0 flex-1 overflow-auto px-3 py-2 font-mono text-[11px] leading-relaxed"
+        >
           {runState.phase === "idle" && consoleLines.length === 0 && syntaxIssues.length === 0 && (
             <p className="select-none text-[10px] uppercase tracking-widest text-muted-foreground">
               No output yet — press Run to execute the active file.
@@ -616,11 +650,17 @@ export function StudyCanvasTabs({
           <div ref={consoleEndRef} />
         </div>
       </div>
-        </>
+        </div>
       )}
 
       {section === "video" && (
-        <div className="min-h-0 flex-1 overflow-auto bg-card p-3">
+        <div
+          role="tabpanel"
+          id={`${uid}-section-panel-video`}
+          aria-labelledby={`${uid}-section-tab-video`}
+          tabIndex={0}
+          className="min-h-0 flex-1 overflow-auto bg-card p-3"
+        >
           {videos.length === 0 ? (
             <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               No_Videos_Matched
@@ -657,7 +697,13 @@ export function StudyCanvasTabs({
       )}
 
       {section === "docs" && (
-        <div className="min-h-0 flex-1 overflow-auto bg-card">
+        <div
+          role="tabpanel"
+          id={`${uid}-section-panel-docs`}
+          aria-labelledby={`${uid}-section-tab-docs`}
+          tabIndex={0}
+          className="min-h-0 flex-1 overflow-auto bg-card"
+        >
           <CanvasContextPanel
             context={context}
             fsrs={fsrs}
