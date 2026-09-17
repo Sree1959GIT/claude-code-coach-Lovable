@@ -206,14 +206,16 @@ export function StudyCanvasTabs({
     return () => document.removeEventListener("selectionchange", onSelectionChange);
   }, []);
 
+  // H2 — arrow / Home / End navigation for the file tablist.
   function onKeyDown(e: React.KeyboardEvent) {
     if (files.length === 0) return;
-    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    let next: number | null = null;
+    if (e.key === "ArrowRight") next = (active + 1) % files.length;
+    else if (e.key === "ArrowLeft") next = (active - 1 + files.length) % files.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = files.length - 1;
+    if (next === null) return;
     e.preventDefault();
-    const next =
-      e.key === "ArrowRight"
-        ? (active + 1) % files.length
-        : (active - 1 + files.length) % files.length;
     setActive(next);
     tabRefs.current[next]?.focus();
   }
