@@ -35,6 +35,7 @@ function clampToViewport(rect: WindowRect): WindowRect {
 
 export function FloatingWindow({
   open,
+  id,
   title,
   subtitle,
   defaultRect,
@@ -45,6 +46,7 @@ export function FloatingWindow({
   footer,
 }: {
   open: boolean;
+  id?: string;
   title: string;
   subtitle?: string;
   defaultRect?: Partial<WindowRect>;
