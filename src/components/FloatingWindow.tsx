@@ -148,7 +148,12 @@ export function FloatingWindow({
 
   return (
     <section
-      aria-label={title}
+      ref={surfaceRef}
+      id={surfaceId}
+      role="dialog"
+      aria-modal={isMobile || undefined}
+      aria-labelledby={titleId}
+      aria-describedby={subtitleId}
       style={
         isMobile
           ? undefined
