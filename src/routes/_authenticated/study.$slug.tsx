@@ -569,6 +569,8 @@ function DomainRunner() {
                 onClose={() => setMentorOpen(false)}
                 context={mentorContext}
                 onHighlight={onHighlight}
+                modal={isMobile}
+                id={MENTOR_ID}
               />
             </div>
           </>
