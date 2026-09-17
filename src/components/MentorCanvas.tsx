@@ -616,7 +616,14 @@ export function MentorCanvas({ open, onClose, context, onHighlight, modal = fals
   if (!open) return null;
 
   return (
-    <aside className="flex h-full min-w-0 flex-col border-l border-border bg-card">
+    <aside
+      ref={surfaceRef}
+      id={surfaceId}
+      role={modal ? "dialog" : "complementary"}
+      aria-modal={modal || undefined}
+      aria-labelledby={titleId}
+      className="flex h-full min-w-0 flex-col border-l border-border bg-card"
+    >
       <header className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.3em] text-primary">
