@@ -727,6 +727,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight, modal = fals
                       onClick={() => setOpenRefs(expanded ? null : i)}
                       className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest text-primary underline underline-offset-4 hover:opacity-80"
                       aria-expanded={expanded}
+                      aria-controls={`${surfaceId}-refs-${i}`}
                     >
                       <ChevronDown
                         className={`h-3 w-3 transition-transform ${expanded ? "rotate-180" : ""}`}
@@ -737,7 +738,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight, modal = fals
                 </div>
               )}
               {!isUser && expanded && (
-                <ul className="mt-2 space-y-1.5">
+                <ul id={`${surfaceId}-refs-${i}`} className="mt-2 space-y-1.5">
                   {refs.map((r) => (
                     <li key={r.title}>
                       <button
