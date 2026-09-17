@@ -697,7 +697,13 @@ export function StudyCanvasTabs({
       )}
 
       {section === "docs" && (
-        <div className="min-h-0 flex-1 overflow-auto bg-card">
+        <div
+          role="tabpanel"
+          id={`${uid}-section-panel-docs`}
+          aria-labelledby={`${uid}-section-tab-docs`}
+          tabIndex={0}
+          className="min-h-0 flex-1 overflow-auto bg-card"
+        >
           <CanvasContextPanel
             context={context}
             fsrs={fsrs}
