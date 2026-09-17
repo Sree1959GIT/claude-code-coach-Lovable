@@ -492,8 +492,9 @@ export function StudyCanvasTabs({
       <div
         ref={panelRef}
         role="tabpanel"
-        id={`canvas-panel-${active}`}
-        aria-labelledby={`canvas-tab-${active}`}
+        id={`${uid}-canvas-panel-${active}`}
+        aria-labelledby={`${uid}-canvas-tab-${active}`}
+        tabIndex={0}
         className="min-h-0 flex-1 overflow-auto bg-card"
       >
         {files.length === 0 ? (
