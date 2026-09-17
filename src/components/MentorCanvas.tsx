@@ -809,18 +809,29 @@ export function MentorCanvas({ open, onClose, context, onHighlight, modal = fals
         })}
 
         {streaming && (
-          <div className="border border-primary/30 bg-primary/5 p-3 text-sm leading-relaxed">
+          <div
+            aria-live="polite"
+            aria-label="Mentor response"
+            className="border border-primary/30 bg-primary/5 p-3 text-sm leading-relaxed"
+          >
             <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-primary">
               Mentor
             </div>
             <div className="whitespace-pre-wrap">
               {streaming}
-              <span className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-primary align-middle" />
+              <span
+                aria-hidden="true"
+                className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-primary align-middle motion-reduce:animate-none"
+              />
             </div>
           </div>
         )}
         {status && !streaming && (
-          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <div
+            role="status"
+            aria-live="polite"
+            className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground"
+          >
             {status}…
           </div>
         )}
