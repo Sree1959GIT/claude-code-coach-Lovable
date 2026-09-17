@@ -40,6 +40,10 @@ export const Route = createFileRoute("/_authenticated/study/$slug")({
   }),
 });
 
+// H2 — stable IDs so launch buttons can reference their surfaces.
+const CANVAS_ID = "study-canvas-window";
+const MENTOR_ID = "study-mentor-drawer";
+
 const MIN_MENTOR_W = 300;
 const MAX_MENTOR_W = 720;
 
@@ -372,13 +376,18 @@ function DomainRunner() {
         <main className="flex min-w-0 flex-1 flex-col overflow-y-auto px-3 py-3 sm:px-5 sm:py-4">
           <div className="mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
             <button
-              onClick={() => setMentorOpen(true)}
+              onClick={() => setMentorOpen((v) => !v)}
+              aria-expanded={mentorOpen}
+              aria-controls={MENTOR_ID}
               className="inline-flex items-center gap-2 border-2 border-primary bg-primary px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground shadow-sm hover:opacity-90 sm:px-4 sm:text-[11px]"
             >
               <UserRound className="h-4 w-4" /> Ask_Mentor
             </button>
             <button
-              onClick={() => setCanvasOpen(true)}
+              onClick={() => setCanvasOpen((v) => !v)}
+              aria-expanded={canvasOpen}
+              aria-controls={CANVAS_ID}
+              title="Toggle Study Canvas (Ctrl+Shift+C)"
               className="inline-flex items-center gap-2 border-2 border-border px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:border-primary sm:px-4 sm:text-[11px]"
             >
               <Code2 className="h-4 w-4" /> Study_Canvas
