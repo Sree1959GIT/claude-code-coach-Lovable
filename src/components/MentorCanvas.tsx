@@ -203,8 +203,16 @@ function getSpeechRecognition(): (new () => SpeechRecognitionLike) | null {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
+export function MentorCanvas({ open, onClose, context, onHighlight, modal = false, id }: Props) {
   const speak = useServerFn(synthesizeSpeech);
+
+  // H2 — focus moves into the drawer on open, is trapped while modal, and
+  // returns to the launch button on close.
+  const autoId = useId();
+  const surfaceId = id ?? `mentor-canvas-${autoId}`;
+  const titleId = `${surfaceId}-title`;
+  const surfaceRef = useFocusSurface<HTMLElement>({ open, modal, onClose });
+
 
   const [messages, setMessages] = useState<Msg[]>([]);
   const [streaming, setStreaming] = useState("");
