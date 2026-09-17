@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useFocusSurface } from "@/hooks/use-focus-surface";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, Mic, MicOff, PlayCircle, Radio, Square, User, Volume2, X } from "lucide-react";
 import { synthesizeSpeech } from "@/lib/mentor.functions";
@@ -34,6 +35,10 @@ type Props = {
   onClose: () => void;
   context: QuestionContext;
   onHighlight?: (t: HighlightTarget) => void;
+  /** H2 — true when the drawer is a modal overlay (mobile); traps focus. */
+  modal?: boolean;
+  /** H2 — DOM id so launch buttons can reference it with aria-controls. */
+  id?: string;
 };
 
 type Segment = { text: string; target: HighlightTarget };
