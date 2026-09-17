@@ -563,7 +563,7 @@ export function StudyCanvasTabs({
             <Terminal className="h-3 w-3" />
             Console · {current ? current.language : ""}
           </span>
-          <span>
+          <span role="status" aria-live="polite">
             {runState.phase === "idle" && "Idle · 10s limit"}
             {runState.phase === "running" && "Running…"}
             {runState.phase === "done" &&
