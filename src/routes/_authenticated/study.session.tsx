@@ -462,6 +462,7 @@ function SessionRunner() {
                 onClose={() => setMentorOpen(false)}
                 context={mentorContext}
                 onHighlight={onHighlight}
+                modal={isMobileSession}
               />
             </div>
           </>
