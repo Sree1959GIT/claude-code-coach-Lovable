@@ -67,6 +67,17 @@ export function FloatingWindow({
   // H1 — on small/touch viewports the window docks as a full-width bottom sheet:
   // no free positioning, no drag, no resize handles.
   const isMobile = useIsMobile();
+  // H2 — dialog semantics: modal drawer on mobile, non-modal panel on desktop.
+  const autoId = useId();
+  const surfaceId = id ?? `floating-window-${autoId}`;
+  const titleId = `${surfaceId}-title`;
+  const subtitleId = `${surfaceId}-subtitle`;
+  const surfaceRef = useFocusSurface<HTMLElement>({
+    open,
+    modal: isMobile,
+    onClose,
+  });
+
 
   const setRect = useCallback(
     (next: WindowRect) => {
