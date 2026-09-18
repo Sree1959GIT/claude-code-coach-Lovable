@@ -5,7 +5,6 @@ import { PanelLeftClose, PanelLeftOpen, UserRound } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { MentorCanvas, type HighlightTarget } from "@/components/MentorCanvas";
 import { useSession } from "@/hooks/useSession";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { logEvent } from "@/lib/analytics";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -14,16 +13,20 @@ import {
   recordSessionAnswer,
   type SessionDetail,
 } from "@/lib/study.functions";
+import {
+  InlineError,
+  PageSkeleton,
+  SkeletonBar,
+  SkeletonLines,
+  routeErrorComponent,
+} from "@/components/Resilience";
 
 export const Route = createFileRoute("/_authenticated/study/session")({
   validateSearch: (search: Record<string, unknown>) => ({
     sessionId: typeof search.sessionId === "string" ? search.sessionId : "",
   }),
-  errorComponent: ({ error }) => (
-    <div className="p-8 font-mono text-sm text-destructive">
-      Session error: {error.message}
-    </div>
-  ),
+  pendingComponent: () => <PageSkeleton label="Loading session" />,
+  errorComponent: routeErrorComponent,
   component: SessionRunner,
   head: () => ({
     meta: [
@@ -61,8 +64,6 @@ function SessionRunner() {
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [elapsed, setElapsed] = useState(0);
   const [mentorOpen, setMentorOpen] = useState(false);
-  // H2 — the mentor drawer is a modal overlay on small screens.
-  const isMobileSession = useIsMobile();
   const [mentorWidth, setMentorWidth] = useState(400);
   const [navOpen, setNavOpen] = useState(true);
   const [focus, setFocus] = useState<HighlightTarget>(null);
@@ -272,7 +273,11 @@ function SessionRunner() {
           </div>
 
           {sessionQ.isLoading && (
-            <div className="font-mono text-xs text-muted-foreground">Loading session…</div>
+            <div className="space-y-3 border border-border bg-card p-5">
+              <SkeletonBar className="h-2 w-24" />
+              <SkeletonBar className="h-5 w-3/4" />
+              <SkeletonLines lines={4} className="pt-2" />
+            </div>
           )}
 
           {!sessionId && (
@@ -285,17 +290,12 @@ function SessionRunner() {
           )}
 
           {sessionQ.isError && (
-            <div className="border border-destructive/40 bg-destructive/10 p-6 font-mono text-xs">
-              Could not load session: {(sessionQ.error as Error).message}
-              <div className="mt-3">
-                <button
-                  onClick={() => sessionQ.refetch()}
-                  className="border border-border px-3 py-1.5 uppercase tracking-widest hover:bg-secondary"
-                >
-                  Retry
-                </button>
-              </div>
-            </div>
+            <InlineError
+              title="Couldn't load this session"
+              error={sessionQ.error}
+              onRetry={() => void sessionQ.refetch()}
+              retrying={sessionQ.isFetching}
+            />
           )}
 
 
@@ -465,7 +465,6 @@ function SessionRunner() {
                 onClose={() => setMentorOpen(false)}
                 context={mentorContext}
                 onHighlight={onHighlight}
-                modal={isMobileSession}
               />
             </div>
           </>

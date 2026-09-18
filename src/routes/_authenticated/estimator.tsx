@@ -9,9 +9,12 @@ import {
   stageEstimate,
   type Complexity,
 } from "@/lib/credit-estimates";
+import { PageSkeleton, routeErrorComponent } from "@/components/Resilience";
 
 export const Route = createFileRoute("/_authenticated/estimator")({
   component: EstimatorPage,
+  pendingComponent: () => <PageSkeleton label="Loading estimator" />,
+  errorComponent: routeErrorComponent,
   head: () => ({
     meta: [
       { title: "Credit Estimator · Claude Architect Prep" },

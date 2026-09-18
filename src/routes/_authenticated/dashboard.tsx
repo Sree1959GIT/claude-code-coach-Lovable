@@ -14,10 +14,20 @@ import { DailyGoalCard } from "@/components/DailyGoalCard";
 import { ExamDayCard } from "@/components/ExamDayCard";
 import { ConfidenceCard } from "@/components/ConfidenceCard";
 import { buildStudyPlan } from "@/lib/study-plan";
+import {
+  InlineError,
+  PageSkeleton,
+  SkeletonBar,
+  SkeletonCards,
+  SkeletonLines,
+  routeErrorComponent,
+} from "@/components/Resilience";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
+  pendingComponent: () => <PageSkeleton label="Loading dashboard" />,
+  errorComponent: routeErrorComponent,
   head: () => ({
     meta: [
       { title: "Dashboard · Claude Architect Prep" },
@@ -80,12 +90,23 @@ function Dashboard() {
         </div>
 
         {/* Quick stats */}
-        <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <StatBox label="Due Now" value={due} icon={<Clock className="h-4 w-4" />} />
-          <StatBox label="Mastered" value={mastered} icon={<TrendingUp className="h-4 w-4" />} />
-          <StatBox label="Lapsed" value={lapsed} icon={<Dumbbell className="h-4 w-4" />} />
-          <StatBox label="Total Cards" value={total} icon={<LayoutGrid className="h-4 w-4" />} />
-        </div>
+        {masteryQ.isLoading ? (
+          <SkeletonCards className="mb-8 grid-cols-2 md:grid-cols-4" />
+        ) : masteryQ.isError ? (
+          <InlineError
+            title="Couldn't load your progress"
+            error={masteryQ.error}
+            onRetry={() => void masteryQ.refetch()}
+            retrying={masteryQ.isFetching}
+          />
+        ) : (
+          <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <StatBox label="Due Now" value={due} icon={<Clock className="h-4 w-4" />} />
+            <StatBox label="Mastered" value={mastered} icon={<TrendingUp className="h-4 w-4" />} />
+            <StatBox label="Lapsed" value={lapsed} icon={<Dumbbell className="h-4 w-4" />} />
+            <StatBox label="Total Cards" value={total} icon={<LayoutGrid className="h-4 w-4" />} />
+          </div>
+        )}
 
         {/* Exam readiness */}
         <section className="mb-8 border border-border bg-card p-6">
@@ -93,7 +114,21 @@ function Dashboard() {
             <Target className="h-4 w-4" /> Exam_Readiness
           </div>
           {readinessQ.isLoading ? (
-            <div className="font-mono text-xs text-muted-foreground">Computing readiness…</div>
+            <div className="grid gap-6 md:grid-cols-[220px_1fr]">
+              <div>
+                <SkeletonBar className="h-10 w-28" />
+                <SkeletonBar className="mt-3 h-2 w-40" />
+                <SkeletonBar className="mt-4 h-2 w-full" />
+              </div>
+              <SkeletonLines lines={4} />
+            </div>
+          ) : readinessQ.isError ? (
+            <InlineError
+              title="Readiness unavailable"
+              error={readinessQ.error}
+              onRetry={() => void readinessQ.refetch()}
+              retrying={readinessQ.isFetching}
+            />
           ) : !readiness ? (
             <div className="font-mono text-xs text-muted-foreground">
               Readiness unavailable. Practice a session to generate signals.
