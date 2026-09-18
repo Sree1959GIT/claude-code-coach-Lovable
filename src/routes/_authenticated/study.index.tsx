@@ -8,14 +8,23 @@ import { startSession } from "@/lib/study.functions";
 import { useSession } from "@/hooks/useSession";
 import { logEvent } from "@/lib/analytics";
 import { useServerFn } from "@tanstack/react-start";
+import { createSeo, DEFAULT_SHARE_IMAGE, SITE_NAME } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/study/")({
   component: StudyHub,
-  head: () => ({
-    meta: [
-      { title: "Study Hub · Claude Architect Prep" },
-      { name: "description", content: "Adaptive practice, weak-area drills, and timed exams for the Claude Code Architect Foundation certification." },
-    ],
+  head: () => createSeo({
+    title: "Study Hub · Claude Architect Prep",
+    description: "Choose adaptive practice, weak-area drills, or timed exams for the Claude Certified Architect Foundations certification.",
+    path: "/study",
+    noIndex: true,
+    image: DEFAULT_SHARE_IMAGE,
+    schema: {
+      "@context": "https://schema.org",
+      "@type": "LearningResource",
+      name: "Claude Architect Prep Study Hub",
+      provider: { "@type": "Organization", name: SITE_NAME },
+      learningResourceType: "Practice",
+    },
   }),
 });
 

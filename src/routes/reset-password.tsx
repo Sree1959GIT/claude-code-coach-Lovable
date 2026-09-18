@@ -3,19 +3,15 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { logEvent } from "@/lib/analytics";
+import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/reset-password")({
   component: ResetPassword,
-  head: () => ({
-    meta: [
-      { title: "Reset password · Claude Architect Prep" },
-      { name: "description", content: "Set a new password for your Claude Architect Prep account." },
-      { property: "og:title", content: "Reset password · Claude Architect Prep" },
-      { property: "og:description", content: "Set a new password for your Claude Architect Prep account." },
-      { property: "og:url", content: "/reset-password" },
-      { name: "robots", content: "noindex" },
-    ],
-    links: [{ rel: "canonical", href: "/reset-password" }],
+  head: () => createSeo({
+    title: "Reset password · Claude Architect Prep",
+    description: "Set a new password for your Claude Architect Prep account.",
+    path: "/reset-password",
+    noIndex: true,
   }),
 });
 

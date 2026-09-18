@@ -20,6 +20,7 @@ import {
   SkeletonLines,
   routeErrorComponent,
 } from "@/components/Resilience";
+import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/study/session")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -28,11 +29,11 @@ export const Route = createFileRoute("/_authenticated/study/session")({
   pendingComponent: () => <PageSkeleton label="Loading session" />,
   errorComponent: routeErrorComponent,
   component: SessionRunner,
-  head: () => ({
-    meta: [
-      { title: "Session · Claude Architect Prep" },
-      { name: "robots", content: "noindex" },
-    ],
+  head: () => createSeo({
+    title: "Active Study Session · Claude Architect Prep",
+    description: "Work through your private adaptive, weak-area, or timed Claude Architect practice session.",
+    path: "/study/session",
+    noIndex: true,
   }),
 });
 

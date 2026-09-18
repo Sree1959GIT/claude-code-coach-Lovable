@@ -29,6 +29,7 @@ import {
   type CanvasQuestionContext,
 } from "@/lib/canvas-context";
 import { logEvent } from "@/lib/analytics";
+import { createSeo, DEFAULT_SHARE_IMAGE, SITE_NAME, titleCaseSlug } from "@/lib/seo";
 import {
   InlineError,
   PageSkeleton,
@@ -38,15 +39,47 @@ import {
 } from "@/components/Resilience";
 
 export const Route = createFileRoute("/_authenticated/study/$slug")({
+  loader: async ({ params, context }) => {
+    const domain = await context.queryClient.ensureQueryData({
+      queryKey: ["domain", params.slug],
+      queryFn: () => fetchDomainBySlug(params.slug),
+    });
+    const questions = domain
+      ? await context.queryClient.ensureQueryData({
+          queryKey: ["questions", domain.id],
+          queryFn: () => fetchDomainQuestions(domain.id),
+        })
+      : [];
+    return { domain, questions };
+  },
   component: DomainRunner,
   pendingComponent: () => <PageSkeleton label="Loading domain" />,
   errorComponent: routeErrorComponent,
-  head: ({ params }) => ({
-    meta: [
-      { title: `${params.slug} · Study · Claude Architect Prep` },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
+  head: ({ params, loaderData }) => {
+    const domain = loaderData?.domain;
+    const questions = loaderData?.questions ?? [];
+    const domainTitle = domain?.title ?? titleCaseSlug(params.slug);
+    const concepts = [...new Set(questions.map((question) => question.key_concept).filter(Boolean))].slice(0, 3);
+    const conceptSummary = concepts.length > 0 ? ` Topics include ${concepts.join(", ")}.` : "";
+    const description = `${domain?.description ?? `Practice ${domainTitle} architecture concepts.`} This module carries ${domain?.weight ?? "a defined"}% of the certification blueprint.${conceptSummary}`;
+    return createSeo({
+      title: `${domainTitle} · Study · Claude Architect Prep`,
+      description,
+      path: `/study/${params.slug}`,
+      noIndex: true,
+      image: DEFAULT_SHARE_IMAGE,
+      schema: {
+        "@context": "https://schema.org",
+        "@type": "LearningResource",
+        name: `${domainTitle} study module`,
+        description,
+        provider: { "@type": "Organization", name: SITE_NAME },
+        learningResourceType: "Practice questions",
+        educationalLevel: "Professional certification preparation",
+        teaches: concepts,
+      },
+    });
+  },
 });
 
 const MIN_MENTOR_W = 300;

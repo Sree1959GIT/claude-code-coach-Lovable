@@ -23,28 +23,27 @@ import {
   SkeletonBar,
   routeErrorComponent,
 } from "@/components/Resilience";
+import { createSeo, DEFAULT_SHARE_IMAGE, SITE_NAME } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/mock-exam")({
   component: MockExamPage,
   pendingComponent: () => <PageSkeleton label="Loading mock exam" />,
   errorComponent: routeErrorComponent,
-  head: () => ({
-    meta: [
-      { title: "Mock Exam · Claude Architect Prep" },
-      {
-        name: "description",
-        content:
-          "Sit a full blueprint-weighted mock exam: 65 questions in 90 minutes with a 70% pass mark, sampled across every certification domain.",
-      },
-      { property: "og:title", content: "Full Mock Exam · Claude Architect Prep" },
-      {
-        property: "og:description",
-        content:
-          "Simulate the real certification: 65 blueprint-weighted questions, 90 minutes, 70% pass mark.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
+  head: () => createSeo({
+    title: "Full Mock Exam · Claude Architect Prep",
+    description: "Sit a 65-question, 90-minute blueprint-weighted mock exam with a 70% pass mark across every certification domain.",
+    path: "/mock-exam",
+    noIndex: true,
+    image: DEFAULT_SHARE_IMAGE,
+    schema: {
+      "@context": "https://schema.org",
+      "@type": "Quiz",
+      name: "Claude Certified Architect Foundations Mock Exam",
+      description: "A 65-question, 90-minute blueprint-weighted certification practice exam.",
+      provider: { "@type": "Organization", name: SITE_NAME },
+      educationalLevel: "Professional certification preparation",
+      timeRequired: "PT90M",
+    },
   }),
 });
 
