@@ -5,9 +5,17 @@ import { useServerFn } from "@tanstack/react-start";
 import { History as HistoryIcon } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getSessionHistory } from "@/lib/history.functions";
+import {
+  InlineError,
+  PageSkeleton,
+  SkeletonTable,
+  routeErrorComponent,
+} from "@/components/Resilience";
 
 export const Route = createFileRoute("/_authenticated/history")({
   component: HistoryPage,
+  pendingComponent: () => <PageSkeleton label="Loading session history" />,
+  errorComponent: routeErrorComponent,
   head: () => ({
     meta: [
       { title: "Session History · Claude Architect Prep" },
@@ -88,7 +96,14 @@ function HistoryPage() {
         </div>
 
         {q.isLoading ? (
-          <div className="font-mono text-xs text-muted-foreground">Loading history…</div>
+          <SkeletonTable rows={6} columns={5} />
+        ) : q.isError ? (
+          <InlineError
+            title="Couldn't load your sessions"
+            error={q.error}
+            onRetry={() => void q.refetch()}
+            retrying={q.isFetching}
+          />
         ) : rows.length === 0 ? (
           <div className="border border-border bg-card p-8 text-center">
             <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">

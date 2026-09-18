@@ -67,10 +67,11 @@
 - [x] **Phase G5:** Coverage parity report matrices — bank composition vs. blueprint weights, per-domain shortfall, difficulty mix and citation share (admin section 15).
 - [x] **Phase F6:** Rate constraint guards — `rate_events` daily counters, tier-based quotas plus burst throttles on mentor chat/stream, codegen and TTS, BYOK exemption, and `getQuotaStatus`.
 - [x] **Phase H1:** Layout reflow pass — Study Canvas docks as a full-width bottom sheet on mobile (drag/resize suppressed, pointer-capture drag on desktop), canvas toolbars/tabs wrap and scroll without overflow, mentor frame becomes a full-screen overlay drawer below 768px.
-- [x] **Phase H2:** Semantic accessible tags pass — `useFocusSurface` focus management (focus in on open, trap while modal, Escape via a surface stack, focus restored to the trigger), dialog semantics on Study Canvas / Mentor / Video surfaces, full tab/tabpanel ARIA with arrow + Home/End keys, live regions for console and mentor streams, `Ctrl/Cmd+Shift+C` canvas toggle, and a global `prefers-reduced-motion` rule.
+- [ ] **Phase H2:** Semantic accessible tags pass — plan saved (`.lovable/plan/phase-h2-semantic-accessibility-2026-09-17.md`), implementation still pending.
+- [x] **Phase H3:** Resiliency boundaries — shared skeleton/error components, route-level pending and error boundaries, and retry triggers across dynamic routes.
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] Phase H3: Resiliency boundaries pass — map fallback skeleton loading views on all dynamic route pathways.
+- [ ] Phase H4: Deploy SEO tagging structures — generate automated router-level Open Graph card parameters.
 
 
 
@@ -115,8 +116,8 @@
 
 ### Phase H — Polish and Launch
 - [x] **H1:** Layout reflow pass: polish multi-frame canvas drawers for seamless mobile responsive viewports.
-- [x] **H2:** Semantic accessible tags pass: apply focus ordering indices, ARIA controls, and motion reduction options.
-- [ ] **H3:** Resiliency boundaries pass: map fallback skeleton loading views on all dynamic route pathways.
+- [ ] **H2:** Semantic accessible tags pass: apply focus ordering indices, ARIA controls, and motion reduction options.
+- [x] **H3:** Resiliency boundaries pass: map fallback skeleton loading views on all dynamic route pathways.
 - [ ] **H4:** Deploy SEO tagging structures: generate automated router-level Open Graph card parameters.
 - [ ] **H5:** User onboarding flow: build interactive diagnostic configuration paths for fresh candidate sign-ups.
 - [ ] **H6:** Penetration audit pass: check row levels, run vulnerability dependency scans, and clear loose database configurations.

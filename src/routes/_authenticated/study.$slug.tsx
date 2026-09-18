@@ -29,9 +29,18 @@ import {
   type CanvasQuestionContext,
 } from "@/lib/canvas-context";
 import { logEvent } from "@/lib/analytics";
+import {
+  InlineError,
+  PageSkeleton,
+  SkeletonBar,
+  SkeletonLines,
+  routeErrorComponent,
+} from "@/components/Resilience";
 
 export const Route = createFileRoute("/_authenticated/study/$slug")({
   component: DomainRunner,
+  pendingComponent: () => <PageSkeleton label="Loading domain" />,
+  errorComponent: routeErrorComponent,
   head: ({ params }) => ({
     meta: [
       { title: `${params.slug} · Study · Claude Architect Prep` },
@@ -39,10 +48,6 @@ export const Route = createFileRoute("/_authenticated/study/$slug")({
     ],
   }),
 });
-
-// H2 — stable IDs so launch buttons can reference their surfaces.
-const CANVAS_ID = "study-canvas-window";
-const MENTOR_ID = "study-mentor-drawer";
 
 const MIN_MENTOR_W = 300;
 const MAX_MENTOR_W = 720;
@@ -100,29 +105,6 @@ function DomainRunner() {
   const draggingRef = useRef(false);
   // H1 — on small viewports the mentor frame becomes a full-width overlay drawer.
   const isMobile = useIsMobile();
-
-  // H2 — Ctrl/Cmd+Shift+C toggles the Study Canvas, unless the user is typing.
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (!(e.ctrlKey || e.metaKey) || !e.shiftKey) return;
-      if (e.key.toLowerCase() !== "c") return;
-      const t = e.target as HTMLElement | null;
-      if (
-        t &&
-        (t.isContentEditable ||
-          t.tagName === "INPUT" ||
-          t.tagName === "TEXTAREA" ||
-          t.tagName === "SELECT")
-      ) {
-        return;
-      }
-      e.preventDefault();
-      setCanvasOpen((v) => !v);
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
 
   useEffect(() => {
     logEvent("page_view", { page: "study_run", slug });
@@ -376,18 +358,13 @@ function DomainRunner() {
         <main className="flex min-w-0 flex-1 flex-col overflow-y-auto px-3 py-3 sm:px-5 sm:py-4">
           <div className="mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
             <button
-              onClick={() => setMentorOpen((v) => !v)}
-              aria-expanded={mentorOpen}
-              aria-controls={MENTOR_ID}
+              onClick={() => setMentorOpen(true)}
               className="inline-flex items-center gap-2 border-2 border-primary bg-primary px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground shadow-sm hover:opacity-90 sm:px-4 sm:text-[11px]"
             >
               <UserRound className="h-4 w-4" /> Ask_Mentor
             </button>
             <button
-              onClick={() => setCanvasOpen((v) => !v)}
-              aria-expanded={canvasOpen}
-              aria-controls={CANVAS_ID}
-              title="Toggle Study Canvas (Ctrl+Shift+C)"
+              onClick={() => setCanvasOpen(true)}
               className="inline-flex items-center gap-2 border-2 border-border px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:border-primary sm:px-4 sm:text-[11px]"
             >
               <Code2 className="h-4 w-4" /> Study_Canvas
@@ -404,8 +381,24 @@ function DomainRunner() {
             </div>
           </div>
 
-          {questionsQ.isLoading && (
-            <div className="font-mono text-xs text-muted-foreground">Loading questions…</div>
+          {(questionsQ.isLoading || domainQ.isLoading) && (
+            <div className="space-y-3 border border-border bg-card p-5">
+              <SkeletonBar className="h-2 w-24" />
+              <SkeletonBar className="h-5 w-3/4" />
+              <SkeletonLines lines={4} className="pt-2" />
+            </div>
+          )}
+
+          {(questionsQ.isError || domainQ.isError) && (
+            <InlineError
+              title="Couldn't load this domain"
+              error={domainQ.error ?? questionsQ.error}
+              onRetry={() => {
+                void domainQ.refetch();
+                void questionsQ.refetch();
+              }}
+              retrying={domainQ.isFetching || questionsQ.isFetching}
+            />
           )}
 
           {finished && (
@@ -569,8 +562,6 @@ function DomainRunner() {
                 onClose={() => setMentorOpen(false)}
                 context={mentorContext}
                 onHighlight={onHighlight}
-                modal={isMobile}
-                id={MENTOR_ID}
               />
             </div>
           </>
@@ -579,7 +570,6 @@ function DomainRunner() {
 
       {/* Phase D1 — non-modal floating study canvas (coexists with the mentor drawer) */}
       <FloatingWindow
-        id={CANVAS_ID}
         open={canvasOpen}
         title="Study_Canvas"
         subtitle={canvasSubtitle}

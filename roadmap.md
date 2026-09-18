@@ -1,0 +1,2 @@
+- [ ] Phase H2: Semantic accessibility pass (plan saved at .lovable/plan/, pending implementation)
+- [ ] Phase H3: Resiliency boundaries — skeleton fallbacks + error boundaries + retry on dynamic routes

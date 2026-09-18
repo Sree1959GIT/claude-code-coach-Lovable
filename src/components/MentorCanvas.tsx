@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import { useFocusSurface } from "@/hooks/use-focus-surface";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, Mic, MicOff, PlayCircle, Radio, Square, User, Volume2, X } from "lucide-react";
 import { synthesizeSpeech } from "@/lib/mentor.functions";
@@ -35,10 +34,6 @@ type Props = {
   onClose: () => void;
   context: QuestionContext;
   onHighlight?: (t: HighlightTarget) => void;
-  /** H2 — true when the drawer is a modal overlay (mobile); traps focus. */
-  modal?: boolean;
-  /** H2 — DOM id so launch buttons can reference it with aria-controls. */
-  id?: string;
 };
 
 type Segment = { text: string; target: HighlightTarget };
@@ -203,16 +198,8 @@ function getSpeechRecognition(): (new () => SpeechRecognitionLike) | null {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export function MentorCanvas({ open, onClose, context, onHighlight, modal = false, id }: Props) {
+export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   const speak = useServerFn(synthesizeSpeech);
-
-  // H2 — focus moves into the drawer on open, is trapped while modal, and
-  // returns to the launch button on close.
-  const autoId = useId();
-  const surfaceId = id ?? `mentor-canvas-${autoId}`;
-  const titleId = `${surfaceId}-title`;
-  const surfaceRef = useFocusSurface<HTMLElement>({ open, modal, onClose });
-
 
   const [messages, setMessages] = useState<Msg[]>([]);
   const [streaming, setStreaming] = useState("");
@@ -616,20 +603,10 @@ export function MentorCanvas({ open, onClose, context, onHighlight, modal = fals
   if (!open) return null;
 
   return (
-    <aside
-      ref={surfaceRef}
-      id={surfaceId}
-      role={modal ? "dialog" : "complementary"}
-      aria-modal={modal || undefined}
-      aria-labelledby={titleId}
-      className="flex h-full min-w-0 flex-col border-l border-border bg-card"
-    >
+    <aside className="flex h-full min-w-0 flex-col border-l border-border bg-card">
       <header className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="min-w-0">
-          <div
-            id={titleId}
-            className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.3em] text-primary"
-          >
+          <div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.3em] text-primary">
             <User className="h-3.5 w-3.5" /> SME_Mentor
           </div>
           <div className="mt-0.5 truncate font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -639,7 +616,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight, modal = fals
         <button
           onClick={onClose}
           aria-label="Close mentor"
-          className="-m-2 shrink-0 p-2 text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground"
         >
           <X className="h-4 w-4" />
         </button>
@@ -727,7 +704,6 @@ export function MentorCanvas({ open, onClose, context, onHighlight, modal = fals
                       onClick={() => setOpenRefs(expanded ? null : i)}
                       className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest text-primary underline underline-offset-4 hover:opacity-80"
                       aria-expanded={expanded}
-                      aria-controls={`${surfaceId}-refs-${i}`}
                     >
                       <ChevronDown
                         className={`h-3 w-3 transition-transform ${expanded ? "rotate-180" : ""}`}
@@ -738,7 +714,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight, modal = fals
                 </div>
               )}
               {!isUser && expanded && (
-                <ul id={`${surfaceId}-refs-${i}`} className="mt-2 space-y-1.5">
+                <ul className="mt-2 space-y-1.5">
                   {refs.map((r) => (
                     <li key={r.title}>
                       <button
@@ -810,29 +786,18 @@ export function MentorCanvas({ open, onClose, context, onHighlight, modal = fals
         })}
 
         {streaming && (
-          <div
-            aria-live="polite"
-            aria-label="Mentor response"
-            className="border border-primary/30 bg-primary/5 p-3 text-sm leading-relaxed"
-          >
+          <div className="border border-primary/30 bg-primary/5 p-3 text-sm leading-relaxed">
             <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-primary">
               Mentor
             </div>
             <div className="whitespace-pre-wrap">
               {streaming}
-              <span
-                aria-hidden="true"
-                className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-primary align-middle motion-reduce:animate-none"
-              />
+              <span className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-primary align-middle" />
             </div>
           </div>
         )}
         {status && !streaming && (
-          <div
-            role="status"
-            aria-live="polite"
-            className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground"
-          >
+          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             {status}…
           </div>
         )}
