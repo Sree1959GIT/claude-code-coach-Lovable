@@ -1,0 +1,16 @@
+{
+  "name": "Claude Code Architect Certification Tutor",
+  "short_name": "CCA Prep",
+  "description": "Adaptive preparation for the Claude Certified Architect Foundations exam.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#18181b",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import { CheckCircle2, ClipboardCopy, Clock, Printer, Target, XCircle } from "lu
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getSessionReport } from "@/lib/study.functions";
+import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/study/report")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -16,24 +17,11 @@ export const Route = createFileRoute("/_authenticated/study/report")({
     </div>
   ),
   component: ReportPage,
-  head: () => ({
-    meta: [
-      { title: "Score Report · Claude Architect Prep" },
-      {
-        name: "description",
-        content:
-          "Blueprint-weighted score report for your practice or mock exam session, with per-domain accuracy and a targeted remediation plan.",
-      },
-      { property: "og:title", content: "Score Report · Claude Architect Prep" },
-      {
-        property: "og:description",
-        content:
-          "See your weighted score, domain breakdown and the exact items to review next.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "robots", content: "noindex" },
-    ],
+  head: () => createSeo({
+    title: "Score Report · Claude Architect Prep",
+    description: "Review your private blueprint-weighted score, per-domain accuracy, timing, and targeted remediation plan.",
+    path: "/study/report",
+    noIndex: true,
   }),
 });
 

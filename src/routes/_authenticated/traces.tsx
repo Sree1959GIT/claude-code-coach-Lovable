@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { logEvent } from "@/lib/analytics";
 import { fetchAgentRuns, fetchAgentSteps, type AgentRun, type AgentStep } from "@/lib/traces";
+import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/traces")({
   component: TracesPage,
@@ -11,16 +12,11 @@ export const Route = createFileRoute("/_authenticated/traces")({
   validateSearch: (search: Record<string, unknown>): { runId?: string } => ({
     runId: typeof search["runId"] === "string" ? search["runId"] : undefined,
   }),
-  head: () => ({
-    meta: [
-      { title: "Agent Traces · Claude Architect Prep" },
-      { name: "description", content: "Inspect every mentor turn: intent routing, retrieval hits, agent steps, latency and token usage." },
-      { property: "og:title", content: "Agent Traces · Claude Architect Prep" },
-      { property: "og:description", content: "Inspect mentor routing, agent steps, latency and token usage." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "robots", content: "noindex" },
-    ],
+  head: () => createSeo({
+    title: "Agent Traces · Claude Architect Prep",
+    description: "Inspect private mentor intent routing, retrieval hits, agent steps, latency, and token usage.",
+    path: "/traces",
+    noIndex: true,
   }),
 });
 

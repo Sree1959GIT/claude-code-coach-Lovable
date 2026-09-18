@@ -3,26 +3,38 @@ import { useEffect } from "react";
 import dashboardPreview from "@/assets/dashboard-preview.jpg";
 import { SiteHeader } from "@/components/SiteHeader";
 import { logEvent } from "@/lib/analytics";
+import { createSeo, DEFAULT_SHARE_IMAGE, SITE_NAME, SITE_ORIGIN } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
   component: Landing,
-  head: () => ({
-    meta: [
-      { title: "Claude Certified Architect — Foundations Exam Prep" },
+  head: () => createSeo({
+    title: "Claude Certified Architect — Foundations Exam Prep",
+    description: "Rigorous, adaptive prep for the Claude Certified Architect Foundations exam with mock exams, an SME voice mentor, spaced repetition, and readiness analytics.",
+    path: "/",
+    image: DEFAULT_SHARE_IMAGE,
+    schema: [
       {
-        name: "description",
-        content:
-          "Rigorous, adaptive prep for the Claude Certified Architect Foundations exam. Mock exams, SME voice mentor, spaced repetition, and analytics — engineered to pass.",
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        name: SITE_NAME,
+        url: SITE_ORIGIN,
+        applicationCategory: "EducationalApplication",
+        operatingSystem: "Web",
+        description: "Adaptive preparation for the Claude Certified Architect Foundations exam.",
+        offers: [
+          { "@type": "Offer", price: "0", priceCurrency: "USD", name: "Standard Access" },
+          { "@type": "Offer", price: "29", priceCurrency: "USD", name: "Architect Plus" },
+        ],
       },
-      { property: "og:title", content: "Claude Certified Architect — Foundations Exam Prep" },
       {
-        property: "og:description",
-        content:
-          "The technical certification path for Claude-native systems. Rigorous simulation, adaptive logic, and architect-level validation.",
+        "@context": "https://schema.org",
+        "@type": "Course",
+        name: "Claude Certified Architect Foundations Exam Prep",
+        description: "Adaptive study, practice questions, mock exams, and architect-level feedback for Claude-native systems.",
+        provider: { "@type": "Organization", name: SITE_NAME, url: SITE_ORIGIN },
+        educationalLevel: "Professional certification preparation",
       },
-      { property: "og:url", content: "/" },
     ],
-    links: [{ rel: "canonical", href: "/" }],
   }),
 });
 

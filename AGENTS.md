@@ -67,11 +67,12 @@
 - [x] **Phase G5:** Coverage parity report matrices — bank composition vs. blueprint weights, per-domain shortfall, difficulty mix and citation share (admin section 15).
 - [x] **Phase F6:** Rate constraint guards — `rate_events` daily counters, tier-based quotas plus burst throttles on mentor chat/stream, codegen and TTS, BYOK exemption, and `getQuotaStatus`.
 - [x] **Phase H1:** Layout reflow pass — Study Canvas docks as a full-width bottom sheet on mobile (drag/resize suppressed, pointer-capture drag on desktop), canvas toolbars/tabs wrap and scroll without overflow, mentor frame becomes a full-screen overlay drawer below 768px.
-- [ ] **Phase H2:** Semantic accessible tags pass — plan saved (`.lovable/plan/phase-h2-semantic-accessibility-2026-09-17.md`), implementation still pending.
+- [x] **Phase H2:** Semantic accessible tags pass — focus management, modal traps, keyboard shortcuts, accessible tab semantics, and reduced-motion support.
 - [x] **Phase H3:** Resiliency boundaries — shared skeleton/error components, route-level pending and error boundaries, and retry triggers across dynamic routes.
+- [x] **Phase H4:** Router-level SEO — complete canonical/Open Graph/Twitter metadata, dynamic domain learning metadata, JSON-LD, manifest, and a 1200×630 social card.
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] Phase H4: Deploy SEO tagging structures — generate automated router-level Open Graph card parameters.
+- [ ] Phase H5: User onboarding flow — build interactive diagnostic configuration paths for fresh candidate sign-ups.
 
 
 
@@ -116,9 +117,9 @@
 
 ### Phase H — Polish and Launch
 - [x] **H1:** Layout reflow pass: polish multi-frame canvas drawers for seamless mobile responsive viewports.
-- [ ] **H2:** Semantic accessible tags pass: apply focus ordering indices, ARIA controls, and motion reduction options.
+- [x] **H2:** Semantic accessible tags pass: apply focus ordering indices, ARIA controls, and motion reduction options.
 - [x] **H3:** Resiliency boundaries pass: map fallback skeleton loading views on all dynamic route pathways.
-- [ ] **H4:** Deploy SEO tagging structures: generate automated router-level Open Graph card parameters.
+- [x] **H4:** Deploy SEO tagging structures: generate automated router-level Open Graph card parameters.
 - [ ] **H5:** User onboarding flow: build interactive diagnostic configuration paths for fresh candidate sign-ups.
 - [ ] **H6:** Penetration audit pass: check row levels, run vulnerability dependency scans, and clear loose database configurations.
 - [ ] **H7:** Domain bind smoke deployment: wire live parameters and test core transaction pathways.

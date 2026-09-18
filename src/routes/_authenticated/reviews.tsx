@@ -17,6 +17,7 @@ import {
   type DraftReviewItem,
 } from "@/lib/authoring.functions";
 import { resolveReview } from "@/lib/admin.functions";
+import { createSeo } from "@/lib/seo";
 
 
 export const Route = createFileRoute("/_authenticated/reviews")({
@@ -24,23 +25,11 @@ export const Route = createFileRoute("/_authenticated/reviews")({
   errorComponent: ({ error }) => (
     <div className="p-8 font-mono text-sm text-destructive">Review workspace error: {error.message}</div>
   ),
-  head: () => ({
-    meta: [
-      { title: "Draft Review Queue · Claude Architect Prep" },
-      {
-        name: "description",
-        content:
-          "Human review workspace for drafted exam questions: inspect the stem, options, explanations and agent evidence before publishing.",
-      },
-      { property: "og:title", content: "Draft Review Queue · Claude Architect Prep" },
-      {
-        property: "og:description",
-        content: "Approve or reject drafted certification questions with full agent provenance in view.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "robots", content: "noindex" },
-    ],
+  head: () => createSeo({
+    title: "Draft Review Queue · Claude Architect Prep",
+    description: "Inspect drafted exam questions, answer options, explanations, and agent evidence before publication.",
+    path: "/reviews",
+    noIndex: true,
   }),
 });
 

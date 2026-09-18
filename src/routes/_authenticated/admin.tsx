@@ -37,6 +37,7 @@ import { DefragPanel } from "@/components/admin/DefragPanel";
 import { ParityPanel } from "@/components/admin/ParityPanel";
 import { UsagePanel } from "@/components/admin/UsagePanel";
 import { ByokPanel } from "@/components/admin/ByokPanel";
+import { createSeo } from "@/lib/seo";
 import {
   InlineError,
   PageSkeleton,
@@ -50,19 +51,11 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
   pendingComponent: () => <PageSkeleton label="Loading admin console" />,
   errorComponent: routeErrorComponent,
-  head: () => ({
-    meta: [
-      { title: "Admin Console · Claude Architect Prep" },
-      {
-        name: "description",
-        content: "Role-gated console for managing learners, question content, review queues and scheduled jobs.",
-      },
-      { property: "og:title", content: "Admin Console · Claude Architect Prep" },
-      { property: "og:description", content: "Manage learners, content, review queues and scheduled jobs." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "robots", content: "noindex" },
-    ],
+  head: () => createSeo({
+    title: "Admin Console · Claude Architect Prep",
+    description: "Role-gated console for managing learners, question content, review queues, AI usage, and scheduled jobs.",
+    path: "/admin",
+    noIndex: true,
   }),
 });
 
