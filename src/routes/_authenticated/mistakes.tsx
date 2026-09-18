@@ -7,6 +7,7 @@ import { CheckCircle2, RotateCcw, XCircle } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getMistakeBank, startMistakeRetest } from "@/lib/mistakes.functions";
 import { logEvent } from "@/lib/analytics";
+import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/mistakes")({
   component: MistakesPage,
@@ -15,24 +16,11 @@ export const Route = createFileRoute("/_authenticated/mistakes")({
       Mistake bank error: {error.message}
     </div>
   ),
-  head: () => ({
-    meta: [
-      { title: "Mistake Bank · Claude Architect Prep" },
-      {
-        name: "description",
-        content:
-          "Every question you have missed, grouped by domain with your wrong answer, the correct option and a one-click drill to fix it.",
-      },
-      { property: "og:title", content: "Mistake Bank · Claude Architect Prep" },
-      {
-        property: "og:description",
-        content:
-          "Review every missed question, see why the correct option wins and drill the weak domain.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "robots", content: "noindex" },
-    ],
+  head: () => createSeo({
+    title: "Mistake Bank · Claude Architect Prep",
+    description: "Review missed questions by certification domain, understand the correct choice, and launch a targeted recovery drill.",
+    path: "/mistakes",
+    noIndex: true,
   }),
 });
 

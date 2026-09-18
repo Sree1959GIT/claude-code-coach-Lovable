@@ -10,23 +10,17 @@ import {
   type Complexity,
 } from "@/lib/credit-estimates";
 import { PageSkeleton, routeErrorComponent } from "@/components/Resilience";
+import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/estimator")({
   component: EstimatorPage,
   pendingComponent: () => <PageSkeleton label="Loading estimator" />,
   errorComponent: routeErrorComponent,
-  head: () => ({
-    meta: [
-      { title: "Credit Estimator · Claude Architect Prep" },
-      {
-        name: "description",
-        content:
-          "Estimate build credits per roadmap stage before you start, based on the options you select.",
-      },
-      { property: "og:title", content: "Credit Estimator · Claude Architect Prep" },
-      { property: "og:description", content: "Per-stage build credit estimates driven by your selected options." },
-      { name: "robots", content: "noindex" },
-    ],
+  head: () => createSeo({
+    title: "Credit Estimator · Claude Architect Prep",
+    description: "Estimate build credits per roadmap stage before starting, based on your selected implementation options.",
+    path: "/estimator",
+    noIndex: true,
   }),
 });
 
