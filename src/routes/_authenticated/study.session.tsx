@@ -273,7 +273,11 @@ function SessionRunner() {
           </div>
 
           {sessionQ.isLoading && (
-            <div className="font-mono text-xs text-muted-foreground">Loading session…</div>
+            <div className="space-y-3 border border-border bg-card p-5">
+              <SkeletonBar className="h-2 w-24" />
+              <SkeletonBar className="h-5 w-3/4" />
+              <SkeletonLines lines={4} className="pt-2" />
+            </div>
           )}
 
           {!sessionId && (
@@ -286,17 +290,12 @@ function SessionRunner() {
           )}
 
           {sessionQ.isError && (
-            <div className="border border-destructive/40 bg-destructive/10 p-6 font-mono text-xs">
-              Could not load session: {(sessionQ.error as Error).message}
-              <div className="mt-3">
-                <button
-                  onClick={() => sessionQ.refetch()}
-                  className="border border-border px-3 py-1.5 uppercase tracking-widest hover:bg-secondary"
-                >
-                  Retry
-                </button>
-              </div>
-            </div>
+            <InlineError
+              title="Couldn't load this session"
+              error={sessionQ.error}
+              onRetry={() => void sessionQ.refetch()}
+              retrying={sessionQ.isFetching}
+            />
           )}
 
 
