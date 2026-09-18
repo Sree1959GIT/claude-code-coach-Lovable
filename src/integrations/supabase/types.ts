@@ -1086,25 +1086,37 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          exam_date: string | null
           id: string
           membership_tier: string
+          onboarded_at: string | null
+          target_score: number | null
           updated_at: string
+          weekly_hours: number | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          exam_date?: string | null
           id: string
           membership_tier?: string
+          onboarded_at?: string | null
+          target_score?: number | null
           updated_at?: string
+          weekly_hours?: number | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          exam_date?: string | null
           id?: string
           membership_tier?: string
+          onboarded_at?: string | null
+          target_score?: number | null
           updated_at?: string
+          weekly_hours?: number | null
         }
         Relationships: []
       }
