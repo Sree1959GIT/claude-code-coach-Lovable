@@ -14,10 +14,19 @@ import { DailyGoalCard } from "@/components/DailyGoalCard";
 import { ExamDayCard } from "@/components/ExamDayCard";
 import { ConfidenceCard } from "@/components/ConfidenceCard";
 import { buildStudyPlan } from "@/lib/study-plan";
+import {
+  InlineError,
+  PageSkeleton,
+  SkeletonBar,
+  SkeletonLines,
+  routeErrorComponent,
+} from "@/components/Resilience";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
+  pendingComponent: () => <PageSkeleton label="Loading dashboard" />,
+  errorComponent: routeErrorComponent,
   head: () => ({
     meta: [
       { title: "Dashboard · Claude Architect Prep" },
