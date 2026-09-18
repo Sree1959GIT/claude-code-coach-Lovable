@@ -1,60 +1,51 @@
-# Phase H2 — CodeCanvas semantic accessibility
+# Phase H4 — Router SEO and social cards
 
 ## Scope
 
-Improve keyboard and assistive-technology access across the Study Canvas, Mentor drawer, nested video dialog, and tab interfaces without changing their visual design or business logic.
+Add consistent route-level metadata for the public entry pages and authenticated learning routes, including dynamic domain/question context, canonical URLs, Open Graph/Twitter cards, and structured data. This phase changes metadata and public web assets only; it does not change study behavior, authentication, or stored data.
 
 ## Implementation
 
-1. **Shared focus management**
-   - Add a small reusable focus-management hook for opening surfaces: remember the trigger, move focus into the surface, cycle `Tab` / `Shift+Tab`, close on `Escape`, and restore focus on close.
-   - Apply trapping only to true modal surfaces: the mobile Mentor overlay and video dialog.
-   - Keep the desktop Mentor frame and desktop floating Study Canvas non-modal so learners can continue using all three frames; focus moves into them on open and returns to their trigger on close, but is not trapped.
-   - Treat the mobile Study Canvas bottom sheet as a modal drawer with focus containment.
+1. **Shared metadata builder**
+   - Add a typed SEO utility that produces title, description, canonical, Open Graph, Twitter, robots, and JSON-LD entries from one route-specific definition.
+   - Use the project domain for absolute canonical, `og:url`, and share-image URLs, with safe description/title normalization and fallbacks.
+   - Keep sitewide charset, viewport, brand name, favicon, font links, and Twitter defaults in the root shell while leaving page-specific tags on leaf routes.
 
-2. **Study Canvas window and global shortcuts**
-   - Give `FloatingWindow` explicit dialog semantics, labelled title/subtitle relationships, keyboard-operable close behavior, and modal state appropriate to the current viewport.
-   - Add `Escape` handling for the active surface, with nested video dialogs closing before their parent drawer.
-   - Add `Ctrl+Shift+C` / `Cmd+Shift+C` to toggle Study Canvas, ignoring the shortcut while typing in inputs or editable fields.
-   - Add `aria-expanded`, `aria-controls`, and stable IDs to Study Canvas and Mentor launch buttons.
+2. **Share card and install metadata**
+   - Create a 1200×630 social-card rendition from the dashboard visual already shown on the landing page and expose it as a public asset.
+   - Add a web app manifest with the product name, theme/background colors, and existing favicon; link it from root head metadata.
+   - Use the same share card across routes that do not show a more specific absolute cover, and keep `og:image` and `twitter:image` synchronized.
 
-3. **Canvas tabs and panels**
-   - Complete the Code / Video / Docs tab contract with stable tab IDs, `aria-controls`, roving `tabIndex`, arrow-key/Home/End navigation, and matching labelled tab panels.
-   - Preserve the existing file tablist and add Home/End keyboard support plus deterministic IDs that remain unique across mounted canvases.
-   - Mark console output and run status with suitable live/status semantics without repeatedly announcing the whole code pane.
+3. **Public route metadata**
+   - Upgrade `/`, `/auth`, and `/reset-password` with complete route-specific title, description, canonical, `og:*`, Twitter, and robots settings.
+   - Add `WebApplication` plus `Course` JSON-LD to the landing page; mark account/password utility pages `noindex` while retaining useful social metadata.
 
-4. **Mentor drawer and video dialog**
-   - Give the Mentor surface a labelled dialog/complementary relationship appropriate to modal versus desktop mode, expose live response/status regions, and connect expandable references with `aria-controls`.
-   - Upgrade `VideoModal` to a correctly labelled modal dialog with initial focus, focus trap, Escape close, backdrop close, and focus restoration.
-   - Ensure icon-only close controls retain accessible names and mobile primary controls meet keyboard/touch requirements.
+4. **Study and account route metadata**
+   - Apply complete, unique metadata to the study hub and the key study/exam/report routes, using `noindex` for private account content.
+   - Add suitable JSON-LD types such as `LearningResource` for domain study modules and `Quiz` for mock-exam surfaces.
+   - Bring the remaining authenticated content routes into the same helper so every content route has a complete, unique head definition without changing page behavior.
 
-5. **Motion reduction**
-   - Add `prefers-reduced-motion` handling for the blinking mentor highlight, entrance animation, pulsing stream cursor, smooth scrolling, and drawer transitions.
+5. **Dynamic domain/question metadata**
+   - Reuse the authenticated route's existing domain/question queries through the route query client so `head()` can read the selected domain title, blueprint weight, description, and first/current question concept when available.
+   - Generate concise fallback metadata from the slug while data loads or a domain is unavailable.
+   - Keep protected data behind the authenticated route gate and never expose question answers in metadata or structured data.
 
-6. **Roadmap and handoff**
-   - Mark H2 complete in both Section 3 and Section 4 of `AGENTS.md`.
-   - Set `CURRENT ACTIVE TASK` to Phase H3: resilient loading and fallback boundaries.
-   - Record the H2 implementation handoff plan and update the project handoff summary.
-
-## Validation
-
-- Run the full TypeScript check.
-- Exercise desktop and mobile study views with Playwright: open/close/restore focus, Tab containment in modal surfaces, Escape precedence, keyboard shortcut toggling, tab arrow/Home/End navigation, and nested video-dialog behavior.
-- Inspect browser console for accessibility/runtime errors.
-- Verify both GitHub `main` branches are synchronized after the project-managed commit/push workflow.
+6. **Roadmap and validation**
+   - Mark H4 complete in both sprint sections of `AGENTS.md` and make H5 (fresh-user onboarding) the next active task.
+   - Run the full TypeScript check, inspect the preview build log, and verify rendered `<head>` output for the public landing and a representative study route.
+   - Re-check both GitHub `main` branches after the project-managed synchronization completes.
 
 ## Files expected to change
 
-- `src/hooks/use-focus-surface.ts`
-- `src/components/FloatingWindow.tsx`
-- `src/components/StudyCanvasTabs.tsx`
-- `src/components/MentorCanvas.tsx`
-- `src/components/VideoModal.tsx`
-- `src/routes/_authenticated/study.$slug.tsx`
-- `src/routes/_authenticated/study.session.tsx`
-- `src/styles.css`
+- `src/lib/seo.ts`
+- `src/routes/__root.tsx`
+- `src/routes/index.tsx`
+- `src/routes/auth.tsx`
+- `src/routes/reset-password.tsx`
+- `src/routes/_authenticated/*.tsx` metadata definitions
+- `public/site.webmanifest`
+- `public/og-card.jpg`
 - `AGENTS.md`
 - `.lovable-context.md`
-- `.lovable/plan/phase-h2-semantic-accessibility-2026-09-17.md`
 
-No database, model, quota, or content-generation behavior changes are included.
+No database migrations, permissions, AI behavior, or visual page redesign are included.
