@@ -75,7 +75,7 @@ export function SkeletonTable({
       {Array.from({ length: rows }).map((_, r) => (
         <div key={r} className="flex gap-4 border-b border-border/60 px-4 py-3 last:border-b-0">
           {Array.from({ length: columns }).map((_, c) => (
-            <SkeletonBar key={c} className="h-3 flex-1" style={undefined} />
+            <SkeletonBar key={c} className="h-3 flex-1" />
           ))}
         </div>
       ))}
