@@ -102,7 +102,21 @@ function Dashboard() {
             <Target className="h-4 w-4" /> Exam_Readiness
           </div>
           {readinessQ.isLoading ? (
-            <div className="font-mono text-xs text-muted-foreground">Computing readiness…</div>
+            <div className="grid gap-6 md:grid-cols-[220px_1fr]">
+              <div>
+                <SkeletonBar className="h-10 w-28" />
+                <SkeletonBar className="mt-3 h-2 w-40" />
+                <SkeletonBar className="mt-4 h-2 w-full" />
+              </div>
+              <SkeletonLines lines={4} />
+            </div>
+          ) : readinessQ.isError ? (
+            <InlineError
+              title="Readiness unavailable"
+              error={readinessQ.error}
+              onRetry={() => void readinessQ.refetch()}
+              retrying={readinessQ.isFetching}
+            />
           ) : !readiness ? (
             <div className="font-mono text-xs text-muted-foreground">
               Readiness unavailable. Practice a session to generate signals.
