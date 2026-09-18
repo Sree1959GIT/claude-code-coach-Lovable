@@ -69,8 +69,7 @@
 - [x] **Phase H1:** Layout reflow pass — Study Canvas docks as a full-width bottom sheet on mobile (drag/resize suppressed, pointer-capture drag on desktop), canvas toolbars/tabs wrap and scroll without overflow, mentor frame becomes a full-screen overlay drawer below 768px.
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] Phase H2: Semantic accessible tags pass — apply focus ordering indices, ARIA controls, and motion reduction options. (plan saved, not yet implemented)
-- [x] **Phase H3:** Resiliency boundaries — shared skeleton/error components, route-level pending and error boundaries, and retry triggers on dynamic routes.
+- [ ] Phase H4: Deploy SEO tagging structures — generate automated router-level Open Graph card parameters.
 
 
 
