@@ -13,16 +13,20 @@ import {
   recordSessionAnswer,
   type SessionDetail,
 } from "@/lib/study.functions";
+import {
+  InlineError,
+  PageSkeleton,
+  SkeletonBar,
+  SkeletonLines,
+  routeErrorComponent,
+} from "@/components/Resilience";
 
 export const Route = createFileRoute("/_authenticated/study/session")({
   validateSearch: (search: Record<string, unknown>) => ({
     sessionId: typeof search.sessionId === "string" ? search.sessionId : "",
   }),
-  errorComponent: ({ error }) => (
-    <div className="p-8 font-mono text-sm text-destructive">
-      Session error: {error.message}
-    </div>
-  ),
+  pendingComponent: () => <PageSkeleton label="Loading session" />,
+  errorComponent: routeErrorComponent,
   component: SessionRunner,
   head: () => ({
     meta: [
