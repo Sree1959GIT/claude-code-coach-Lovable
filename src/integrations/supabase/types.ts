@@ -303,6 +303,96 @@ export type Database = {
           },
         ]
       }
+      ai_response_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          hits: number
+          id: string
+          last_hit_at: string
+          model: string
+          response: string
+          task: string
+          tier: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          hits?: number
+          id?: string
+          last_hit_at?: string
+          model: string
+          response: string
+          task: string
+          tier?: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          hits?: number
+          id?: string
+          last_hit_at?: string
+          model?: string
+          response?: string
+          task?: string
+          tier?: string
+        }
+        Relationships: []
+      }
+      ai_usage_events: {
+        Row: {
+          cache_key: string | null
+          cached: boolean
+          completion_tokens: number
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          estimated_credits: number
+          id: string
+          model: string
+          ok: boolean
+          prompt_tokens: number
+          saved_credits: number
+          task: string
+          tier: string
+          user_id: string | null
+        }
+        Insert: {
+          cache_key?: string | null
+          cached?: boolean
+          completion_tokens?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          estimated_credits?: number
+          id?: string
+          model: string
+          ok?: boolean
+          prompt_tokens?: number
+          saved_credits?: number
+          task: string
+          tier?: string
+          user_id?: string | null
+        }
+        Update: {
+          cache_key?: string | null
+          cached?: boolean
+          completion_tokens?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          estimated_credits?: number
+          id?: string
+          model?: string
+          ok?: boolean
+          prompt_tokens?: number
+          saved_credits?: number
+          task?: string
+          tier?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
@@ -935,6 +1025,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          membership_tier: string
           updated_at: string
         }
         Insert: {
@@ -942,6 +1033,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          membership_tier?: string
           updated_at?: string
         }
         Update: {
@@ -949,6 +1041,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          membership_tier?: string
           updated_at?: string
         }
         Relationships: []
@@ -1267,6 +1360,30 @@ export type Database = {
           },
         ]
       }
+      rate_events: {
+        Row: {
+          action: string
+          byok: boolean
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          byok?: boolean
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          byok?: boolean
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_mastery: {
         Row: {
           created_at: string
@@ -1322,6 +1439,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_provider_keys: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          key_ciphertext: string
+          key_last4: string
+          label: string | null
+          last_verified_at: string | null
+          last_verify_status: string | null
+          provider: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key_ciphertext: string
+          key_last4: string
+          label?: string | null
+          last_verified_at?: string | null
+          last_verify_status?: string | null
+          provider: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key_ciphertext?: string
+          key_last4?: string
+          label?: string | null
+          last_verified_at?: string | null
+          last_verify_status?: string | null
+          provider?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

@@ -11,28 +11,17 @@ import {
   SkeletonTable,
   routeErrorComponent,
 } from "@/components/Resilience";
+import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/history")({
   component: HistoryPage,
   pendingComponent: () => <PageSkeleton label="Loading session history" />,
   errorComponent: routeErrorComponent,
-  head: () => ({
-    meta: [
-      { title: "Session History · Claude Architect Prep" },
-      {
-        name: "description",
-        content:
-          "Every past practice and mock exam session with score, mode, duration and a link to the full score report.",
-      },
-      { property: "og:title", content: "Session History · Claude Architect Prep" },
-      {
-        property: "og:description",
-        content: "Review your past study and mock exam sessions and open any score report.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "robots", content: "noindex" },
-    ],
+  head: () => createSeo({
+    title: "Session History · Claude Architect Prep",
+    description: "Review your private practice and mock exam sessions by score, mode, duration, and detailed report.",
+    path: "/history",
+    noIndex: true,
   }),
 });
 

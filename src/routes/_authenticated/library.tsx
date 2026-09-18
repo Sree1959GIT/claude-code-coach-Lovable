@@ -12,27 +12,16 @@ import {
 } from "@/lib/library.functions";
 import { INGEST_PRESETS } from "@/lib/library-presets";
 import { searchLibrary } from "@/lib/retrieval.functions";
+import { createSeo } from "@/lib/seo";
 
 
 export const Route = createFileRoute("/_authenticated/library")({
   component: LibraryPage,
-  head: () => ({
-    meta: [
-      { title: "Library Console · Claude Architect Prep" },
-      {
-        name: "description",
-        content:
-          "Admin console to seed, ingest and test the retrieval library that grounds the SME Voice Mentor.",
-      },
-      { property: "og:title", content: "Library Console · Claude Architect Prep" },
-      {
-        property: "og:description",
-        content: "Seed, ingest and test the RAG knowledge library.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "robots", content: "noindex" },
-    ],
+  head: () => createSeo({
+    title: "Library Console · Claude Architect Prep",
+    description: "Seed, ingest, search, and test the private retrieval library that grounds the SME Voice Mentor.",
+    path: "/library",
+    noIndex: true,
   }),
 });
 

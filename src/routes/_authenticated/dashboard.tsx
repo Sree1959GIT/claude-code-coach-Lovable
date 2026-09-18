@@ -14,6 +14,7 @@ import { DailyGoalCard } from "@/components/DailyGoalCard";
 import { ExamDayCard } from "@/components/ExamDayCard";
 import { ConfidenceCard } from "@/components/ConfidenceCard";
 import { buildStudyPlan } from "@/lib/study-plan";
+import { createSeo, DEFAULT_SHARE_IMAGE } from "@/lib/seo";
 import {
   InlineError,
   PageSkeleton,
@@ -28,15 +29,12 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
   pendingComponent: () => <PageSkeleton label="Loading dashboard" />,
   errorComponent: routeErrorComponent,
-  head: () => ({
-    meta: [
-      { title: "Dashboard · Claude Architect Prep" },
-      { name: "description", content: "Your Claude Certified Architect Foundations prep dashboard." },
-      { property: "og:title", content: "Dashboard · Claude Architect Prep" },
-      { property: "og:description", content: "Your prep dashboard." },
-      { name: "robots", content: "noindex" },
-    ],
-    links: [{ rel: "canonical", href: "/dashboard" }],
+  head: () => createSeo({
+    title: "Dashboard · Claude Architect Prep",
+    description: "Track readiness, mastery, daily goals, weak domains, and your Claude Certified Architect Foundations study plan.",
+    path: "/dashboard",
+    noIndex: true,
+    image: DEFAULT_SHARE_IMAGE,
   }),
 });
 

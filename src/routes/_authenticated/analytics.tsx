@@ -26,17 +26,16 @@ import { useServerFn } from "@tanstack/react-start";
 import { getMasteryOverview } from "@/lib/study.functions";
 import { getReadiness, getReadinessTrend } from "@/lib/readiness.functions";
 import { computePassEstimate, PASS_MARK, READINESS_BAND_LABEL } from "@/lib/readiness";
+import { createSeo, DEFAULT_SHARE_IMAGE } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/analytics")({
   component: AnalyticsPage,
-  head: () => ({
-    meta: [
-      { title: "Analytics · Claude Architect Prep" },
-      { name: "description", content: "Your per-domain accuracy, response times, study cadence, and mastery state." },
-      { property: "og:title", content: "Analytics · Claude Architect Prep" },
-      { property: "og:description", content: "Per-domain accuracy and study cadence." },
-      { name: "robots", content: "noindex" },
-    ],
+  head: () => createSeo({
+    title: "Learning Analytics · Claude Architect Prep",
+    description: "Review your private per-domain accuracy, response times, study cadence, readiness trend, and mastery state.",
+    path: "/analytics",
+    noIndex: true,
+    image: DEFAULT_SHARE_IMAGE,
   }),
 });
 

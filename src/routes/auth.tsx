@@ -6,6 +6,7 @@ import { lovable } from "@/integrations/lovable";
 import { logEvent } from "@/lib/analytics";
 import { useSession } from "@/hooks/useSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { createSeo, DEFAULT_SHARE_IMAGE } from "@/lib/seo";
 
 const searchSchema = z.object({
   mode: z.enum(["signin", "signup"]).optional().default("signin"),
@@ -14,15 +15,12 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
   validateSearch: searchSchema,
-  head: () => ({
-    meta: [
-      { title: "Sign in · Claude Architect Prep" },
-      { name: "description", content: "Sign in or create an account to start your Claude Certified Architect Foundations prep." },
-      { property: "og:title", content: "Sign in · Claude Architect Prep" },
-      { property: "og:description", content: "Sign in or create an account to start your Claude Certified Architect Foundations prep." },
-      { property: "og:url", content: "/auth" },
-    ],
-    links: [{ rel: "canonical", href: "/auth" }],
+  head: () => createSeo({
+    title: "Sign in · Claude Architect Prep",
+    description: "Sign in or create an account to start your Claude Certified Architect Foundations preparation.",
+    path: "/auth",
+    noIndex: true,
+    image: DEFAULT_SHARE_IMAGE,
   }),
 });
 
