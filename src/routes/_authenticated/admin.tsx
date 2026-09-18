@@ -37,11 +37,19 @@ import { DefragPanel } from "@/components/admin/DefragPanel";
 import { ParityPanel } from "@/components/admin/ParityPanel";
 import { UsagePanel } from "@/components/admin/UsagePanel";
 import { ByokPanel } from "@/components/admin/ByokPanel";
+import {
+  InlineError,
+  PageSkeleton,
+  SkeletonTable,
+  routeErrorComponent,
+} from "@/components/Resilience";
 
 
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
+  pendingComponent: () => <PageSkeleton label="Loading admin console" />,
+  errorComponent: routeErrorComponent,
   head: () => ({
     meta: [
       { title: "Admin Console · Claude Architect Prep" },
@@ -105,10 +113,16 @@ function LearnersTable() {
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["admin-learners"] }),
   });
 
-  if (isLoading) return <p className="mt-4 font-mono text-xs text-muted-foreground">Loading learners…</p>;
+  if (isLoading) return <SkeletonTable className="mt-4" rows={5} columns={5} />;
   if (error)
     return (
-      <p className="mt-4 font-mono text-xs text-destructive">Could not load learners: {(error as Error).message}</p>
+      <div className="mt-4">
+        <InlineError
+          title="Couldn't load learners"
+          error={error}
+          onRetry={() => void queryClient.invalidateQueries({ queryKey: ["admin-learners"] })}
+        />
+      </div>
     );
 
   const rows = data ?? [];
@@ -250,10 +264,16 @@ function ContentPanel() {
   });
 
 
-  if (isLoading) return <p className="mt-4 font-mono text-xs text-muted-foreground">Loading content…</p>;
+  if (isLoading) return <SkeletonTable className="mt-4" rows={5} columns={4} />;
   if (error)
     return (
-      <p className="mt-4 font-mono text-xs text-destructive">Could not load content: {(error as Error).message}</p>
+      <div className="mt-4">
+        <InlineError
+          title="Couldn't load content"
+          error={error}
+          onRetry={() => void queryClient.invalidateQueries({ queryKey: ["admin-content"] })}
+        />
+      </div>
     );
 
   const domains = data ?? [];

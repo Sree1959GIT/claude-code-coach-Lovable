@@ -29,9 +29,18 @@ import {
   type CanvasQuestionContext,
 } from "@/lib/canvas-context";
 import { logEvent } from "@/lib/analytics";
+import {
+  InlineError,
+  PageSkeleton,
+  SkeletonBar,
+  SkeletonLines,
+  routeErrorComponent,
+} from "@/components/Resilience";
 
 export const Route = createFileRoute("/_authenticated/study/$slug")({
   component: DomainRunner,
+  pendingComponent: () => <PageSkeleton label="Loading domain" />,
+  errorComponent: routeErrorComponent,
   head: ({ params }) => ({
     meta: [
       { title: `${params.slug} · Study · Claude Architect Prep` },
@@ -372,8 +381,24 @@ function DomainRunner() {
             </div>
           </div>
 
-          {questionsQ.isLoading && (
-            <div className="font-mono text-xs text-muted-foreground">Loading questions…</div>
+          {(questionsQ.isLoading || domainQ.isLoading) && (
+            <div className="space-y-3 border border-border bg-card p-5">
+              <SkeletonBar className="h-2 w-24" />
+              <SkeletonBar className="h-5 w-3/4" />
+              <SkeletonLines lines={4} className="pt-2" />
+            </div>
+          )}
+
+          {(questionsQ.isError || domainQ.isError) && (
+            <InlineError
+              title="Couldn't load this domain"
+              error={domainQ.error ?? questionsQ.error}
+              onRetry={() => {
+                void domainQ.refetch();
+                void questionsQ.refetch();
+              }}
+              retrying={domainQ.isFetching || questionsQ.isFetching}
+            />
           )}
 
           {finished && (
