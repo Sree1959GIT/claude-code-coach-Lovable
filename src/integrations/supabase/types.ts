@@ -714,6 +714,68 @@ export type Database = {
           },
         ]
       }
+      crawl_targets: {
+        Row: {
+          crawl_interval_hours: number
+          created_at: string
+          created_by: string | null
+          enabled: boolean
+          id: string
+          label: string | null
+          last_chars: number | null
+          last_chunks: number | null
+          last_crawled_at: string | null
+          last_ok: boolean | null
+          last_status: string | null
+          source_id: string | null
+          tags: string[]
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          crawl_interval_hours?: number
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string | null
+          last_chars?: number | null
+          last_chunks?: number | null
+          last_crawled_at?: string | null
+          last_ok?: boolean | null
+          last_status?: string | null
+          source_id?: string | null
+          tags?: string[]
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          crawl_interval_hours?: number
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string | null
+          last_chars?: number | null
+          last_chunks?: number | null
+          last_crawled_at?: string | null
+          last_ok?: boolean | null
+          last_status?: string | null
+          source_id?: string | null
+          tags?: string[]
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crawl_targets_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "authoring_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       domain_confidence: {
         Row: {
           created_at: string
@@ -1024,25 +1086,37 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          exam_date: string | null
           id: string
           membership_tier: string
+          onboarded_at: string | null
+          target_score: number | null
           updated_at: string
+          weekly_hours: number | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          exam_date?: string | null
           id: string
           membership_tier?: string
+          onboarded_at?: string | null
+          target_score?: number | null
           updated_at?: string
+          weekly_hours?: number | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          exam_date?: string | null
           id?: string
           membership_tier?: string
+          onboarded_at?: string | null
+          target_score?: number | null
           updated_at?: string
+          weekly_hours?: number | null
         }
         Relationships: []
       }
