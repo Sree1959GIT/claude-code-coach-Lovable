@@ -69,10 +69,11 @@
 - [x] **Phase H1:** Layout reflow pass — Study Canvas docks as a full-width bottom sheet on mobile (drag/resize suppressed, pointer-capture drag on desktop), canvas toolbars/tabs wrap and scroll without overflow, mentor frame becomes a full-screen overlay drawer below 768px.
 - [x] **Phase H2:** Semantic accessible tags pass — focus management, modal traps, keyboard shortcuts, accessible tab semantics, and reduced-motion support.
 - [x] **Phase H3:** Resiliency boundaries — shared skeleton/error components, route-level pending and error boundaries, and retry triggers across dynamic routes.
+- [x] **Phase H5:** Onboarding wizard — exam date, target score band, weekly hours, domain confidence, saved to profiles, seeding the baseline plan and readiness forecast.
 - [x] **Phase H4:** Router-level SEO — complete canonical/Open Graph/Twitter metadata, dynamic domain learning metadata, JSON-LD, manifest, and a 1200×630 social card.
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] Phase H5: User onboarding flow — build interactive diagnostic configuration paths for fresh candidate sign-ups.
+- [ ] Phase H6: Penetration audit pass — check row levels, run vulnerability dependency scans, and clear loose database configurations.
 
 
 
@@ -120,7 +121,7 @@
 - [x] **H2:** Semantic accessible tags pass: apply focus ordering indices, ARIA controls, and motion reduction options.
 - [x] **H3:** Resiliency boundaries pass: map fallback skeleton loading views on all dynamic route pathways.
 - [x] **H4:** Deploy SEO tagging structures: generate automated router-level Open Graph card parameters.
-- [ ] **H5:** User onboarding flow: build interactive diagnostic configuration paths for fresh candidate sign-ups.
+- [x] **H5:** User onboarding flow: build interactive diagnostic configuration paths for fresh candidate sign-ups.
 - [ ] **H6:** Penetration audit pass: check row levels, run vulnerability dependency scans, and clear loose database configurations.
 - [ ] **H7:** Domain bind smoke deployment: wire live parameters and test core transaction pathways.
 
