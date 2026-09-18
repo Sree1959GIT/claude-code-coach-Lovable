@@ -17,9 +17,17 @@ import {
   fetchQuestionCounts,
   formatMinutes,
 } from "@/lib/mock-exam";
+import {
+  InlineError,
+  PageSkeleton,
+  SkeletonBar,
+  routeErrorComponent,
+} from "@/components/Resilience";
 
 export const Route = createFileRoute("/_authenticated/mock-exam")({
   component: MockExamPage,
+  pendingComponent: () => <PageSkeleton label="Loading mock exam" />,
+  errorComponent: routeErrorComponent,
   head: () => ({
     meta: [
       { title: "Mock Exam · Claude Architect Prep" },
@@ -83,6 +91,7 @@ function MockExamPage() {
   }
 
   const loading = domainsQ.isLoading || countsQ.isLoading;
+  const failed = domainsQ.isError || countsQ.isError;
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -128,9 +137,27 @@ function MockExamPage() {
             Blueprint_Allocation
           </div>
           <div className="divide-y divide-border">
-            {loading && (
-              <div className="px-4 py-6 text-sm text-muted-foreground">
-                Loading question bank…
+            {loading &&
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={`sk-${i}`} className="flex items-center gap-4 px-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <SkeletonBar className="h-3 w-2/5" />
+                    <SkeletonBar className="mt-2 h-1.5 w-full" />
+                  </div>
+                  <SkeletonBar className="h-3 w-12" />
+                </div>
+              ))}
+            {!loading && failed && (
+              <div className="px-4 py-6">
+                <InlineError
+                  title="Couldn't load the question bank"
+                  error={domainsQ.error ?? countsQ.error}
+                  onRetry={() => {
+                    void domainsQ.refetch();
+                    void countsQ.refetch();
+                  }}
+                  retrying={domainsQ.isFetching || countsQ.isFetching}
+                />
               </div>
             )}
             {rows.map((r) => {
