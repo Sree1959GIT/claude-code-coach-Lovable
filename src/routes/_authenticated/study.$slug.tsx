@@ -60,10 +60,11 @@ export const Route = createFileRoute("/_authenticated/study/$slug")({
     const questions = loaderData?.questions ?? [];
     const domainTitle = domain?.title ?? titleCaseSlug(params.slug);
     const concepts = [...new Set(questions.map((question) => question.key_concept).filter(Boolean))].slice(0, 3);
+    const primaryConcept = concepts[0];
     const conceptSummary = concepts.length > 0 ? ` Topics include ${concepts.join(", ")}.` : "";
     const description = `${domain?.description ?? `Practice ${domainTitle} architecture concepts.`} This module carries ${domain?.weight ?? "a defined"}% of the certification blueprint.${conceptSummary}`;
     return createSeo({
-      title: `${domainTitle} · Study · Claude Architect Prep`,
+      title: `${domainTitle}${primaryConcept ? `: ${primaryConcept}` : ""} · Claude Architect Prep`,
       description,
       path: `/study/${params.slug}`,
       noIndex: true,
