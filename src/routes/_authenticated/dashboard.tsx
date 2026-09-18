@@ -15,6 +15,7 @@ import { ExamDayCard } from "@/components/ExamDayCard";
 import { ConfidenceCard } from "@/components/ConfidenceCard";
 import { buildStudyPlan } from "@/lib/study-plan";
 import { createSeo, DEFAULT_SHARE_IMAGE } from "@/lib/seo";
+import { OnboardingWizard } from "@/components/OnboardingWizard";
 import {
   InlineError,
   PageSkeleton,
@@ -77,6 +78,7 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
+      <OnboardingWizard readiness={readiness} />
       <main className="mx-auto max-w-7xl px-6 py-24">
         <div className="mb-8">
           <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
