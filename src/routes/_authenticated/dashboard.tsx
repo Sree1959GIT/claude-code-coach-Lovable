@@ -89,12 +89,23 @@ function Dashboard() {
         </div>
 
         {/* Quick stats */}
-        <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <StatBox label="Due Now" value={due} icon={<Clock className="h-4 w-4" />} />
-          <StatBox label="Mastered" value={mastered} icon={<TrendingUp className="h-4 w-4" />} />
-          <StatBox label="Lapsed" value={lapsed} icon={<Dumbbell className="h-4 w-4" />} />
-          <StatBox label="Total Cards" value={total} icon={<LayoutGrid className="h-4 w-4" />} />
-        </div>
+        {masteryQ.isLoading ? (
+          <SkeletonCards className="mb-8 grid-cols-2 md:grid-cols-4" />
+        ) : masteryQ.isError ? (
+          <InlineError
+            title="Couldn't load your progress"
+            error={masteryQ.error}
+            onRetry={() => void masteryQ.refetch()}
+            retrying={masteryQ.isFetching}
+          />
+        ) : (
+          <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <StatBox label="Due Now" value={due} icon={<Clock className="h-4 w-4" />} />
+            <StatBox label="Mastered" value={mastered} icon={<TrendingUp className="h-4 w-4" />} />
+            <StatBox label="Lapsed" value={lapsed} icon={<Dumbbell className="h-4 w-4" />} />
+            <StatBox label="Total Cards" value={total} icon={<LayoutGrid className="h-4 w-4" />} />
+          </div>
+        )}
 
         {/* Exam readiness */}
         <section className="mb-8 border border-border bg-card p-6">
