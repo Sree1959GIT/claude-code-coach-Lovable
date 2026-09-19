@@ -144,6 +144,25 @@ function DomainRunner() {
     logEvent("page_view", { page: "study_run", slug });
   }, [slug]);
 
+  // H2 — Ctrl/Cmd+Shift+C toggles the Study Canvas, ignored while typing.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!(e.ctrlKey || e.metaKey) || !e.shiftKey) return;
+      if (e.key.toLowerCase() !== "c") return;
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (t.isContentEditable ||
+          ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName))
+      )
+        return;
+      e.preventDefault();
+      setCanvasOpen((v) => !v);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const questions = questionsQ.data ?? [];
   const q = questions[idx];
 
@@ -392,14 +411,21 @@ function DomainRunner() {
         <main className="flex min-w-0 flex-1 flex-col overflow-y-auto px-3 py-3 sm:px-5 sm:py-4">
           <div className="mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
             <button
+              type="button"
               onClick={() => setMentorOpen(true)}
-              className="inline-flex items-center gap-2 border-2 border-primary bg-primary px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground shadow-sm hover:opacity-90 sm:px-4 sm:text-[11px]"
+              aria-expanded={mentorOpen}
+              aria-controls="mentor-canvas"
+              className="inline-flex min-h-11 items-center gap-2 border-2 border-primary bg-primary px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground shadow-sm hover:opacity-90 sm:px-4 sm:text-[11px]"
             >
               <UserRound className="h-4 w-4" /> Ask_Mentor
             </button>
             <button
-              onClick={() => setCanvasOpen(true)}
-              className="inline-flex items-center gap-2 border-2 border-border px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:border-primary sm:px-4 sm:text-[11px]"
+              type="button"
+              onClick={() => setCanvasOpen((v) => !v)}
+              aria-expanded={canvasOpen}
+              aria-controls="study-canvas"
+              aria-keyshortcuts="Control+Shift+C"
+              className="inline-flex min-h-11 items-center gap-2 border-2 border-border px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:border-primary sm:px-4 sm:text-[11px]"
             >
               <Code2 className="h-4 w-4" /> Study_Canvas
             </button>
@@ -604,6 +630,7 @@ function DomainRunner() {
 
       {/* Phase D1 — non-modal floating study canvas (coexists with the mentor drawer) */}
       <FloatingWindow
+        id="study-canvas"
         open={canvasOpen}
         title="Study_Canvas"
         subtitle={canvasSubtitle}

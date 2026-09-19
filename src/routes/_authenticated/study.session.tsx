@@ -250,8 +250,11 @@ function SessionRunner() {
         <main className="flex min-w-0 flex-1 flex-col overflow-y-auto px-5 py-4">
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <button
+              type="button"
               onClick={() => setMentorOpen(true)}
-              className="inline-flex items-center gap-2 border-2 border-primary bg-primary px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-widest text-primary-foreground shadow-sm hover:opacity-90"
+              aria-expanded={mentorOpen}
+              aria-controls="mentor-canvas"
+              className="inline-flex min-h-11 items-center gap-2 border-2 border-primary bg-primary px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-widest text-primary-foreground shadow-sm hover:opacity-90"
             >
               <UserRound className="h-4 w-4" /> Ask_Mentor
             </button>
