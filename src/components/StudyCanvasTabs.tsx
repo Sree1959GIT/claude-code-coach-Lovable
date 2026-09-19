@@ -5,7 +5,7 @@
  * diagnostic runtime error display with line numbers and stack traces.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   BookOpen,
