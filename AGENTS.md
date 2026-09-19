@@ -73,8 +73,10 @@
 - [x] **Phase H6:** Penetration audit pass — answer keys gated behind published questions, library corpus and codebases restricted to signed-in learners, BYOK vault locked to service role, blanket anon write/TRUNCATE grants revoked, signup trigger function removed from the public API, Phase H5 profile columns restored, dependency scan clean.
 - [x] **Phase H4:** Router-level SEO — complete canonical/Open Graph/Twitter metadata, dynamic domain learning metadata, JSON-LD, manifest, and a 1200×630 social card.
 
+- [x] **Phase H7:** Domain bind smoke deployment — backend binding repaired (`.env` rebound to the live instance), authenticated smoke pass over landing, dashboard, study, Study Canvas, mentor, admin console and BYOK vault, FSRS write path verified, and the head-order hydration mismatch fixed.
+
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] Phase H7: Domain bind smoke deployment — wire live parameters and test core transaction pathways.
+- [ ] Phase H2: Semantic accessible tags pass — implement the saved plan at `.lovable/plan/phase-h2-semantic-accessibility-2026-09-17.md` (focus traps, dialog semantics, keyboard shortcuts, reduced motion).
 
 
 
@@ -124,7 +126,7 @@
 - [x] **H4:** Deploy SEO tagging structures: generate automated router-level Open Graph card parameters.
 - [x] **H5:** User onboarding flow: build interactive diagnostic configuration paths for fresh candidate sign-ups.
 - [x] **H6:** Penetration audit pass: check row levels, run vulnerability dependency scans, and clear loose database configurations.
-- [ ] **H7:** Domain bind smoke deployment: wire live parameters and test core transaction pathways.
+- [x] **H7:** Domain bind smoke deployment: wire live parameters and test core transaction pathways.
 
 ---
 

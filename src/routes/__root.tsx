@@ -109,12 +109,17 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="dark" style={{ colorScheme: "dark" }} suppressHydrationWarning>
       <head>
-        <HeadContent />
+        {/* Phase H7: this inline theme bootstrap must stay the first head child.
+            HeadContent emits a variable number of route-level tags (JSON-LD and
+            friends), so any fixed element placed after it lands on a different
+            index during hydration and trips a mismatch. */}
         <script
+          key="theme-bootstrap"
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem('cca-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}var d=document.documentElement;d.classList.toggle('dark',t==='dark');d.style.colorScheme=t;}catch(e){}})();`,
           }}
         />
+        <HeadContent />
       </head>
       <body>
         {children}
