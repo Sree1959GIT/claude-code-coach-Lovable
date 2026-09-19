@@ -130,6 +130,13 @@ export function StudyCanvasTabs({
   // Phase E9 — code / video / docs sections tied to the active question.
   const [section, setSection] = useState<CanvasSection>("code");
   const [video, setVideo] = useState<LearnResource | null>(null);
+  // H2 — deterministic, per-instance ids so several canvases can coexist.
+  const uid = useId();
+  const sectionTabId = (id: CanvasSection) => `${uid}-section-tab-${id}`;
+  const sectionPanelId = (id: CanvasSection) => `${uid}-section-panel-${id}`;
+  const fileTabId = (i: number) => `${uid}-file-tab-${i}`;
+  const filePanelId = (i: number) => `${uid}-file-panel-${i}`;
+  const sectionTabRefs = useRef<Partial<Record<CanvasSection, HTMLButtonElement | null>>>({});
 
   const matched = useMemo(
     () =>
