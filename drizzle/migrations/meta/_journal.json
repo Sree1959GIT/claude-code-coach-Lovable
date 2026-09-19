@@ -8,6 +8,13 @@
       "when": 1789700860289,
       "tag": "0000_sync_phase_f_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789788442218,
+      "tag": "0001_h6_security_hardening",
+      "breakpoints": true
     }
   ]
 }
