@@ -382,9 +382,13 @@ export function StudyCanvasTabs({
       </div>
 
       {section === "code" && (
-        <>
+        <div
+          role="tabpanel"
+          id={sectionPanelId("code")}
+          aria-labelledby={sectionTabId("code")}
+          className="flex min-h-0 flex-1 flex-col"
+        >
       <div
-
         role="tablist"
         aria-label="Canvas files"
         onKeyDown={onKeyDown}
