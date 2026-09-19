@@ -200,6 +200,16 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   const speak = useServerFn(synthesizeSpeech);
+  // H2 — focus moves into the mentor on open and is trapped only in the
+  // mobile full-screen overlay; the desktop side frame stays non-modal.
+  const isMobileViewport = useIsMobile();
+  const surfaceRef = useFocusSurface<HTMLElement>({
+    open,
+    modal: isMobileViewport,
+    onClose,
+  });
+  const mentorTitleId = useId();
+
 
   const [messages, setMessages] = useState<Msg[]>([]);
   const [streaming, setStreaming] = useState("");
