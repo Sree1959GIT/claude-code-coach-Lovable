@@ -144,6 +144,25 @@ function DomainRunner() {
     logEvent("page_view", { page: "study_run", slug });
   }, [slug]);
 
+  // H2 — Ctrl/Cmd+Shift+C toggles the Study Canvas, ignored while typing.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!(e.ctrlKey || e.metaKey) || !e.shiftKey) return;
+      if (e.key.toLowerCase() !== "c") return;
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (t.isContentEditable ||
+          ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName))
+      )
+        return;
+      e.preventDefault();
+      setCanvasOpen((v) => !v);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const questions = questionsQ.data ?? [];
   const q = questions[idx];
 
