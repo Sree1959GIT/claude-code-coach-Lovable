@@ -157,6 +157,23 @@
   border-radius: 2px;
 }
 
+/* H2 — motion reduction: no blinking highlight, entrance slide, or pulsing cursor. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .mentor-focus {
+    animation: none !important;
+    background-color: color-mix(in oklab, var(--color-primary) 18%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-primary) 55%, transparent);
+  }
+}
+
 
 @media print {
   [data-print-hide] {
