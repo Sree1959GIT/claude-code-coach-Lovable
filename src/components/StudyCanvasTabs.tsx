@@ -566,13 +566,16 @@ export function StudyCanvasTabs({
       </div>
 
       {/* Phase D5 — console results pane */}
-      <div className="flex h-28 shrink-0 flex-col border-t border-border bg-muted/30 sm:h-36">
+      <section
+        aria-label="Run console"
+        className="flex h-28 shrink-0 flex-col border-t border-border bg-muted/30 sm:h-36"
+      >
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             <Terminal className="h-3 w-3" />
             Console · {current ? current.language : ""}
           </span>
-          <span>
+          <span role="status" aria-live="polite">
             {runState.phase === "idle" && "Idle · 10s limit"}
             {runState.phase === "running" && "Running…"}
             {runState.phase === "done" &&
