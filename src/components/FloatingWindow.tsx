@@ -6,9 +6,10 @@
  * it is open. Dragged by its title bar, resized from its edges/corner.
  */
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useFocusSurface } from "@/hooks/use-focus-surface";
 
 export type WindowRect = { x: number; y: number; width: number; height: number };
 
