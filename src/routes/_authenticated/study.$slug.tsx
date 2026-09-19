@@ -611,6 +611,7 @@ function DomainRunner() {
 
       {/* Phase D1 — non-modal floating study canvas (coexists with the mentor drawer) */}
       <FloatingWindow
+        id="study-canvas"
         open={canvasOpen}
         title="Study_Canvas"
         subtitle={canvasSubtitle}
