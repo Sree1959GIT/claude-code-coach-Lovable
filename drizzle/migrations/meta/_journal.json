@@ -15,6 +15,13 @@
       "when": 1789788442218,
       "tag": "0001_h6_security_hardening",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789788507189,
+      "tag": "0002_h6_schema_drift_and_public_reads",
+      "breakpoints": true
     }
   ]
 }
