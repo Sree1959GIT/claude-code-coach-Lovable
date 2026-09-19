@@ -592,7 +592,11 @@ export function StudyCanvasTabs({
               })()}
           </span>
         </div>
-        <div className="min-h-0 flex-1 overflow-auto px-3 py-2 font-mono text-[11px] leading-relaxed">
+        <div
+          aria-live="polite"
+          aria-atomic="false"
+          className="min-h-0 flex-1 overflow-auto px-3 py-2 font-mono text-[11px] leading-relaxed"
+        >
           {runState.phase === "idle" && consoleLines.length === 0 && syntaxIssues.length === 0 && (
             <p className="select-none text-[10px] uppercase tracking-widest text-muted-foreground">
               No output yet — press Run to execute the active file.
