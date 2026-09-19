@@ -681,7 +681,9 @@ export function StudyCanvasTabs({
               {videos.map((r) => (
                 <li key={r.videoId}>
                   <button
+                    type="button"
                     onClick={() => setVideo(r)}
+                    aria-label={`Play video: ${r.title}`}
                     className="w-full border border-border text-left hover:border-primary"
                   >
                     {thumbnailFor(r) && (
