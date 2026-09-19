@@ -6,9 +6,10 @@
  * it is open. Dragged by its title bar, resized from its edges/corner.
  */
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useFocusSurface } from "@/hooks/use-focus-surface";
 
 export type WindowRect = { x: number; y: number; width: number; height: number };
 
@@ -34,6 +35,7 @@ function clampToViewport(rect: WindowRect): WindowRect {
 
 export function FloatingWindow({
   open,
+  id,
   title,
   subtitle,
   defaultRect,
@@ -44,6 +46,8 @@ export function FloatingWindow({
   footer,
 }: {
   open: boolean;
+  /** Stable DOM id so launch buttons can point `aria-controls` at the panel. */
+  id?: string;
   title: string;
   subtitle?: string;
   defaultRect?: Partial<WindowRect>;
@@ -64,6 +68,13 @@ export function FloatingWindow({
   // H1 — on small/touch viewports the window docks as a full-width bottom sheet:
   // no free positioning, no drag, no resize handles.
   const isMobile = useIsMobile();
+  // H2 — focus moves in on open and returns to the trigger on close. Only the
+  // mobile bottom sheet traps focus; the desktop panel stays non-modal.
+  const surfaceRef = useFocusSurface<HTMLElement>({ open, modal: isMobile, onClose });
+  const autoId = useId();
+  const titleId = `${autoId}-title`;
+  const subtitleId = `${autoId}-subtitle`;
+
 
   const setRect = useCallback(
     (next: WindowRect) => {
@@ -134,7 +145,13 @@ export function FloatingWindow({
 
   return (
     <section
-      aria-label={title}
+      ref={surfaceRef}
+      id={id}
+      role="dialog"
+      aria-modal={isMobile ? true : undefined}
+      aria-labelledby={titleId}
+      aria-describedby={subtitleId}
+      tabIndex={-1}
       style={
         isMobile
           ? undefined
@@ -160,16 +177,22 @@ export function FloatingWindow({
           />
         )}
         <div className="min-w-0">
-          <div className="truncate font-mono text-[10px] uppercase tracking-widest text-primary">
+          <div
+            id={subtitleId}
+            className="truncate font-mono text-[10px] uppercase tracking-widest text-primary"
+          >
             {subtitle ?? "Floating_Window"}
           </div>
-          <div className="truncate text-sm font-semibold">{title}</div>
+          <div id={titleId} className="truncate text-sm font-semibold">
+            {title}
+          </div>
         </div>
         <button
+          type="button"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={onClose}
           aria-label={`Close ${title}`}
-          className="-m-2 shrink-0 p-2 text-muted-foreground hover:text-foreground"
+          className="-m-2 inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 text-muted-foreground hover:text-foreground"
         >
           <X className="h-4 w-4" />
         </button>

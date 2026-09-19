@@ -76,7 +76,8 @@
 - [x] **Phase H7:** Domain bind smoke deployment — backend binding repaired (`.env` rebound to the live instance), authenticated smoke pass over landing, dashboard, study, Study Canvas, mentor, admin console and BYOK vault, FSRS write path verified, and the head-order hydration mismatch fixed.
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] Phase H2: Semantic accessible tags pass — implement the saved plan at `.lovable/plan/phase-h2-semantic-accessibility-2026-09-17.md` (focus traps, dialog semantics, keyboard shortcuts, reduced motion).
+- [x] Phase H2: Semantic accessible tags pass — completed (focus-management hook, dialog semantics on Study Canvas / Mentor / video modal, Ctrl+Shift+C canvas toggle and Escape precedence, full tab/tabpanel contract with arrow/Home/End keys, console live regions, reduced-motion support).
+- **Next:** No pending backlog sub-tasks — Phases D–H are all complete. Await the user's next feature request or launch/publish instruction.
 
 
 

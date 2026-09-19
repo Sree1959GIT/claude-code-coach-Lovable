@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useId } from "react";
 import { X } from "lucide-react";
 import type { LearnResource } from "@/lib/resources";
+import { useFocusSurface } from "@/hooks/use-focus-surface";
 
 export function VideoModal({
   resource,
@@ -9,13 +10,9 @@ export function VideoModal({
   resource: LearnResource | null;
   onClose: () => void;
 }) {
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  const titleId = useId();
+  const open = Boolean(resource?.videoId);
+  const ref = useFocusSurface<HTMLDivElement>({ open, modal: true, onClose });
 
   if (!resource?.videoId) return null;
   const src = `https://www.youtube-nocookie.com/embed/${resource.videoId}?start=${
@@ -26,12 +23,14 @@ export function VideoModal({
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4"
       onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={resource.title}
     >
       <div
-        className="w-full max-w-3xl border border-border bg-card"
+        ref={ref}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="w-full max-w-3xl border border-border bg-card outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between border-b border-border px-4 py-2">
@@ -39,12 +38,14 @@ export function VideoModal({
             <div className="truncate font-mono text-[10px] uppercase tracking-widest text-primary">
               {resource.source}
             </div>
-            <div className="truncate text-sm font-semibold">{resource.title}</div>
+            <div id={titleId} className="truncate text-sm font-semibold">
+              {resource.title}
+            </div>
           </div>
           <button
             onClick={onClose}
             aria-label="Close video"
-            className="text-muted-foreground hover:text-foreground"
+            className="-m-2 inline-flex min-h-11 min-w-11 items-center justify-center p-2 text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
