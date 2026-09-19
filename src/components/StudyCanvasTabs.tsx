@@ -660,12 +660,18 @@ export function StudyCanvasTabs({
           )}
           <div ref={consoleEndRef} />
         </div>
-      </div>
-        </>
+      </section>
+        </div>
       )}
 
       {section === "video" && (
-        <div className="min-h-0 flex-1 overflow-auto bg-card p-3">
+        <div
+          role="tabpanel"
+          id={sectionPanelId("video")}
+          aria-labelledby={sectionTabId("video")}
+          tabIndex={0}
+          className="min-h-0 flex-1 overflow-auto bg-card p-3"
+        >
           {videos.length === 0 ? (
             <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               No_Videos_Matched
