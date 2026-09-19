@@ -347,13 +347,21 @@ export function StudyCanvasTabs({
       <div
         role="tablist"
         aria-label="Canvas sections"
+        onKeyDown={onSectionKeyDown}
         className="flex shrink-0 flex-wrap items-center gap-1 border-b border-border bg-muted/50 px-2 py-1"
       >
         {SECTIONS.map(({ id, label, Icon }) => (
           <button
             key={id}
+            type="button"
             role="tab"
+            id={sectionTabId(id)}
+            ref={(el) => {
+              sectionTabRefs.current[id] = el;
+            }}
             aria-selected={section === id}
+            aria-controls={sectionPanelId(id)}
+            tabIndex={section === id ? 0 : -1}
             onClick={() => setSection(id)}
             className={`inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[9px] uppercase tracking-widest transition-colors ${
               section === id
