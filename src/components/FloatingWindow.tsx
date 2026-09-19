@@ -177,16 +177,22 @@ export function FloatingWindow({
           />
         )}
         <div className="min-w-0">
-          <div className="truncate font-mono text-[10px] uppercase tracking-widest text-primary">
+          <div
+            id={subtitleId}
+            className="truncate font-mono text-[10px] uppercase tracking-widest text-primary"
+          >
             {subtitle ?? "Floating_Window"}
           </div>
-          <div className="truncate text-sm font-semibold">{title}</div>
+          <div id={titleId} className="truncate text-sm font-semibold">
+            {title}
+          </div>
         </div>
         <button
+          type="button"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={onClose}
           aria-label={`Close ${title}`}
-          className="-m-2 shrink-0 p-2 text-muted-foreground hover:text-foreground"
+          className="-m-2 inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 text-muted-foreground hover:text-foreground"
         >
           <X className="h-4 w-4" />
         </button>
