@@ -2,4 +2,4 @@
 - [x] Phase H3: Resiliency boundaries — skeleton fallbacks + error boundaries + retry on dynamic routes
 - [x] Phase H4: Router SEO, Open Graph/Twitter cards, JSON-LD, dynamic study metadata, manifest, and social card
 - [x] Phase H5: User onboarding flow — interactive diagnostic setup for new candidates
-- [ ] Phase H6: Penetration audit pass
+- [x] Phase H6: Penetration audit pass
