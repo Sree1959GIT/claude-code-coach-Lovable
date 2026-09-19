@@ -603,10 +603,21 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   if (!open) return null;
 
   return (
-    <aside className="flex h-full min-w-0 flex-col border-l border-border bg-card">
+    <aside
+      ref={surfaceRef}
+      id="mentor-canvas"
+      role="dialog"
+      aria-modal={isMobileViewport ? true : undefined}
+      aria-labelledby={mentorTitleId}
+      tabIndex={-1}
+      className="flex h-full min-w-0 flex-col border-l border-border bg-card"
+    >
       <header className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.3em] text-primary">
+          <div
+            id={mentorTitleId}
+            className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.3em] text-primary"
+          >
             <User className="h-3.5 w-3.5" /> SME_Mentor
           </div>
           <div className="mt-0.5 truncate font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -614,9 +625,10 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
           </div>
         </div>
         <button
+          type="button"
           onClick={onClose}
           aria-label="Close mentor"
-          className="text-muted-foreground hover:text-foreground"
+          className="-m-2 inline-flex min-h-11 min-w-11 items-center justify-center p-2 text-muted-foreground hover:text-foreground"
         >
           <X className="h-4 w-4" />
         </button>
