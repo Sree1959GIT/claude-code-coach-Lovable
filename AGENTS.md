@@ -70,10 +70,11 @@
 - [x] **Phase H2:** Semantic accessible tags pass — focus management, modal traps, keyboard shortcuts, accessible tab semantics, and reduced-motion support.
 - [x] **Phase H3:** Resiliency boundaries — shared skeleton/error components, route-level pending and error boundaries, and retry triggers across dynamic routes.
 - [x] **Phase H5:** Onboarding wizard — exam date, target score band, weekly hours, domain confidence, saved to profiles, seeding the baseline plan and readiness forecast.
+- [x] **Phase H6:** Penetration audit pass — answer keys gated behind published questions, library corpus and codebases restricted to signed-in learners, BYOK vault locked to service role, blanket anon write/TRUNCATE grants revoked, signup trigger function removed from the public API, Phase H5 profile columns restored, dependency scan clean.
 - [x] **Phase H4:** Router-level SEO — complete canonical/Open Graph/Twitter metadata, dynamic domain learning metadata, JSON-LD, manifest, and a 1200×630 social card.
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
-- [ ] Phase H6: Penetration audit pass — check row levels, run vulnerability dependency scans, and clear loose database configurations.
+- [ ] Phase H7: Domain bind smoke deployment — wire live parameters and test core transaction pathways.
 
 
 
@@ -122,7 +123,7 @@
 - [x] **H3:** Resiliency boundaries pass: map fallback skeleton loading views on all dynamic route pathways.
 - [x] **H4:** Deploy SEO tagging structures: generate automated router-level Open Graph card parameters.
 - [x] **H5:** User onboarding flow: build interactive diagnostic configuration paths for fresh candidate sign-ups.
-- [ ] **H6:** Penetration audit pass: check row levels, run vulnerability dependency scans, and clear loose database configurations.
+- [x] **H6:** Penetration audit pass: check row levels, run vulnerability dependency scans, and clear loose database configurations.
 - [ ] **H7:** Domain bind smoke deployment: wire live parameters and test core transaction pathways.
 
 ---
