@@ -419,7 +419,10 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   async function send(text: string) {
     const trimmed = text.trim();
     if (!trimmed || busyRef.current) return;
+    // Must run inside the originating click so the first clip can play.
+    unlockAudio();
     stoppedRef.current = false;
+
     setError(null);
     const next: Msg[] = [...messagesRef.current, { role: "user", content: trimmed }];
     setMessages(next);
