@@ -401,8 +401,10 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
 
   /** Speaks a full written answer on demand (Read_Response button). */
   function readAloud(text: string) {
+    unlockAudio();
     const sentences = text.match(/[^.!?]+[.!?]*/g) ?? [text];
     stoppedRef.current = false;
+
     queueRef.current = sentences
       .map((s) => s.trim())
       .filter((s) => s.length > 1)
