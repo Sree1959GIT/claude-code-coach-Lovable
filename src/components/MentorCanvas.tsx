@@ -238,6 +238,8 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
 
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUnlockedRef = useRef(false);
+
   const recogRef = useRef<SpeechRecognitionLike | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const liveRef = useRef(false);
@@ -304,6 +306,39 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   }, [open]);
 
   // ---- speech synthesis queue -------------------------------------------
+  /**
+   * Browsers only allow audio that starts inside a user gesture. Our first
+   * clip starts seconds later (after the stream + TTS round-trip), so the very
+   * first request used to be blocked silently. Priming the element with a
+   * muted silent clip during the click keeps it playable afterwards.
+   */
+  function unlockAudio() {
+    const el = audioRef.current;
+    if (!el || audioUnlockedRef.current) return;
+    audioUnlockedRef.current = true;
+    try {
+      el.muted = true;
+      el.src =
+        "data:audio/mpeg;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCA//////////////////////////////////////////////////////////////////8AAAA8TEFNRTMuOTlyAc0AAAAAAAAAABSAJAJAQgAAgAAAAnGMUiMEAAAAAAAAAAAAAAAAAAAA";
+      const p = el.play();
+      if (p) {
+        void p
+          .then(() => {
+            el.pause();
+            el.currentTime = 0;
+            el.muted = false;
+          })
+          .catch(() => {
+            el.muted = false;
+          });
+      } else {
+        el.muted = false;
+      }
+    } catch {
+      el.muted = false;
+    }
+  }
+
   async function synth(text: string): Promise<string | null> {
     try {
       const { audio, mimeType } = await speak({ data: { text, voice: "alloy" } });
@@ -319,12 +354,14 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
     return new Promise((resolve) => {
       const el = audioRef.current;
       if (!el) return resolve();
+      el.muted = false;
       el.onended = () => resolve();
       el.onerror = () => resolve();
       el.src = url;
       void el.play().catch(() => resolve());
     });
   }
+
 
   const drain = useCallback(async () => {
     if (drainingRef.current) return;
@@ -364,8 +401,10 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
 
   /** Speaks a full written answer on demand (Read_Response button). */
   function readAloud(text: string) {
+    unlockAudio();
     const sentences = text.match(/[^.!?]+[.!?]*/g) ?? [text];
     stoppedRef.current = false;
+
     queueRef.current = sentences
       .map((s) => s.trim())
       .filter((s) => s.length > 1)
@@ -380,7 +419,10 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   async function send(text: string) {
     const trimmed = text.trim();
     if (!trimmed || busyRef.current) return;
+    // Must run inside the originating click so the first clip can play.
+    unlockAudio();
     stoppedRef.current = false;
+
     setError(null);
     const next: Msg[] = [...messagesRef.current, { role: "user", content: trimmed }];
     setMessages(next);
