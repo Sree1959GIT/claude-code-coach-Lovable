@@ -238,6 +238,8 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
 
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUnlockedRef = useRef(false);
+
   const recogRef = useRef<SpeechRecognitionLike | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const liveRef = useRef(false);
