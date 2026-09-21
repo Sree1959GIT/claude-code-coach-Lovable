@@ -30,8 +30,9 @@ function ResetPassword() {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       await logEvent("password_reset_completed");
+      await supabase.auth.signOut();
       setDone(true);
-      setTimeout(() => navigate({ to: "/dashboard", replace: true }), 1200);
+      setTimeout(() => navigate({ to: "/auth", search: { mode: "signin" }, replace: true }), 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Reset failed");
     } finally {
@@ -90,7 +91,7 @@ function ResetPassword() {
           )}
           {done && (
             <div className="border border-primary/40 bg-primary/10 px-3 py-2 font-mono text-[10px] text-primary">
-              Password updated. Redirecting...
+              Password updated. Returning to Sign_In...
             </div>
           )}
           <button
