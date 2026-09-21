@@ -29,6 +29,11 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedStudySessionRouteImport } from './routes/_authenticated/study.session'
 import { Route as AuthenticatedStudyReportRouteImport } from './routes/_authenticated/study.report'
 import { Route as AuthenticatedStudySlugRouteImport } from './routes/_authenticated/study.$slug'
+import { Route as AuthenticatedAdminRetrievalRouteImport } from './routes/_authenticated/admin.retrieval'
+import { Route as AuthenticatedAdminQualityRouteImport } from './routes/_authenticated/admin.quality'
+import { Route as AuthenticatedAdminOperationsRouteImport } from './routes/_authenticated/admin.operations'
+import { Route as AuthenticatedAdminLearnersRouteImport } from './routes/_authenticated/admin.learners'
+import { Route as AuthenticatedAdminContentRouteImport } from './routes/_authenticated/admin.content'
 import { Route as ApiPublicCronRefreshLibraryRouteImport } from './routes/api/public/cron/refresh-library'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -132,6 +137,36 @@ const AuthenticatedStudySlugRoute = AuthenticatedStudySlugRouteImport.update({
   path: '/study/$slug',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRetrievalRoute =
+  AuthenticatedAdminRetrievalRouteImport.update({
+    id: '/retrieval',
+    path: '/retrieval',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminQualityRoute =
+  AuthenticatedAdminQualityRouteImport.update({
+    id: '/quality',
+    path: '/quality',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminOperationsRoute =
+  AuthenticatedAdminOperationsRouteImport.update({
+    id: '/operations',
+    path: '/operations',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminLearnersRoute =
+  AuthenticatedAdminLearnersRouteImport.update({
+    id: '/learners',
+    path: '/learners',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminContentRoute =
+  AuthenticatedAdminContentRouteImport.update({
+    id: '/content',
+    path: '/content',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const ApiPublicCronRefreshLibraryRoute =
   ApiPublicCronRefreshLibraryRouteImport.update({
     id: '/api/public/cron/refresh-library',
@@ -154,6 +189,11 @@ export interface FileRoutesByFullPath {
   '/reviews': typeof AuthenticatedReviewsRoute
   '/traces': typeof AuthenticatedTracesRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
+  '/admin/content': typeof AuthenticatedAdminContentRoute
+  '/admin/learners': typeof AuthenticatedAdminLearnersRoute
+  '/admin/operations': typeof AuthenticatedAdminOperationsRoute
+  '/admin/quality': typeof AuthenticatedAdminQualityRoute
+  '/admin/retrieval': typeof AuthenticatedAdminRetrievalRoute
   '/study/$slug': typeof AuthenticatedStudySlugRoute
   '/study/report': typeof AuthenticatedStudyReportRoute
   '/study/session': typeof AuthenticatedStudySessionRoute
@@ -175,6 +215,11 @@ export interface FileRoutesByTo {
   '/reviews': typeof AuthenticatedReviewsRoute
   '/traces': typeof AuthenticatedTracesRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
+  '/admin/content': typeof AuthenticatedAdminContentRoute
+  '/admin/learners': typeof AuthenticatedAdminLearnersRoute
+  '/admin/operations': typeof AuthenticatedAdminOperationsRoute
+  '/admin/quality': typeof AuthenticatedAdminQualityRoute
+  '/admin/retrieval': typeof AuthenticatedAdminRetrievalRoute
   '/study/$slug': typeof AuthenticatedStudySlugRoute
   '/study/report': typeof AuthenticatedStudyReportRoute
   '/study/session': typeof AuthenticatedStudySessionRoute
@@ -199,6 +244,11 @@ export interface FileRoutesById {
   '/_authenticated/reviews': typeof AuthenticatedReviewsRoute
   '/_authenticated/traces': typeof AuthenticatedTracesRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
+  '/_authenticated/admin/content': typeof AuthenticatedAdminContentRoute
+  '/_authenticated/admin/learners': typeof AuthenticatedAdminLearnersRoute
+  '/_authenticated/admin/operations': typeof AuthenticatedAdminOperationsRoute
+  '/_authenticated/admin/quality': typeof AuthenticatedAdminQualityRoute
+  '/_authenticated/admin/retrieval': typeof AuthenticatedAdminRetrievalRoute
   '/_authenticated/study/$slug': typeof AuthenticatedStudySlugRoute
   '/_authenticated/study/report': typeof AuthenticatedStudyReportRoute
   '/_authenticated/study/session': typeof AuthenticatedStudySessionRoute
@@ -223,6 +273,11 @@ export interface FileRouteTypes {
     | '/reviews'
     | '/traces'
     | '/api/mentor-stream'
+    | '/admin/content'
+    | '/admin/learners'
+    | '/admin/operations'
+    | '/admin/quality'
+    | '/admin/retrieval'
     | '/study/$slug'
     | '/study/report'
     | '/study/session'
@@ -244,6 +299,11 @@ export interface FileRouteTypes {
     | '/reviews'
     | '/traces'
     | '/api/mentor-stream'
+    | '/admin/content'
+    | '/admin/learners'
+    | '/admin/operations'
+    | '/admin/quality'
+    | '/admin/retrieval'
     | '/study/$slug'
     | '/study/report'
     | '/study/session'
@@ -267,6 +327,11 @@ export interface FileRouteTypes {
     | '/_authenticated/reviews'
     | '/_authenticated/traces'
     | '/api/mentor-stream'
+    | '/_authenticated/admin/content'
+    | '/_authenticated/admin/learners'
+    | '/_authenticated/admin/operations'
+    | '/_authenticated/admin/quality'
+    | '/_authenticated/admin/retrieval'
     | '/_authenticated/study/$slug'
     | '/_authenticated/study/report'
     | '/_authenticated/study/session'
@@ -426,6 +491,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudySlugRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/retrieval': {
+      id: '/_authenticated/admin/retrieval'
+      path: '/retrieval'
+      fullPath: '/admin/retrieval'
+      preLoaderRoute: typeof AuthenticatedAdminRetrievalRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/quality': {
+      id: '/_authenticated/admin/quality'
+      path: '/quality'
+      fullPath: '/admin/quality'
+      preLoaderRoute: typeof AuthenticatedAdminQualityRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/operations': {
+      id: '/_authenticated/admin/operations'
+      path: '/operations'
+      fullPath: '/admin/operations'
+      preLoaderRoute: typeof AuthenticatedAdminOperationsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/learners': {
+      id: '/_authenticated/admin/learners'
+      path: '/learners'
+      fullPath: '/admin/learners'
+      preLoaderRoute: typeof AuthenticatedAdminLearnersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/content': {
+      id: '/_authenticated/admin/content'
+      path: '/content'
+      fullPath: '/admin/content'
+      preLoaderRoute: typeof AuthenticatedAdminContentRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/api/public/cron/refresh-library': {
       id: '/api/public/cron/refresh-library'
       path: '/api/public/cron/refresh-library'
@@ -437,10 +537,20 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminContentRoute: typeof AuthenticatedAdminContentRoute
+  AuthenticatedAdminLearnersRoute: typeof AuthenticatedAdminLearnersRoute
+  AuthenticatedAdminOperationsRoute: typeof AuthenticatedAdminOperationsRoute
+  AuthenticatedAdminQualityRoute: typeof AuthenticatedAdminQualityRoute
+  AuthenticatedAdminRetrievalRoute: typeof AuthenticatedAdminRetrievalRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminContentRoute: AuthenticatedAdminContentRoute,
+  AuthenticatedAdminLearnersRoute: AuthenticatedAdminLearnersRoute,
+  AuthenticatedAdminOperationsRoute: AuthenticatedAdminOperationsRoute,
+  AuthenticatedAdminQualityRoute: AuthenticatedAdminQualityRoute,
+  AuthenticatedAdminRetrievalRoute: AuthenticatedAdminRetrievalRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
