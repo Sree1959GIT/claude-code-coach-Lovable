@@ -136,6 +136,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
+        <RecoveryRedirect />
         <Outlet />
         <Toaster />
       </ThemeProvider>
