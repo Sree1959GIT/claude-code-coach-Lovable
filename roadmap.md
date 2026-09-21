@@ -5,3 +5,59 @@
 - [x] Phase H6: Penetration audit pass
 - [x] Phase H7: Domain bind smoke deployment — backend rebound to the live instance, full authenticated smoke pass, hydration fix
 - [x] Password recovery callback repair — preserve email-link credentials, validate the recovery session, and return to Sign In after update
+
+## Next Build Wave (UI redesign review folded in)
+
+### S — Shell first
+- [ ] S1: Colour + state tokens (success / warning / danger), surface ladder, radius, spacing, 44px touch target
+- [ ] S2: Typography pass — 12px floor, 15px body, sentence case, monospace budget, drop Snake_Case chrome
+- [ ] S3: Navigation — four destinations + Progress menu + account menu; operator tools leave the student header
+- [ ] S4: Mobile bottom bar + session focus mode
+- [ ] S5: Split /admin into five grouped routes, promote the review queue, admin overview
+- [ ] S6: Settings page (Study / Mentor & voice / Models / Account & plan)
+- [ ] S7: Dashboard reorder — day's task and one primary action first; real empty + error states
+
+### G — Any-exam support (lands with the shell)
+- [ ] G1: Exam entity and blueprint data
+- [ ] G2: Exam switcher in the header
+- [ ] G3: De-hardcode CCAF wording
+- [ ] G4: Create-an-exam wizard
+- [ ] G5: Per-exam isolation and sharing
+
+### A — Mentor speed and voice
+- [ ] A1: Stage timings + parallel pre-steps
+- [ ] A2: Spoken summary first
+- [ ] A3: Offline voice engine with download progress
+- [ ] A4: Voice picker (Instant / Studio) with announced fallback
+- [ ] A5: Microphone choice (on-device / browser)
+- [ ] A6: Barge-in with a visible Stop
+
+### B — Study Canvas
+- [ ] B1: Raised-surface contrast
+- [ ] B2: Explain code / Guide me / Example videos buttons
+- [ ] B3: Send file, selection, language and run output to the mentor, and show what was captured
+- [ ] B4: Guide me walkthrough + example videos
+
+### D — Multi-answer questions
+- [ ] D1: Answer mode + baseline lock
+- [ ] D2: Authoring honours the mode
+- [ ] D3: Checkbox answering with explicit submit
+- [ ] D4: Partial credit as a third result state
+- [ ] D5: Downstream — mistakes, history, analytics, scheduling
+
+### C — Video clip windows
+- [ ] C1: End times
+- [ ] C2: Player honours the window + clip badge
+- [ ] C3: Admin range scrubber
+
+### E — Question-bank finder
+- [ ] E1: Deep research job with staged progress
+- [ ] E2: Source results desk
+- [ ] E3: Import to library with per-row log
+- [ ] E4: Safety and dedupe
+
+### F — Model configuration
+- [ ] F1: Provider registry
+- [ ] F2: Learner picker in Settings
+- [ ] F3: Hardware scan and recommendation
+- [ ] F4: Health badges and fallback

@@ -38,7 +38,22 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  /* S1 — state tokens. Each colour has exactly one meaning. */
   --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-soft: var(--danger-soft);
+
+  /* S1 — surface ladder: canvas < surface < raised (Study Canvas sits here). */
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+
   --color-code-keyword: var(--code-keyword);
   --color-code-string: var(--code-string);
   --color-code-comment: var(--code-comment);
