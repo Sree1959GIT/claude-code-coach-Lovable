@@ -13,6 +13,7 @@ import { useSession } from "@/hooks/useSession";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "./ThemeToggle";
+import { MobileTabBar } from "./MobileTabBar";
 import { logEvent } from "@/lib/analytics";
 import { getActivityTimestamps } from "@/lib/streaks.functions";
 import { computeStreaks } from "@/lib/streaks";
@@ -97,6 +98,7 @@ export function SiteHeader() {
   const studyActive = pathname.startsWith("/study") && pathname !== "/study/report";
 
   return (
+    <>
     <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-6 px-6">
         <Link to="/" className="flex shrink-0 items-center gap-3">
@@ -203,5 +205,7 @@ export function SiteHeader() {
         </div>
       </div>
     </nav>
+    {user && <MobileTabBar />}
+    </>
   );
 }
