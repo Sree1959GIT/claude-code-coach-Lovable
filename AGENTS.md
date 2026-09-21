@@ -78,7 +78,14 @@
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
 - [x] Phase H2: Semantic accessible tags pass — completed (focus-management hook, dialog semantics on Study Canvas / Mentor / video modal, Ctrl+Shift+C canvas toggle and Escape precedence, full tab/tabpanel contract with arrow/Home/End keys, console live regions, reduced-motion support).
 - [x] Password recovery callback repair — recovery credentials now survive the hosted email handoff and are validated before password entry.
-- **Next:** No pending backlog sub-tasks — Phases D–H and the password recovery repair are complete. Await the user's next feature request or launch/publish instruction.
+- [x] **S1 (Next Build Wave):** Colour and type tokens — success / warning / danger state tokens with soft + foreground pairs in both themes, a canvas → surface → raised surface ladder (Study Canvas sits on raised), and `touch-target` (44px) plus `surface-raised` utilities. Radius stays 6px.
+- [x] **S2:** Typography pass — 12px minimum text size, 15px sentence-case body copy, header links/buttons in sentence case (uppercase kept only as section labels), and underscore labels removed app-wide.
+- [x] **S3:** Navigation — four destinations (Dashboard, Study, Mock exam, Progress menu), active-section marker, streak chip, theme toggle and a single account menu holding Library plus operator tools (Review queue, Traces, Estimator, Admin console).
+- [x] **S4:** Mobile bottom bar (Home / Study / Exam / Progress) plus a focus mode that drops the chrome in the question runner.
+- [x] **S5:** Admin console split into Overview / Learners / Content / Quality / Retrieval / Operations routes with a grouped side rail carrying pending-review and failing-job counts; panels extracted to `src/components/admin/CorePanels.tsx`.
+- [x] **S6:** Settings page (`/settings`) with Study, Mentor & voice, Models, and Account & plan tabs.
+- [x] **S7:** Dashboard reorder — the day's task and one primary action lead, new learners get a real first task, readiness empty state rewritten, and `alert()` launch failures replaced with inline error banners.
+- **Next:** G1 — exam entity: exam record (name, description, domains, blueprint weights, pass mark, question count, duration) with the five hard-coded domains moved under it.
 
 
 

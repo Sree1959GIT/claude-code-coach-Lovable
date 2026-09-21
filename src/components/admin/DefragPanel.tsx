@@ -8,14 +8,14 @@ import { toast } from "sonner";
 import { runDefragSweep, type DefragResult } from "@/lib/defrag.functions";
 
 const btn =
-  "bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50";
+  "bg-primary px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50";
 const ghost =
-  "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 hover:bg-muted";
+  "border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest disabled:opacity-50 hover:bg-muted";
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="border border-border px-3 py-2">
-      <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
       <p className="mt-1 font-mono text-sm font-bold">{value}</p>
     </div>
   );
@@ -52,7 +52,7 @@ export function DefragPanel() {
     <div className="mt-4">
       <div className="flex flex-wrap items-center gap-3">
         <button type="button" className={ghost} disabled={busy !== null} onClick={() => void run(true)}>
-          {busy === "scan" ? "Scanning…" : "Dry_Run"}
+          {busy === "scan" ? "Scanning…" : "Dry run"}
         </button>
         <button
           type="button"
@@ -60,9 +60,9 @@ export function DefragPanel() {
           disabled={busy !== null || !result || result.documentsChanged === 0 || !result.dryRun}
           onClick={() => void run(false)}
         >
-          {busy === "apply" ? "Sweeping…" : "Apply_Sweep"}
+          {busy === "apply" ? "Sweeping…" : "Apply sweep"}
         </button>
-        <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Up to 20 oldest documents per run
         </p>
       </div>
@@ -77,7 +77,7 @@ export function DefragPanel() {
             <Stat label="Merged" value={result.chunksMerged} />
             <Stat label="Empty stripped" value={result.chunksStripped} />
           </div>
-          <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <p className="mt-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
             {result.dryRun ? "Dry run · nothing written" : `Applied · ${result.chunksReembedded} re-embedded`} ·{" "}
             {Math.round(result.durationMs / 100) / 10}s
           </p>
@@ -86,9 +86,9 @@ export function DefragPanel() {
 
       {rows.length > 0 && (
         <div className="mt-4 overflow-x-auto border border-border">
-          <table className="w-full min-w-[640px] border-collapse font-mono text-[11px]">
+          <table className="w-full min-w-[640px] border-collapse font-mono text-xs">
             <thead>
-              <tr className="border-b border-border bg-muted/40 text-left text-[10px] uppercase tracking-widest text-muted-foreground">
+              <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-widest text-muted-foreground">
                 <th className="px-3 py-2">Document</th>
                 <th className="px-3 py-2 text-right">Before</th>
                 <th className="px-3 py-2 text-right">After</th>

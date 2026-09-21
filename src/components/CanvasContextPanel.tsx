@@ -19,7 +19,7 @@ function Row({ label, value }: { label: string; value: string }) {
       <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
         {label}
       </span>
-      <span className="truncate text-right text-[11px]">{value}</span>
+      <span className="truncate text-right text-xs">{value}</span>
     </div>
   );
 }
@@ -43,14 +43,14 @@ export function CanvasContextPanel({
     <div className="space-y-4 p-3">
       <section>
         <h3 className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-primary">
-          Question_Context
+          Question context
         </h3>
         {context ? (
           <div>
             <Row label="Domain" value={context.domain ?? "—"} />
             <Row label="Item" value={`Q${context.index}/${context.total}`} />
             <Row label="Concept" value={context.keyConcept ?? "—"} />
-            <Row label="Concept_Tag" value={context.conceptTag ?? "—"} />
+            <Row label="Concept tag" value={context.conceptTag ?? "—"} />
             <Row label="Difficulty" value={context.difficulty ?? "—"} />
             <Row
               label="Selection"
@@ -62,8 +62,8 @@ export function CanvasContextPanel({
             />
           </div>
         ) : (
-          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            No_Active_Question
+          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            No active question
           </p>
         )}
       </section>
@@ -73,13 +73,13 @@ export function CanvasContextPanel({
           FSRS_Metrics
         </h3>
         {fsrsLoading ? (
-          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             Loading…
           </p>
         ) : fsrs ? (
           <div>
             <Row label="Status" value={fsrs.status} />
-            <Row label="Next_Review" value={formatDue(fsrs.dueAt)} />
+            <Row label="Next review" value={formatDue(fsrs.dueAt)} />
             <Row label="Stability" value={`${fsrs.stability.toFixed(2)}d`} />
             <Row label="Difficulty" value={fsrs.difficulty.toFixed(1)} />
             <Row label="Reps · Lapses" value={`${fsrs.reps} · ${fsrs.lapses}`} />
@@ -88,7 +88,7 @@ export function CanvasContextPanel({
               value={r === null ? "—" : `${Math.round(r * 100)}%`}
             />
             <Row
-              label="Last_Attempt"
+              label="Last attempt"
               value={
                 fsrs.lastAttemptCorrect === null
                   ? "—"
@@ -99,8 +99,8 @@ export function CanvasContextPanel({
             />
           </div>
         ) : (
-          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Not_Yet_Scheduled — answer this question to start tracking.
+          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            Not yet scheduled — answer this question to start tracking.
           </p>
         )}
       </section>
@@ -108,7 +108,7 @@ export function CanvasContextPanel({
       {advice && advice.conceptLinks.length > 0 && (
         <section>
           <h3 className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-primary">
-            Concept_Links
+            Concept links
           </h3>
           <ul className="flex flex-wrap gap-1.5">
             {advice.conceptLinks.map((c, i) => (
@@ -125,11 +125,11 @@ export function CanvasContextPanel({
 
       <section>
         <h3 className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-primary">
-          Reference_Docs
+          Reference docs
         </h3>
         {docs.length === 0 ? (
-          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            No_Docs_Matched
+          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            No docs matched
           </p>
         ) : (
           <ul className="space-y-1">
@@ -139,7 +139,7 @@ export function CanvasContextPanel({
                   href={d.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-start gap-2 border border-border px-2 py-1.5 text-[11px] hover:border-primary"
+                  className="flex items-start gap-2 border border-border px-2 py-1.5 text-xs hover:border-primary"
                 >
                   <ExternalLink className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
                   <span className="min-w-0">

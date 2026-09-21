@@ -56,8 +56,8 @@ function HistoryPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl px-4 py-8">
         <header className="mb-6">
-          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
-            <HistoryIcon className="h-4 w-4" /> Session_History
+          <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
+            <HistoryIcon className="h-4 w-4" /> Session history
           </div>
           <h1 className="mt-1 font-mono text-2xl font-bold uppercase tracking-tight">
             Past sessions
@@ -73,7 +73,7 @@ function HistoryPage() {
             <button
               key={m}
               onClick={() => setMode(m)}
-              className={`border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest transition-colors ${
+              className={`border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest transition-colors ${
                 mode === m
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-background hover:border-primary"
@@ -100,7 +100,7 @@ function HistoryPage() {
             </p>
             <Link
               to="/study"
-              className="mt-4 inline-block border border-primary px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary hover:bg-primary hover:text-primary-foreground"
+              className="mt-4 inline-block border border-primary px-3 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary hover:bg-primary hover:text-primary-foreground"
             >
               Start studying →
             </Link>
@@ -109,7 +109,7 @@ function HistoryPage() {
           <div className="overflow-x-auto border border-border bg-card">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-border font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <tr className="border-b border-border font-mono text-xs uppercase tracking-widest text-muted-foreground">
                   <th className="px-4 py-3">Date</th>
                   <th className="px-4 py-3">Mode</th>
                   <th className="px-4 py-3">Focus</th>
@@ -148,12 +148,12 @@ function HistoryPage() {
                         <Link
                           to="/study/report"
                           search={{ sessionId: r.id }}
-                          className="font-mono text-[10px] font-bold uppercase tracking-widest text-primary hover:underline"
+                          className="font-mono text-xs font-bold uppercase tracking-widest text-primary hover:underline"
                         >
                           Open →
                         </Link>
                       ) : (
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                        <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                           —
                         </span>
                       )}

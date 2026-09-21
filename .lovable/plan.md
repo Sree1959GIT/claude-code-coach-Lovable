@@ -1,140 +1,133 @@
-# Next Build Wave — Speed, Multi-Answer, Canvas, Any-Exam
+# Next Build Wave — revised against the UI redesign review
 
-Eight workstreams, broken into small prompts. Each prompt is one sitting of work (roughly two credits) and leaves the app working.
+The redesign document changes the order, not the content. Its core argument: turning this into a multi-exam platform rewrites the header, the brand lockup and every page title — and the navigation redesign rewrites the same header. Build them together first, or build the header twice.
 
-One honest note up front: you chose the in-browser offline voice. A voice that runs on the learner's own machine cannot sound exactly like today's cloud "alloy" voice. The plan ships the offline voice as the default for instant speech and keeps the cloud voice as a selectable option, so you can compare them side by side and decide.
+So the wave now opens with **Shell** (navigation, design tokens, admin split, settings page, exam entity), then the feature workstreams land into a system that can hold them.
 
----
-
-## A. Mentor speed and voice (first priority)
-
-**A1 — Measure and trim the wait.**
-Time each stage of a mentor reply (routing, memory, library lookup, first token). Log the timings and show them in the admin console. Run the memory and library steps at the same time as the model warm-up instead of before it, and skip the library lookup for chit-chat turns.
-
-**A2 — Speak the first sentence immediately.**
-Move the short spoken summary to the *front* of the reply instead of after the written answer, so speech can begin on the first sentence while the written explanation is still arriving.
-
-**A3 — Offline voice engine.**
-Add an in-browser speech engine (WASM neural voice, downloaded once and cached). Speech starts within a fraction of a second, costs nothing, and works offline.
-
-**A4 — Voice picker.**
-Settings control: Instant (offline) or Studio (today's cloud voice). Remembered per learner. Automatic fallback to cloud if the offline engine can't load.
-
-**A5 — Offline listening.**
-Replace the browser's built-in dictation with the same local engine so microphone input works consistently across browsers and keeps working offline.
-
-**A6 — Sentence-level pipelining.**
-Speak sentence N while sentence N+1 is still being prepared, with a barge-in stop so the learner can interrupt mid-sentence.
+One honest note carried over: you chose the in-browser offline voice. It cannot sound exactly like today's cloud voice. It ships as the default "Instant" option with the cloud voice as "Studio", side by side in settings, so you can judge.
 
 ---
 
-## B. Study Canvas fixes (quick wins)
+## S. Shell first (new — from the review)
 
-**B1 — Contrast pass.**
-Give the Study Canvas its own raised surface: darker/lighter panel than the page behind it, stronger border, clear shadow, readable code colours in both light and dark mode.
+**S1 — Colour and type tokens.**
+Keep the zinc canvas and blue accent. Add the three missing state colours so blue stops doing every job: success (mastered/passing), warning (due now/awaiting a human), danger (lapsed/failed). Restore the 6px corner radius, set the spacing scale to 4/8, and set a 44px minimum touch target.
 
-**B2 — Canvas action buttons.**
-Add a toolbar row to the Canvas: **Explain_Code**, **Guide_Me**, **Example_Videos**.
+**S2 — Typography pass.**
+Smallest text becomes 12px, not 10px. Body copy 15px, sentence case. Uppercase survives only as a section label — never a link, button or heading. Monospace is spent only on machine values: scores, timers, counts, routes, IDs, model names and code. Drop Snake_Case from navigation and buttons ("Mock exam", "Sign out", "Start today's session").
 
-**B3 — Wire Explain_Code to the mentor.**
-Today the mentor only ever sees the question. Send the currently open file, the visible/selected lines, the language and any run output along with the request, and add a code-explaining mode to the mentor prompt so it walks through the code rather than the question.
+**S3 — Navigation: four destinations.**
+Dashboard, Study, Mock exam, and a **Progress** menu holding analytics, mistake bank, session history and readiness report. Clear current-section marker. Streak chip, theme toggle and one account menu on the right. Operator tools (Library, Traces, Estimator) leave the student header.
 
-**B4 — Guide_Me and Example_Videos.**
-Guide_Me asks for a step-by-step walkthrough with checkpoints. Example_Videos pulls matching video clips for the code's concept into the Canvas video tab.
+**S4 — Mobile bottom bar.**
+Home / Study / Exam / Progress, one thumb-tap away mid-session. Plus a focus mode for the question runner: the session screen drops the chrome.
+
+**S5 — Split the admin console.**
+Five routes instead of one 17-section scroll: Learners, Content, Quality, Retrieval, Operations, with a grouped side rail and counts (drafts awaiting review, failing jobs). Promote the Draft Review Queue, which today is linked from nowhere. An admin overview page leads with "what needs a human today".
+
+**S6 — Settings page (built once, serves four features).**
+Four tabs: Study (exam date, daily goal, notifications — the exam date currently lives only in browser storage), Mentor & voice, Models, Account & plan. This is where the voice picker, microphone choice and model picker live.
+
+**S7 — Dashboard reorder.**
+Lead with the day's task and a single primary action ("Start today's session"), then readiness, then the rest. Give a brand-new learner a first task instead of "Readiness unavailable" over blank meters. Replace `alert()` failures with real error states.
 
 ---
 
-## C. Video clips with exact windows
+## G. Any-exam support (moves up — lands with the shell)
 
-**C1 — Stop timestamps.**
-Add an end time to every video reference and fill in the existing library entries.
+**G1 — Exam entity.** Exam record: name, description, domains, blueprint weights, pass mark, question count, duration. The five hard-coded domains become exam data. Current CCAF content moves under it.
 
-**C2 — Player honours the window.**
-The player starts at the start time and stops at the end time, with a small "clip 2:10–3:40" label and a replay-clip button.
+**G2 — Exam switcher in the header.** The active exam is context, not brand: "CCA Prep" stays the product, the exam name sits beside it with a readiness figure, visible on every screen so no one misreads whose score they are seeing.
 
-**C3 — Agent-picked windows.**
-When the resource agent suggests a video, it also proposes the start/stop for the relevant passage; admin can correct it.
+**G3 — De-hardcode the wording.** Landing hero, page titles, prompts and domain grid all read from the exam record, and render sanely for an exam with no blueprint yet.
+
+**G4 — Create-an-exam wizard.** Four steps: name, blueprint, scope, build. The research agent proposes weights with provenance ("official guide" vs "inferred from practice sets"); the total is a live amber/green check rather than a submit-time error; nothing is irreversible and the screen says so; if the agent finds nothing, step two still works as a blank table. Step four hands over a **building** exam with live progress, not a spinner — the learner can close the tab.
+
+**G5 — Isolation and sharing.** Per-exam library, questions, progress and readiness; exam cards show building / ready / needs attention; optional sharing of a published exam.
+
+---
+
+## A. Mentor speed and voice
+
+**A1 — Measure and trim the wait.** Stage-by-stage timings (routing, memory, library lookup, first token) surfaced in the admin Operations area; run memory and retrieval in parallel with model warm-up; skip retrieval on chit-chat.
+
+**A2 — Speak the first sentence immediately.** Move the spoken summary to the front of the reply so speech starts on sentence one.
+
+**A3 — Offline voice engine.** In-browser neural voice, downloaded once and cached, with a real progress bar for the ~60 MB download — not a spinner.
+
+**A4 — Voice picker in Settings.** Instant (default, on-device, starts in about a fifth of a second, free, offline) vs Studio (today's cloud voice, warmer, ~1s, uses credits), with "hear both". Fallback to Studio is announced in one quiet line so a changed voice never reads as a glitch.
+
+**A5 — Microphone choice.** On-device transcription (consistent across browsers, works offline) or browser dictation.
+
+**A6 — Barge-in.** Speaking over the mentor stops it, with a **visible Stop button** whenever it is talking.
+
+---
+
+## B. Study Canvas
+
+**B1 — Contrast.** The canvas takes the raised surface tone against the page surface — solved by the S1 token board.
+
+**B2 — Action buttons, renamed.** "Explain code" (primary), "Guide me" and "Example videos" (quiet). Sentence case, per S2.
+
+**B3 — Explain code actually sees the code.** Send the open file, the selected lines, the language and the last run output to the mentor, add a code-explaining mode to its prompt, and **show what was captured** — "lines 14–28 of retry.ts" — so the context is never silent.
+
+**B4 — Guide me / Example videos.** Step-by-step walkthrough with checkpoints; matching video clips for the code's concept.
 
 ---
 
 ## D. Multi-answer questions
 
-**D1 — Data and admin switch.**
-Add an answer-count setting per question (single or multiple) plus a baseline lock. Once a question is baselined the setting can't change.
+**D1 — Mode and lock.** Per-question answer mode (single / multiple) plus a baseline lock that freezes it once published.
 
-**D2 — Authoring.**
-The question generator and editor respect the setting: multi-answer questions get the right number of correct options and a "select all that apply" instruction.
+**D2 — Authoring.** Generator and editor honour the mode and produce the right number of correct options.
 
-**D3 — Answering.**
-Checkboxes instead of radio buttons for multi-answer questions, with a submit step and partial-credit scoring (all-or-nothing by default, configurable).
+**D3 — Answering.** Checkboxes, "Select all that apply" shown **above the options** (not buried in the stem), a live selected-count, and an explicit Submit — nothing auto-advances.
 
-**D4 — Everything downstream.**
-Scoring, review, mistakes deck, mock exams and the readiness model all handle multi-answer results.
+**D4 — Partial credit is a third state.** Result reads "You found 2 of 3" with a per-option breakdown (correct / missed / wrong), each state carrying colour **plus** an icon and a word so it survives colour blindness and greyscale. Score shown as 2 of 3, never a bare percentage.
+
+**D5 — Downstream.** Mistake bank gets its own "partly correct" filter; analytics and history show the split rather than one accuracy number; the review scheduler gets an explicit rule for what a partial score means, explained in the interface.
+
+---
+
+## C. Video clips with exact windows
+
+**C1 — End times** on every video reference, backfilled for the existing library.
+**C2 — Player honours the window**, with a monospace clip badge (`2:10-3:40`) and replay-clip.
+**C3 — Admin correction via a range scrubber** on the timeline, not two number fields.
 
 ---
 
 ## E. Research agent — question-bank finder
 
-**E1 — Deep research run.**
-Admin button that sends the research agent out to find question banks and practice sets for the current exam subject. It returns candidate sources.
-
-**E2 — Results desk.**
-A table of found sources: URL, title, estimated number of questions/answers, licence/access notes, confidence. Click a row to open a preview canvas showing sampled questions.
-
-**E3 — Import.**
-"Import to library" per source: pulls raw content into the library ingest pipeline, with a per-row log like the existing bulk-import panel.
-
-**E4 — Safety and dedupe.**
-Skip paywalled/disallowed sources, flag copyright risks, and de-duplicate against existing questions before import.
+**E1 — Deep research run** as a long-running job with staged progress in a closable panel, never a blocked screen.
+**E2 — Results desk** reusing the review-queue table: URL, title, estimated question count, access notes, confidence; a row opens a preview.
+**E3 — Import to library** with a per-row log.
+**E4 — Safety and dedupe**: skip paywalled or disallowed sources, flag copyright risk, de-duplicate before import.
 
 ---
 
-## F. Model configuration (Ollama / OpenRouter / cloud)
+## F. Model configuration
 
-**F1 — Provider registry.**
-Admin can register model endpoints: Ollama, OpenRouter or any aggregator, and cloud providers. Each entry stores its address, credentials and whether learners may pick it.
-
-**F2 — Learner picker.**
-Learners choose from the models the admin allows, per task type (mentor, code generation, research).
-
-**F3 — Hardware scan and recommendation.**
-Detect the learner's machine capability and recommend suitable local models for this subject, ranked by speed, tool-calling support and quality, with a note on speed-up options.
-
-**F4 — Capability checks.**
-Before a model is offered, verify it responds and supports tool calling; show a health badge and fall back automatically when one is down.
+**F1 — Provider registry** (Ollama, OpenRouter or any aggregator, cloud): admin-only, form-heavy, reusing the review-queue table shell.
+**F2 — Learner picker lives in Settings → Models only.** A good default is chosen for them; nobody picks an inference provider to start a session.
+**F3 — Hardware scan and recommendation** for the minority who want a local model.
+**F4 — Health badges** (green / amber / red) with automatic fallback.
 
 ---
 
-## G. Any-exam support (multiple exams + self-serve)
+## Order
 
-**G1 — Exam entity.**
-Introduce an exam record: name, description, domains, blueprint weights, passing score, question count, duration. Move the current CCAF content under it.
-
-**G2 — Exam switching.**
-Header switcher; the dashboard, study, library, readiness and admin screens all scope to the active exam.
-
-**G3 — De-hardcode the wording.**
-Replace CCAF-specific titles, prompts and page copy with values from the exam record.
-
-**G4 — Create-an-exam wizard.**
-Any user creates an exam: name it, describe it, set domains and weights (or let the research agent propose them), then kick off library building and question generation.
-
-**G5 — Isolation and sharing.**
-Each exam's library, questions, progress and readiness stay separate; optional sharing of a published exam with other learners.
-
----
-
-## H. Housekeeping
-
-**H1** — Update the roadmap and sprint state file with all of the above as the new backlog, replacing the finished Phase D–H list.
+S1–S4 and G1–G3 together, then S5–S7, then A, then B, then D, then C and E, then F and G4–G5.
 
 ---
 
 ## Technical notes
 
-- Offline voice: a WASM text-to-speech model (Piper/Kokoro class) loaded via a worker and cached in the browser; speech-to-text via a small local Whisper-class WASM model. Both behind the existing execution-provider style registry so cloud remains a swappable adapter.
-- Mentor latency: the current chain runs routing, memory and retrieval before opening the model stream, and the spoken summary sits after the written body, so speech cannot begin until late in the stream. A2 reorders the marker; A1 parallelises the pre-steps.
-- Canvas context: `MentorCanvas` currently receives only the question context; B3 extends that payload with the active file, selection, language and last run output.
-- Video windows: `LearnResource` has `start` only — add `end`, and stop playback via the player API rather than the embed URL.
-- Multi-answer: `question_options.is_correct` already allows several true rows; the gap is an answer-count/lock field on `questions` plus the grading and UI paths.
-- Exams: a new `exams` table with an exam reference on domains, questions, library documents and progress tables, plus row-level rules scoped by exam.
+- Tokens: extend the existing CSS variables with success/warning/danger pairs and restore `--radius`; the code-syntax tokens already exist and stay.
+- Nav/admin split: new route files per admin group; the existing 17 panel components move under them unchanged.
+- Offline voice: WASM text-to-speech in a worker with cache storage; on-device speech-to-text via a small WASM model, both behind a provider registry so cloud stays swappable.
+- Mentor latency: the pre-steps currently run before the model stream opens, and the spoken marker sits after the written body.
+- Canvas context: the mentor payload currently carries only the question; B3 extends it with file, selection, language and run output.
+- Video: `LearnResource` has `start` only — add `end` and stop via the player API.
+- Multi-answer: several correct options are already storable; the gap is the mode/lock field, grading, and the third result state across mistakes, history, analytics and scheduling.
+- Exams: an `exams` table referenced by domains, questions, library documents and progress, with access rules scoped per exam.

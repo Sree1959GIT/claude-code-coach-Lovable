@@ -68,7 +68,7 @@ function Landing() {
       <header className="mx-auto max-w-7xl px-6 py-24">
         <div className="grid gap-12 lg:grid-cols-[1fr_420px]">
           <div className="animate-entrance">
-            <div className="mb-6 inline-block border border-primary/30 bg-primary/5 px-2 py-1 font-mono text-[10px] text-primary">
+            <div className="mb-6 inline-block border border-primary/30 bg-primary/5 px-2 py-1 font-mono text-xs text-primary">
               FOUNDATIONS · V1.0
             </div>
             <h1 className="mb-6 max-w-2xl font-mono text-5xl font-bold uppercase leading-[1.1] tracking-tighter sm:text-7xl">
@@ -88,7 +88,7 @@ function Landing() {
                 }
                 className="bg-primary px-8 py-4 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground shadow-xl shadow-primary/20 transition-transform hover:-translate-y-0.5"
               >
-                Initialize_Prep
+                Initialize prep
               </Link>
               <Link
                 to="/auth"
@@ -98,7 +98,7 @@ function Landing() {
                 }
                 className="flex items-center gap-3 border border-border bg-transparent px-8 py-4 font-mono text-xs font-bold uppercase tracking-widest text-foreground transition-colors hover:bg-secondary"
               >
-                Google_Auth
+                Google auth
               </Link>
             </div>
           </div>
@@ -116,7 +116,7 @@ function Landing() {
             <div className="space-y-6">
               {DOMAINS.slice(0, 3).map((d) => (
                 <div key={d.id} className="space-y-2">
-                  <div className="flex justify-between font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <div className="flex justify-between font-mono text-xs uppercase tracking-widest text-muted-foreground">
                     <span>
                       {d.id}_{d.name.replace(/ /g, "_")}
                     </span>
@@ -130,15 +130,15 @@ function Landing() {
               <div className="flex items-center gap-4 border-t border-border pt-6">
                 <div className="flex flex-1 flex-col">
                   <span className="font-mono text-2xl font-bold">12</span>
-                  <span className="font-mono text-[10px] uppercase text-muted-foreground">
-                    Day_Streak
+                  <span className="font-mono text-xs uppercase text-muted-foreground">
+                    Day streak
                   </span>
                 </div>
                 <div className="h-10 w-px bg-border" />
                 <div className="flex flex-1 flex-col">
                   <span className="font-mono text-2xl font-bold">84.2</span>
-                  <span className="font-mono text-[10px] uppercase text-muted-foreground">
-                    Mastery_Index
+                  <span className="font-mono text-xs uppercase text-muted-foreground">
+                    Mastery index
                   </span>
                 </div>
               </div>
@@ -150,12 +150,12 @@ function Landing() {
       {/* Trusted */}
       <section className="border-y border-border py-8">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-6 px-6 opacity-40">
-          <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-            Built_By_Engineers_For_Engineers
+          <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">
+            Built by engineers for engineers
           </span>
           <div className="flex flex-wrap gap-8 font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground sm:gap-12">
-            <span>Agentic_Loops</span>
-            <span>Tool_Design</span>
+            <span>Agentic loops</span>
+            <span>Tool design</span>
             <span>CLAUDE.md</span>
             <span>MCP</span>
             <span>Sub-Agents</span>
@@ -167,7 +167,7 @@ function Landing() {
       <section className="mx-auto max-w-7xl px-6 py-24">
         <div className="mb-12">
           <h2 className="mb-3 font-mono text-xs font-bold uppercase tracking-[0.3em] text-primary">
-            Exam_Domain_Weighting
+            Exam domain weighting
           </h2>
           <p className="max-w-xl text-sm text-muted-foreground">
             Study paths are structured against the official domain distribution so your time
@@ -178,7 +178,7 @@ function Landing() {
           {DOMAINS.map((d) => (
             <div key={d.id} className="bg-background p-6 transition-colors hover:bg-primary/5">
               <div className="mb-3 font-mono text-3xl font-bold text-primary">{d.weight}%</div>
-              <div className="mb-4 font-mono text-[10px] font-bold uppercase tracking-widest">
+              <div className="mb-4 font-mono text-xs font-bold uppercase tracking-widest">
                 {d.id} · {d.name}
               </div>
               <div className="h-1 w-full bg-border">
@@ -193,7 +193,7 @@ function Landing() {
       <section className="mx-auto max-w-7xl px-6 py-24">
         <div className="mb-16">
           <h2 className="mb-4 font-mono text-xs font-bold uppercase tracking-[0.3em] text-primary">
-            System_Capabilities
+            System capabilities
           </h2>
           <div className="h-px w-full bg-border" />
         </div>
@@ -214,7 +214,7 @@ function Landing() {
       <section className="mx-auto max-w-7xl px-6 py-24">
         <div className="mb-8">
           <h2 className="mb-3 font-mono text-xs font-bold uppercase tracking-[0.3em] text-primary">
-            Dashboard_Preview
+            Dashboard preview
           </h2>
           <p className="max-w-xl text-sm text-muted-foreground">
             Every session feeds the readiness model. See your weakest domain, response-time
@@ -237,19 +237,19 @@ function Landing() {
       <section className="mx-auto max-w-7xl border-t border-border px-6 py-24">
         <div className="mb-12">
           <h2 className="mb-3 font-mono text-xs font-bold uppercase tracking-[0.3em] text-primary">
-            Access_Tiers
+            Access tiers
           </h2>
           <p className="max-w-xl text-sm text-muted-foreground">Start free. Upgrade when you're ready to simulate the real thing.</p>
         </div>
         <div className="grid gap-8 lg:grid-cols-2">
           <div className="border border-border bg-card p-10">
             <h4 className="mb-2 font-mono text-xs font-bold uppercase tracking-widest">
-              Standard_Access
+              Standard access
             </h4>
             <div className="mb-8 font-mono text-4xl font-bold">
               $0<span className="text-xs text-muted-foreground">/MO</span>
             </div>
-            <ul className="mb-10 space-y-4 font-mono text-[10px] uppercase text-muted-foreground">
+            <ul className="mb-10 space-y-4 font-mono text-xs uppercase text-muted-foreground">
               <li>- 1 Foundation Mock Exam</li>
               <li>- Core Domain Summaries</li>
               <li>- Basic Analytics</li>
@@ -257,22 +257,22 @@ function Landing() {
             <Link
               to="/auth"
               search={{ mode: "signup" }}
-              className="block w-full border border-border py-4 text-center font-mono text-[10px] font-bold uppercase tracking-widest transition-colors hover:bg-secondary"
+              className="block w-full border border-border py-4 text-center font-mono text-xs font-bold uppercase tracking-widest transition-colors hover:bg-secondary"
             >
-              Deploy_Free
+              Deploy free
             </Link>
           </div>
           <div className="relative border-2 border-primary bg-card p-10">
-            <div className="absolute -top-3 right-8 bg-primary px-2 py-1 font-mono text-[10px] font-bold text-primary-foreground">
+            <div className="absolute -top-3 right-8 bg-primary px-2 py-1 font-mono text-xs font-bold text-primary-foreground">
               RECOMMENDED
             </div>
             <h4 className="mb-2 font-mono text-xs font-bold uppercase tracking-widest text-primary">
-              Architect_Plus
+              Architect plus
             </h4>
             <div className="mb-8 font-mono text-4xl font-bold">
               $29<span className="text-xs text-muted-foreground">/MO</span>
             </div>
-            <ul className="mb-10 space-y-4 font-mono text-[10px] uppercase">
+            <ul className="mb-10 space-y-4 font-mono text-xs uppercase">
               <li className="flex items-center gap-2">
                 <span className="text-primary">[+]</span> Unlimited Mocks
               </li>
@@ -290,9 +290,9 @@ function Landing() {
               to="/auth"
               search={{ mode: "signup" }}
               onClick={() => logEvent("cta_click", { location: "pricing", cta: "pro" })}
-              className="block w-full bg-primary py-4 text-center font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground shadow-xl shadow-primary/20"
+              className="block w-full bg-primary py-4 text-center font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground shadow-xl shadow-primary/20"
             >
-              Initialize_Pro
+              Initialize pro
             </Link>
           </div>
         </div>
@@ -303,7 +303,7 @@ function Landing() {
         <div className="mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-4">
           <div className="lg:col-span-2">
             <div className="mb-6 flex items-center gap-4">
-              <div className="flex h-6 w-6 items-center justify-center bg-primary text-[10px] font-bold text-primary-foreground">
+              <div className="flex h-6 w-6 items-center justify-center bg-primary text-xs font-bold text-primary-foreground">
                 CCA
               </div>
               <span className="font-mono text-xs font-bold uppercase tracking-tight">
@@ -316,16 +316,16 @@ function Landing() {
             </p>
           </div>
           <div className="space-y-4">
-            <h5 className="font-mono text-[10px] uppercase tracking-widest">Protocols</h5>
-            <ul className="space-y-2 font-mono text-[10px] uppercase text-muted-foreground">
+            <h5 className="font-mono text-xs uppercase tracking-widest">Protocols</h5>
+            <ul className="space-y-2 font-mono text-xs uppercase text-muted-foreground">
               <li>Foundations</li>
               <li>Deployment</li>
               <li>Compliance</li>
             </ul>
           </div>
           <div className="space-y-4">
-            <h5 className="font-mono text-[10px] uppercase tracking-widest">System</h5>
-            <ul className="space-y-2 font-mono text-[10px] uppercase text-muted-foreground">
+            <h5 className="font-mono text-xs uppercase tracking-widest">System</h5>
+            <ul className="space-y-2 font-mono text-xs uppercase text-muted-foreground">
               <li>Changelog</li>
               <li>Status</li>
               <li>Support</li>
@@ -333,7 +333,7 @@ function Landing() {
           </div>
         </div>
         <div className="mx-auto mt-20 flex max-w-7xl items-center justify-between border-t border-border px-6 pt-8 font-mono text-[9px] uppercase text-muted-foreground opacity-60">
-          <span>©2026 Protocol_Architect_Labs</span>
+          <span>©2026 Protocol architect labs</span>
           <span>Status: Operational</span>
         </div>
       </footer>

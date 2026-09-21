@@ -118,7 +118,7 @@ function ResetPassword() {
       <nav className="border-b border-border">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-4">
-            <div className="flex h-6 w-6 items-center justify-center bg-primary text-[10px] font-bold text-primary-foreground">
+            <div className="flex h-6 w-6 items-center justify-center bg-primary text-xs font-bold text-primary-foreground">
               CCA
             </div>
             <span className="font-mono text-xs font-bold uppercase tracking-tight">
@@ -131,29 +131,29 @@ function ResetPassword() {
 
       <main className="mx-auto flex max-w-md flex-col px-6 py-16">
         <div className="mb-8">
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
-            {"> Reset_Credentials"}
+          <div className="mb-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
+            {"> Reset credentials"}
           </div>
           <h1 className="font-mono text-3xl font-bold uppercase tracking-tight">
-            New_Password
+            New password
           </h1>
         </div>
 
         {checkingLink ? (
-          <div className="border border-border bg-card p-6 font-mono text-[10px] uppercase tracking-widest text-muted-foreground" role="status">
-            Validating_Reset_Link...
+          <div className="border border-border bg-card p-6 font-mono text-xs uppercase tracking-widest text-muted-foreground" role="status">
+            Validating reset link...
           </div>
         ) : !recoveryReady ? (
           <div className="space-y-4 border border-border bg-card p-6">
-            <div className="border border-destructive/40 bg-destructive/10 px-3 py-2 font-mono text-[10px] text-destructive" role="alert">
+            <div className="border border-destructive/40 bg-destructive/10 px-3 py-2 font-mono text-xs text-destructive" role="alert">
               {error ?? "This password reset link is invalid or has expired."}
             </div>
             <Link
               to="/auth"
               search={{ mode: "signin" }}
-              className="block w-full bg-primary py-3 text-center font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
+              className="block w-full bg-primary py-3 text-center font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
             >
-              Return_To_Sign_In
+              Return to sign in
             </Link>
           </div>
         ) : (
@@ -161,9 +161,9 @@ function ResetPassword() {
             <div className="space-y-1">
               <label
                 htmlFor="password"
-                className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground"
+                className="block font-mono text-xs uppercase tracking-widest text-muted-foreground"
               >
-                New_Password
+                New password
               </label>
               <input
                 id="password"
@@ -176,21 +176,21 @@ function ResetPassword() {
               />
             </div>
             {error && (
-              <div className="border border-destructive/40 bg-destructive/10 px-3 py-2 font-mono text-[10px] text-destructive">
+              <div className="border border-destructive/40 bg-destructive/10 px-3 py-2 font-mono text-xs text-destructive">
                 {error}
               </div>
             )}
             {done && (
-              <div className="border border-primary/40 bg-primary/10 px-3 py-2 font-mono text-[10px] text-primary">
-                Password updated. Returning to Sign_In...
+              <div className="border border-primary/40 bg-primary/10 px-3 py-2 font-mono text-xs text-primary">
+                Password updated. Returning to Sign in...
               </div>
             )}
             <button
               type="submit"
               disabled={busy || done}
-              className="w-full bg-primary py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-60"
+              className="w-full bg-primary py-3 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-60"
             >
-              {busy ? "Updating..." : "Update_Password"}
+              {busy ? "Updating..." : "Update password"}
             </button>
           </form>
         )}

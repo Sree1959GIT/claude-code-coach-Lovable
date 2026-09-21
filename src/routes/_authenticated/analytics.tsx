@@ -143,16 +143,16 @@ function AnalyticsPage() {
       <SiteHeader />
       <main className="mx-auto max-w-7xl px-6 py-16">
         <header className="mb-12">
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+          <div className="mb-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
             {"> Analytics"}
           </div>
           <h1 className="font-mono text-4xl font-bold uppercase tracking-tight">
-            Progress_Signals
+            Progress signals
           </h1>
         </header>
 
         <div className="mb-8 grid gap-px bg-border sm:grid-cols-5">
-          <Stat k="Total_Attempts" v={String(totals.total)} />
+          <Stat k="Total attempts" v={String(totals.total)} />
           <Stat
             k="Accuracy"
             v={
@@ -162,14 +162,14 @@ function AnalyticsPage() {
             }
           />
           <Stat k="Correct" v={String(totals.correct)} />
-          <Stat k="Avg_Time" v={totals.avgMs ? `${(totals.avgMs / 1000).toFixed(1)}s` : "—"} />
+          <Stat k="Avg time" v={totals.avgMs ? `${(totals.avgMs / 1000).toFixed(1)}s` : "—"} />
           <Stat k="Cards" v={String(masteryQ.data?.length ?? 0)} />
         </div>
 
         {/* Predicted pass */}
         <section className="mb-8 border border-border bg-card p-6">
-          <div className="mb-4 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
-            Predicted_Pass
+          <div className="mb-4 font-mono text-xs uppercase tracking-[0.3em] text-primary">
+            Predicted pass
           </div>
           {readinessQ.isLoading || !passEstimate || !readinessQ.data ? (
             <div className="font-mono text-xs text-muted-foreground">
@@ -181,19 +181,19 @@ function AnalyticsPage() {
                 <div className="font-mono text-5xl font-bold tabular-nums">
                   {passEstimate.passProbability}%
                 </div>
-                <div className="mt-1 font-mono text-[10px] uppercase tracking-widest text-primary">
+                <div className="mt-1 font-mono text-xs uppercase tracking-widest text-primary">
                   {passEstimate.label} to pass
                 </div>
-                <div className="mt-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <div className="mt-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                   Readiness band: {READINESS_BAND_LABEL[readinessQ.data.band]} ·{" "}
                   {readinessQ.data.score}
                 </div>
-                <div className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <div className="mt-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                   Confidence {passEstimate.confidence}% · {passEstimate.sampleSize} attempts
                 </div>
               </div>
               <div>
-                <div className="mb-2 flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <div className="mb-2 flex items-baseline justify-between font-mono text-xs uppercase tracking-widest text-muted-foreground">
                   <span>
                     Projected score {passEstimate.predicted} ({passEstimate.low}–
                     {passEstimate.high})
@@ -218,7 +218,7 @@ function AnalyticsPage() {
                     style={{ left: `${PASS_MARK}%` }}
                   />
                 </div>
-                <div className="mt-2 flex justify-between font-mono text-[10px] text-muted-foreground">
+                <div className="mt-2 flex justify-between font-mono text-xs text-muted-foreground">
                   <span>0</span>
                   <span>50</span>
                   <span>100</span>
@@ -235,11 +235,11 @@ function AnalyticsPage() {
         {/* Readiness trend */}
         <section className="mb-8 border border-border bg-card p-6">
           <div className="mb-4 flex flex-wrap items-baseline gap-3">
-            <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
-              Readiness_Trend_30d
+            <div className="font-mono text-xs uppercase tracking-[0.3em] text-primary">
+              Readiness trend 30d
             </div>
             {trendDelta !== null ? (
-              <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 {trendDelta >= 0 ? "+" : ""}
                 {trendDelta} pts over the window
               </div>
@@ -271,7 +271,7 @@ function AnalyticsPage() {
         </section>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <Panel title="Attempts_Last_14_Days">
+          <Panel title="Attempts last 14 days">
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={byDay}>
                 <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
@@ -290,7 +290,7 @@ function AnalyticsPage() {
             </ResponsiveContainer>
           </Panel>
 
-          <Panel title="Accuracy_By_Domain">
+          <Panel title="Accuracy by domain">
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={byDomain}>
                 <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
@@ -309,7 +309,7 @@ function AnalyticsPage() {
             </ResponsiveContainer>
           </Panel>
 
-          <Panel title="Mastery_Distribution">
+          <Panel title="Mastery distribution">
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie
@@ -336,7 +336,7 @@ function AnalyticsPage() {
             </ResponsiveContainer>
           </Panel>
 
-          <Panel title="Mastery_Heatmap">
+          <Panel title="Mastery heatmap">
             <div className="grid grid-cols-2 gap-3">
               <HeatStat label="New" value={masteryDistribution.find((d) => d.name === "New")?.value ?? 0} />
               <HeatStat label="Learning" value={masteryDistribution.find((d) => d.name === "Learning")?.value ?? 0} />
@@ -349,8 +349,8 @@ function AnalyticsPage() {
         </div>
 
         {totals.total === 0 && (
-          <div className="mt-8 border border-dashed border-border p-6 text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-            No attempts yet — head to the Study_Hub to begin capturing signal.
+          <div className="mt-8 border border-dashed border-border p-6 text-center font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            No attempts yet — head to the Study hub to begin capturing signal.
           </div>
         )}
       </main>
@@ -381,7 +381,7 @@ function HeatStat({ label, value }: { label: string; value: number }) {
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="border border-border bg-card p-6">
-      <div className="mb-4 font-mono text-[10px] uppercase tracking-widest text-primary">
+      <div className="mb-4 font-mono text-xs uppercase tracking-widest text-primary">
         {title}
       </div>
       {children}

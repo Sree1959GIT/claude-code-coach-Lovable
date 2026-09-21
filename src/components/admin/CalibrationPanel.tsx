@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { calibrateDifficulty, type CalibrationResult } from "@/lib/calibration.functions";
 
 const btn =
-  "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
+  "border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
 
 export function CalibrationPanel() {
   const run = useServerFn(calibrateDifficulty);
@@ -34,7 +34,7 @@ export function CalibrationPanel() {
   return (
     <div className="mt-4 border border-border bg-background p-5">
       <div className="flex flex-wrap items-end gap-4">
-        <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Min attempts · {minSamples}
           <input
             type="range"
@@ -52,7 +52,7 @@ export function CalibrationPanel() {
           disabled={mutation.isPending}
           onClick={() => mutation.mutate(false)}
         >
-          {mutation.isPending ? "Working…" : "Preview_Calibration"}
+          {mutation.isPending ? "Working…" : "Preview calibration"}
         </button>
         <button
           type="button"
@@ -60,13 +60,13 @@ export function CalibrationPanel() {
           disabled={mutation.isPending || !result}
           onClick={() => mutation.mutate(true)}
         >
-          Apply_Calibration
+          Apply calibration
         </button>
       </div>
 
       {result && (
         <div className="mt-4 overflow-x-auto border border-border">
-          <table className="w-full min-w-[640px] border-collapse font-mono text-[11px]">
+          <table className="w-full min-w-[640px] border-collapse font-mono text-xs">
             <thead>
               <tr className="border-b border-border bg-muted/30 text-left uppercase tracking-widest">
                 <th className="px-3 py-2">Question</th>
@@ -102,7 +102,7 @@ export function CalibrationPanel() {
               )}
             </tbody>
           </table>
-          <div className="border-t border-border bg-muted/20 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <div className="border-t border-border bg-muted/20 px-3 py-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
             {result.scanned} scanned · {result.withData} with data · {result.changes} changes ·{" "}
             {result.applied} applied
           </div>

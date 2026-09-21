@@ -409,7 +409,7 @@ export function StudyCanvasTabs({
               aria-controls={filePanelId(i)}
               tabIndex={isActive ? 0 : -1}
               onClick={() => setActive(i)}
-              className={`flex shrink-0 items-center gap-2 border-r border-border px-3 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+              className={`flex shrink-0 items-center gap-2 border-r border-border px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors ${
                 isActive
                   ? "border-b-2 border-b-primary bg-card text-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -468,14 +468,14 @@ export function StudyCanvasTabs({
             aria-label="Copy selected text"
             className="inline-flex items-center gap-1.5 border border-border bg-background px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-foreground transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <Copy className="h-3 w-3" /> Copy_Selection
+            <Copy className="h-3 w-3" /> Copy selection
           </button>
           <button
             onClick={copyFile}
             aria-label="Copy entire file"
             className="inline-flex items-center gap-1.5 border border-border bg-background px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-foreground transition-colors hover:border-primary"
           >
-            <Copy className="h-3 w-3" /> Copy_File
+            <Copy className="h-3 w-3" /> Copy file
           </button>
           {/* Phase E3 — background queue of extra cached examples */}
           {moreState !== "unavailable" && (
@@ -491,8 +491,8 @@ export function StudyCanvasTabs({
                 : moreState === "loaded"
                   ? `+${moreCount}_Loaded`
                   : moreState === "empty"
-                    ? "No_More"
-                    : "More_Codebases"}
+                    ? "No more"
+                    : "More codebases"}
             </button>
           )}
         </div>
@@ -507,8 +507,8 @@ export function StudyCanvasTabs({
         className="min-h-0 flex-1 overflow-auto bg-card"
       >
         {files.length === 0 ? (
-          <div className="p-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-            No_Files_Loaded
+          <div className="p-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            No files loaded
           </div>
         ) : view === "advice" && advice ? (
           <AdviceMatrix
@@ -517,7 +517,7 @@ export function StudyCanvasTabs({
             onJumpToLine={jumpToLine}
           />
         ) : (
-        <pre className="min-w-full font-mono text-[11px] leading-relaxed">
+        <pre className="min-w-full font-mono text-xs leading-relaxed">
           <code className="block">
             {highlighted.map((tokens, i) => {
               const errorMessage = errorLines.get(i + 1);
@@ -584,7 +584,7 @@ export function StudyCanvasTabs({
                 const status = r.cancelled
                   ? "Cancelled"
                   : r.timedOut
-                    ? "Timed_Out"
+                    ? "Timed out"
                     : r.ok
                       ? "OK"
                       : "Error";
@@ -595,18 +595,18 @@ export function StudyCanvasTabs({
         <div
           aria-live="polite"
           aria-atomic="false"
-          className="min-h-0 flex-1 overflow-auto px-3 py-2 font-mono text-[11px] leading-relaxed"
+          className="min-h-0 flex-1 overflow-auto px-3 py-2 font-mono text-xs leading-relaxed"
         >
           {runState.phase === "idle" && consoleLines.length === 0 && syntaxIssues.length === 0 && (
-            <p className="select-none text-[10px] uppercase tracking-widest text-muted-foreground">
+            <p className="select-none text-xs uppercase tracking-widest text-muted-foreground">
               No output yet — press Run to execute the active file.
             </p>
           )}
           {/* Phase D6 — pre-run syntax warnings */}
           {syntaxIssues.length > 0 && (
             <div className="mb-1 border border-destructive/40 p-2">
-              <p className="mb-1 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-destructive">
-                <AlertTriangle className="h-3 w-3" /> Syntax_Check · Run_Blocked
+              <p className="mb-1 inline-flex items-center gap-1.5 text-xs uppercase tracking-widest text-destructive">
+                <AlertTriangle className="h-3 w-3" /> Syntax check · Run blocked
               </p>
               {syntaxIssues.map((issue, i) => (
                 <pre key={i} className="whitespace-pre-wrap text-destructive">
@@ -642,8 +642,8 @@ export function StudyCanvasTabs({
               {/* Phase D6 — parsed stack trace with line numbers */}
               {diagnostic && diagnostic.frames.length > 0 && (
                 <div className="mt-1 border-l-2 border-destructive/50 pl-2">
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Stack_Trace
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                    Stack trace
                     {diagnostic.lines.length > 0
                       ? ` · line${diagnostic.lines.length > 1 ? "s" : ""} ${diagnostic.lines.join(", ")}`
                       : ""}
@@ -673,8 +673,8 @@ export function StudyCanvasTabs({
           className="min-h-0 flex-1 overflow-auto bg-card p-3"
         >
           {videos.length === 0 ? (
-            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              No_Videos_Matched
+            <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              No videos matched
             </p>
           ) : (
             <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -695,7 +695,7 @@ export function StudyCanvasTabs({
                       />
                     )}
                     <span className="block px-2 py-1.5">
-                      <span className="block truncate text-[11px]">{r.title}</span>
+                      <span className="block truncate text-xs">{r.title}</span>
                       <span className="block font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
                         {r.source}
                         {r.start ? ` · ${Math.floor(r.start / 60)}:${String(r.start % 60).padStart(2, "0")}` : ""}

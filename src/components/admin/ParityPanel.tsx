@@ -8,7 +8,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getCoverageParity, type ParityRow } from "@/lib/coverage.functions";
 
 const btn =
-  "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
+  "border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
 
 const STATE_LABEL: Record<ParityRow["state"], string> = {
   short: "Under-served",
@@ -51,7 +51,7 @@ export function ParityPanel() {
   return (
     <div className="mt-4 border border-border bg-background p-5">
       <div className="flex flex-wrap items-end gap-4">
-        <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Target bank size · {targetBankSize}
           <input
             type="range"
@@ -85,16 +85,16 @@ export function ParityPanel() {
               { k: "Mean deviation", v: `${data.meanDeviation} pts` },
             ].map((s) => (
               <div key={s.k} className="border border-border px-3 py-2">
-                <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{s.k}</div>
+                <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{s.k}</div>
                 <div className="font-mono text-lg font-bold">{s.v}</div>
               </div>
             ))}
           </div>
 
           <div className="mt-4 overflow-x-auto border border-border">
-            <table className="w-full min-w-[860px] border-collapse font-mono text-[11px]">
+            <table className="w-full min-w-[860px] border-collapse font-mono text-xs">
               <thead>
-                <tr className="border-b border-border bg-muted/30 text-left text-[10px] uppercase tracking-widest text-muted-foreground">
+                <tr className="border-b border-border bg-muted/30 text-left text-xs uppercase tracking-widest text-muted-foreground">
                   <th className="px-3 py-2">Domain</th>
                   <th className="px-3 py-2 text-right">Blueprint</th>
                   <th className="px-3 py-2 text-right">Bank</th>
@@ -145,7 +145,7 @@ export function ParityPanel() {
                 )}
               </tbody>
             </table>
-            <div className="border-t border-border bg-muted/20 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <div className="border-t border-border bg-muted/20 px-3 py-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
               Δ = bank share minus blueprint share, in percentage points · target sized to a {data.targetBankSize}-question bank
             </div>
           </div>

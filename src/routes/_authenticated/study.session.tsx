@@ -67,6 +67,17 @@ function SessionRunner() {
   const [mentorOpen, setMentorOpen] = useState(false);
   const [mentorWidth, setMentorWidth] = useState(400);
   const [navOpen, setNavOpen] = useState(true);
+  // S4 — focus mode: the session screen drops its chrome.
+  const [focusMode, setFocusMode] = useState(false);
+  useEffect(() => {
+    setFocusMode(localStorage.getItem("ccaf.focus_mode") === "1");
+  }, []);
+  function toggleFocusMode() {
+    setFocusMode((v) => {
+      localStorage.setItem("ccaf.focus_mode", v ? "0" : "1");
+      return !v;
+    });
+  }
   const [focus, setFocus] = useState<HighlightTarget>(null);
   const draggingRef = useRef(false);
 
@@ -196,19 +207,19 @@ function SessionRunner() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
-      <SiteHeader />
+      {!focusMode && <SiteHeader />}
 
       <div className="flex min-h-0 flex-1">
         {/* Frame 1 — collapsible question navigator */}
         <aside
-          className={`hidden shrink-0 flex-col border-r border-border bg-card/40 transition-all lg:flex ${
+          className={`${focusMode ? "hidden" : "hidden lg:flex"} shrink-0 flex-col border-r border-border bg-card/40 transition-all ${
             navOpen ? "w-52" : "w-12"
           }`}
         >
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
             {navOpen && (
               <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-                Session_Viewer
+                Session viewer
               </span>
             )}
             <button
@@ -229,7 +240,7 @@ function SessionRunner() {
                 key={qq.id}
                 onClick={() => setIdx(i)}
                 title={`Q${i + 1} · ${qq.difficulty}`}
-                className={`block w-full border-l-2 px-2 py-1.5 text-left font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                className={`block w-full border-l-2 px-2 py-1.5 text-left font-mono text-xs uppercase tracking-widest transition-colors ${
                   i === idx
                     ? "border-primary bg-secondary text-foreground"
                     : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
@@ -240,7 +251,7 @@ function SessionRunner() {
             ))}
           </nav>
           {navOpen && (
-            <div className="border-t border-border px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <div className="border-t border-border px-3 py-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
               Score: {score.correct}/{score.total}
             </div>
           )}
@@ -254,17 +265,25 @@ function SessionRunner() {
               onClick={() => setMentorOpen(true)}
               aria-expanded={mentorOpen}
               aria-controls="mentor-canvas"
-              className="inline-flex min-h-11 items-center gap-2 border-2 border-primary bg-primary px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-widest text-primary-foreground shadow-sm hover:opacity-90"
+              className="inline-flex min-h-11 items-center gap-2 border-2 border-primary bg-primary px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground shadow-sm hover:opacity-90"
             >
-              <UserRound className="h-4 w-4" /> Ask_Mentor
+              <UserRound className="h-4 w-4" /> Ask mentor
             </button>
             <Link
               to="/study"
-              className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+              className="text-sm text-muted-foreground hover:text-foreground"
             >
-              ← Study_Hub
+              ← Study hub
             </Link>
-            <div className="ml-auto flex items-center gap-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <button
+              type="button"
+              onClick={toggleFocusMode}
+              aria-pressed={focusMode}
+              className="rounded-md border border-border px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground"
+            >
+              {focusMode ? "Exit focus mode" : "Focus mode"}
+            </button>
+            <div className="ml-auto flex items-center gap-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
               {timerDisplay && (
                 <span className={`${timerWarn ? "text-destructive font-bold" : ""}`}>
                   {timerDisplay}
@@ -288,7 +307,7 @@ function SessionRunner() {
             <div className="border border-destructive/40 bg-destructive/10 p-6 font-mono text-xs">
               Missing session id.{" "}
               <Link to="/study" className="underline">
-                Back to Study_Hub
+                Back to Study hub
               </Link>
             </div>
           )}
@@ -305,14 +324,14 @@ function SessionRunner() {
 
           {finished && (
             <div className="border border-border bg-card p-8 text-center">
-              <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
-                {"> Set_Complete"}
+              <div className="mb-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
+                {"> Set complete"}
               </div>
               <h1 className="mb-6 font-mono text-3xl font-bold uppercase">
                 {score.correct} / {score.total}
               </h1>
               {timeLimitMs && (
-                <div className="mb-4 font-mono text-[11px] text-muted-foreground">
+                <div className="mb-4 font-mono text-xs text-muted-foreground">
                   Time used: {formatTime(elapsed)}
                 </div>
               )}
@@ -323,23 +342,23 @@ function SessionRunner() {
                     setScore({ correct: 0, total: 0 });
                     setElapsed(0);
                   }}
-                  className="border border-border bg-background px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-secondary"
+                  className="border border-border bg-background px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
                 >
-                  Retry_Same
+                  Retry same
                 </button>
                 <button
                   onClick={() =>
                     navigate({ to: "/study/report", search: { sessionId } })
                   }
-                  className="bg-primary px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
+                  className="bg-primary px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
                 >
-                  Score_Report
+                  Score report
                 </button>
                 <button
                   onClick={() => navigate({ to: "/analytics" })}
-                  className="border border-border bg-background px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-secondary"
+                  className="border border-border bg-background px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
                 >
-                  View_Analytics
+                  View analytics
                 </button>
               </div>
             </div>
@@ -416,7 +435,7 @@ function SessionRunner() {
                           </span>
                         </button>
                         {revealed && (opt.is_correct || isSelected) && opt.explanation && (
-                          <div className="mt-1 border-l-2 border-primary/40 bg-secondary/30 px-3 py-1.5 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                          <div className="mt-1 border-l-2 border-primary/40 bg-secondary/30 px-3 py-1.5 font-mono text-xs leading-relaxed text-muted-foreground">
                             {opt.explanation}
                           </div>
                         )}
@@ -426,23 +445,23 @@ function SessionRunner() {
                 </ul>
 
                 <div className="mt-4 flex items-center justify-between">
-                  <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                     Score: {score.correct}/{score.total}
                   </div>
                   {!revealed ? (
                     <button
                       onClick={handleSubmit}
                       disabled={!selected}
-                      className="bg-primary px-5 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-40"
+                      className="bg-primary px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-40"
                     >
-                      Submit_Answer
+                      Submit answer
                     </button>
                   ) : (
                     <button
                       onClick={() => setIdx((i) => i + 1)}
-                      className="bg-primary px-5 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
+                      className="bg-primary px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
                     >
-                      {idx + 1 >= questions.length ? "Finish_Set" : "Next_Question →"}
+                      {idx + 1 >= questions.length ? "Finish set" : "Next question →"}
                     </button>
                   )}
                 </div>

@@ -38,7 +38,22 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  /* S1 — state tokens. Each colour has exactly one meaning. */
   --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-soft: var(--danger-soft);
+
+  /* S1 — surface ladder: canvas < surface < raised (Study Canvas sits here). */
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+
   --color-code-keyword: var(--code-keyword);
   --color-code-string: var(--code-string);
   --color-code-comment: var(--code-comment);
@@ -73,7 +88,21 @@
   --border: oklch(0.18 0.01 260 / 0.12);
   --input: oklch(0.18 0.01 260 / 0.12);
   --ring: oklch(0.62 0.19 256);
+  /* S1 — surface ladder (light) */
+  --surface: oklch(1 0 0);
+  --surface-raised: oklch(0.975 0.002 260);
+
+  /* S1 — state tokens (light). Success = mastered, warning = due now,
+     danger = lapsed/destructive. Never decorative. */
   --success: oklch(0.55 0.15 150);
+  --success-foreground: oklch(0.99 0 0);
+  --success-soft: oklch(0.95 0.05 150);
+  --warning: oklch(0.72 0.15 75);
+  --warning-foreground: oklch(0.2 0.03 75);
+  --warning-soft: oklch(0.96 0.06 85);
+  --danger: oklch(0.577 0.245 27.325);
+  --danger-foreground: oklch(0.99 0 0);
+  --danger-soft: oklch(0.95 0.04 25);
 
   /* Study Canvas syntax tokens — light */
   --code-keyword: oklch(0.52 0.19 300);
@@ -106,7 +135,20 @@
   --border: oklch(0.98 0.003 260 / 0.12);
   --input: oklch(0.98 0.003 260 / 0.15);
   --ring: oklch(0.68 0.19 256);
-  --success: oklch(0.75 0.16 155);
+  /* S1 — surface ladder (dark): canvas #0F1013 < surface #17181C < raised #1D1F24 */
+  --surface: oklch(0.198 0.005 270);
+  --surface-raised: oklch(0.232 0.006 270);
+
+  /* S1 — state tokens (dark) */
+  --success: oklch(0.83 0.18 152);
+  --success-foreground: oklch(0.18 0.03 152);
+  --success-soft: oklch(0.32 0.07 152);
+  --warning: oklch(0.83 0.16 85);
+  --warning-foreground: oklch(0.2 0.04 85);
+  --warning-soft: oklch(0.33 0.07 85);
+  --danger: oklch(0.72 0.17 22);
+  --danger-foreground: oklch(0.18 0.03 22);
+  --danger-soft: oklch(0.32 0.08 22);
 
   /* Study Canvas syntax tokens — dark */
   --code-keyword: oklch(0.76 0.15 300);
@@ -129,6 +171,16 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    /* S2 — 15px sentence-case body copy, comfortable reading line height. */
+    font-size: 15px;
+    line-height: 1.6;
+  }
+}
+
+/* S4 — leave room for the mobile bottom bar. */
+@media (max-width: 767px) {
+  body:has(nav[data-mobile-tabbar]) {
+    padding-bottom: 4.5rem;
   }
 }
 
@@ -139,6 +191,19 @@
 
 @utility animate-entrance {
   animation: cca-entrance 0.6s var(--ease-out-terminal) both;
+}
+
+/* S1 — minimum comfortable hit area for any interactive control. */
+@utility touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* S1 — the raised tier of the surface ladder (Study Canvas, popovers, sheets). */
+@utility surface-raised {
+  background-color: var(--color-surface-raised);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px -12px oklch(0 0 0 / 0.45);
 }
 
 @keyframes cca-focus-blink {

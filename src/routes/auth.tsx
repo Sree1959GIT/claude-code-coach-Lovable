@@ -120,7 +120,7 @@ function AuthPage() {
       <nav className="border-b border-border">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-4">
-            <div className="flex h-6 w-6 items-center justify-center bg-primary text-[10px] font-bold text-primary-foreground">
+            <div className="flex h-6 w-6 items-center justify-center bg-primary text-xs font-bold text-primary-foreground">
               CCA
             </div>
             <span className="font-mono text-xs font-bold uppercase tracking-tight">
@@ -133,21 +133,21 @@ function AuthPage() {
 
       <main className="mx-auto flex max-w-md flex-col px-6 py-16">
         <div className="mb-8">
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
-            {mode === "signup" ? "> Init_New_Session" : "> Resume_Session"}
+          <div className="mb-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
+            {mode === "signup" ? "> Init new session" : "> Resume session"}
           </div>
           <h1 className="font-mono text-3xl font-bold uppercase tracking-tight">
-            {mode === "signup" ? "Create_Account" : "Sign_In"}
+            {mode === "signup" ? "Create account" : "Sign in"}
           </h1>
         </div>
 
         <div className="border border-border bg-card p-6">
           <button
             onClick={handleGoogle}
-            className="mb-6 flex w-full items-center justify-center gap-3 border border-border py-3 font-mono text-[10px] font-bold uppercase tracking-widest transition-colors hover:bg-secondary"
+            className="mb-6 flex w-full items-center justify-center gap-3 border border-border py-3 font-mono text-xs font-bold uppercase tracking-widest transition-colors hover:bg-secondary"
           >
             <GoogleIcon />
-            Continue_With_Google
+            Continue with google
           </button>
 
           <div className="mb-6 flex items-center gap-3">
@@ -163,9 +163,9 @@ function AuthPage() {
               <div className="space-y-1">
                 <label
                   htmlFor="name"
-                  className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground"
+                  className="block font-mono text-xs uppercase tracking-widest text-muted-foreground"
                 >
-                  Display_Name
+                  Display name
                 </label>
                 <input
                   id="name"
@@ -179,7 +179,7 @@ function AuthPage() {
             <div className="space-y-1">
               <label
                 htmlFor="email"
-                className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground"
+                className="block font-mono text-xs uppercase tracking-widest text-muted-foreground"
               >
                 Email
               </label>
@@ -195,7 +195,7 @@ function AuthPage() {
             <div className="space-y-1">
               <label
                 htmlFor="password"
-                className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground"
+                className="block font-mono text-xs uppercase tracking-widest text-muted-foreground"
               >
                 Password
               </label>
@@ -211,12 +211,12 @@ function AuthPage() {
             </div>
 
             {error && (
-              <div className="border border-destructive/40 bg-destructive/10 px-3 py-2 font-mono text-[10px] text-destructive">
+              <div className="border border-destructive/40 bg-destructive/10 px-3 py-2 font-mono text-xs text-destructive">
                 {error}
               </div>
             )}
             {notice && (
-              <div className="border border-primary/40 bg-primary/10 px-3 py-2 font-mono text-[10px] text-primary">
+              <div className="border border-primary/40 bg-primary/10 px-3 py-2 font-mono text-xs text-primary">
                 {notice}
               </div>
             )}
@@ -224,13 +224,13 @@ function AuthPage() {
             <button
               type="submit"
               disabled={busy}
-              className="w-full bg-primary py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground shadow-xl shadow-primary/20 disabled:opacity-60"
+              className="w-full bg-primary py-3 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground shadow-xl shadow-primary/20 disabled:opacity-60"
             >
-              {busy ? "Processing..." : mode === "signup" ? "Create_Account" : "Sign_In"}
+              {busy ? "Processing..." : mode === "signup" ? "Create account" : "Sign in"}
             </button>
           </form>
 
-          <div className="mt-6 flex items-center justify-between font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <div className="mt-6 flex items-center justify-between font-mono text-xs uppercase tracking-widest text-muted-foreground">
             <button
               type="button"
               onClick={() => {
@@ -240,7 +240,7 @@ function AuthPage() {
               }}
               className="hover:text-foreground"
             >
-              {mode === "signup" ? "> Have_Account" : "> Need_Account"}
+              {mode === "signup" ? "> Have account" : "> Need account"}
             </button>
             {mode === "signin" && (
               <button
@@ -249,7 +249,7 @@ function AuthPage() {
                 disabled={resetting}
                 className="hover:text-foreground disabled:opacity-60"
               >
-                {resetting ? "Sending..." : "Reset_Password"}
+                {resetting ? "Sending..." : "Reset password"}
               </button>
             )}
           </div>
@@ -257,9 +257,9 @@ function AuthPage() {
 
         <Link
           to="/"
-          className="mt-8 text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+          className="mt-8 text-center font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
         >
-          ← Return_Home
+          ← Return home
         </Link>
       </main>
     </div>

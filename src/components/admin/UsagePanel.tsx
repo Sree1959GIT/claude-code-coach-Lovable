@@ -10,7 +10,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getUsageSummary } from "@/lib/usage.functions";
 
 const btn =
-  "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
+  "border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
 
 const WINDOWS = [7, 30, 90];
 
@@ -20,7 +20,7 @@ const credits = (n: number) => `${n.toFixed(n < 10 ? 3 : 1)} cr`;
 function Stat({ k, v, tone }: { k: string; v: string; tone?: string }) {
   return (
     <div className="border border-border px-3 py-2">
-      <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{k}</div>
+      <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{k}</div>
       <div className={`font-mono text-lg font-bold ${tone ?? ""}`}>{v}</div>
     </div>
   );
@@ -88,7 +88,7 @@ export function UsagePanel() {
 
           {data.byDay.length > 0 && (
             <div className="mt-6">
-              <h3 className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 Daily volume · cached share
               </h3>
               <div className="mt-2 flex items-end gap-1 overflow-x-auto border border-border p-3">
@@ -114,9 +114,9 @@ export function UsagePanel() {
 
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
             <div className="overflow-x-auto border border-border">
-              <table className="w-full border-collapse font-mono text-[11px]">
+              <table className="w-full border-collapse font-mono text-xs">
                 <thead>
-                  <tr className="border-b border-border bg-muted/30 text-left text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <tr className="border-b border-border bg-muted/30 text-left text-xs uppercase tracking-widest text-muted-foreground">
                     <th className="px-3 py-2">Task</th>
                     <th className="px-3 py-2 text-right">Calls</th>
                     <th className="px-3 py-2 text-right">Hit %</th>
@@ -153,9 +153,9 @@ export function UsagePanel() {
             </div>
 
             <div className="overflow-x-auto border border-border">
-              <table className="w-full border-collapse font-mono text-[11px]">
+              <table className="w-full border-collapse font-mono text-xs">
                 <thead>
-                  <tr className="border-b border-border bg-muted/30 text-left text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <tr className="border-b border-border bg-muted/30 text-left text-xs uppercase tracking-widest text-muted-foreground">
                     <th className="px-3 py-2">Model</th>
                     <th className="px-3 py-2 text-right">Calls</th>
                     <th className="px-3 py-2 text-right">Spent</th>
@@ -183,9 +183,9 @@ export function UsagePanel() {
           </div>
 
           <div className="mt-6 overflow-x-auto border border-border">
-            <table className="w-full border-collapse font-mono text-[11px]">
+            <table className="w-full border-collapse font-mono text-xs">
               <thead>
-                <tr className="border-b border-border bg-muted/30 text-left text-[10px] uppercase tracking-widest text-muted-foreground">
+                <tr className="border-b border-border bg-muted/30 text-left text-xs uppercase tracking-widest text-muted-foreground">
                   <th className="px-3 py-2">Popular concept</th>
                   <th className="px-3 py-2 text-right">Generation runs</th>
                   <th className="px-3 py-2 text-right">Saved examples</th>
@@ -209,7 +209,7 @@ export function UsagePanel() {
                 )}
               </tbody>
             </table>
-            <div className="border-t border-border bg-muted/20 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <div className="border-t border-border bg-muted/20 px-3 py-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
               Credits are estimates for comparison, not billing · green bar segment = answers served from cache
             </div>
           </div>

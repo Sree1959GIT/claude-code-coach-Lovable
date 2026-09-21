@@ -21,7 +21,7 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="font-mono text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 font-mono text-sm uppercase tracking-widest text-foreground">
-          Route_Not_Found
+          Route not found
         </h2>
         <p className="mt-4 text-sm text-muted-foreground">
           This path is not part of the current build.
@@ -29,9 +29,9 @@ function NotFoundComponent() {
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex items-center justify-center bg-primary px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
+            className="inline-flex items-center justify-center bg-primary px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
           >
-            Return_Home
+            Return home
           </Link>
         </div>
       </div>
@@ -50,7 +50,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="font-mono text-sm font-semibold uppercase tracking-widest text-foreground">
-          Runtime_Error
+          Runtime error
         </h1>
         <p className="mt-3 text-sm text-muted-foreground">
           Something went wrong. Try refreshing or head back home.
@@ -61,15 +61,15 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center bg-primary px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
+            className="inline-flex items-center justify-center bg-primary px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
           >
-            Try_Again
+            Try again
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center border border-input bg-background px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-foreground hover:bg-secondary"
+            className="inline-flex items-center justify-center border border-input bg-background px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-foreground hover:bg-secondary"
           >
-            Go_Home
+            Go home
           </a>
         </div>
       </div>

@@ -36,6 +36,7 @@ function StudyHub() {
   const start = useServerFn(startSession);
   const domainsQ = useQuery({ queryKey: ["domains"], queryFn: fetchDomains });
   const [busy, setBusy] = useState(false);
+  const [launchError, setLaunchError] = useState<string | null>(null);
   const [activeMode, setActiveMode] = useState<string | null>(null);
 
   async function launch(
@@ -44,6 +45,7 @@ function StudyHub() {
     domainId: string | null = null,
   ) {
     if (!user) return;
+    setLaunchError(null);
     setBusy(true);
     setActiveMode(`${mode}-${count}`);
     try {
@@ -52,7 +54,7 @@ function StudyHub() {
       navigate({ to: "/study/session", search: { sessionId: result.sessionId } });
     } catch (err) {
       console.error(err);
-      alert("Could not start session. Try again.");
+      setLaunchError("We couldn't start that session. Check your connection and try again.");
     } finally {
       setBusy(false);
       setActiveMode(null);
@@ -66,8 +68,13 @@ function StudyHub() {
       <SiteHeader />
 
       <main className="mx-auto w-full max-w-6xl px-4 py-6">
+        {launchError && (
+          <div role="alert" className="mb-6 rounded-md border border-danger/40 bg-danger-soft px-4 py-3 text-sm text-danger">
+            {launchError}
+          </div>
+        )}
         <header className="mb-8 animate-enter">
-          <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+          <div className="font-mono text-xs uppercase tracking-[0.3em] text-primary">
             {"// Study Hub"}
           </div>
           <h1 className="mt-1 font-mono text-2xl font-bold uppercase tracking-tight">
@@ -116,7 +123,7 @@ function StudyHub() {
             className="group flex flex-col gap-3 border border-primary/60 bg-card p-5 transition-colors hover:border-primary sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+              <div className="font-mono text-xs uppercase tracking-[0.3em] text-primary">
                 {"// Exam Simulation"}
               </div>
               <h2 className="mt-1 font-mono text-sm font-bold uppercase tracking-wide">
@@ -126,7 +133,7 @@ function StudyHub() {
                 Blueprint-weighted sampling with a 70% pass mark and a live countdown.
               </p>
             </div>
-            <span className="flex items-center gap-2 border border-primary bg-primary px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground">
+            <span className="flex items-center gap-2 border border-primary bg-primary px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground">
               <Play className="h-3 w-3" /> Review blueprint
             </span>
           </Link>
@@ -135,8 +142,8 @@ function StudyHub() {
 
         {/* Domain practice */}
         <section className="animate-enter" style={{ animationDelay: "100ms" }}>
-          <div className="mb-4 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
-            <LayoutGrid className="h-4 w-4" /> Domain_Practice
+          <div className="mb-4 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
+            <LayoutGrid className="h-4 w-4" /> Domain practice
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             {domains.map((d) => (
@@ -151,7 +158,7 @@ function StudyHub() {
                   <div className="mt-1 line-clamp-1 text-xs text-muted-foreground">{d.description}</div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                     {Number(d.weight) * 100}%
                   </span>
                   <Play className="h-4 w-4 text-primary opacity-60 transition-opacity group-hover:opacity-100" />
@@ -188,7 +195,7 @@ function ModeCard(props: {
               key={count}
               disabled={props.busy}
               onClick={() => props.onLaunch(count)}
-              className={`flex items-center gap-2 border px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest transition-colors ${
+              className={`flex items-center gap-2 border px-3 py-2 font-mono text-xs font-bold uppercase tracking-widest transition-colors ${
                 isActive
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-background hover:border-primary"
