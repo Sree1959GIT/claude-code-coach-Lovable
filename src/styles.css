@@ -88,7 +88,21 @@
   --border: oklch(0.18 0.01 260 / 0.12);
   --input: oklch(0.18 0.01 260 / 0.12);
   --ring: oklch(0.62 0.19 256);
+  /* S1 — surface ladder (light) */
+  --surface: oklch(1 0 0);
+  --surface-raised: oklch(0.975 0.002 260);
+
+  /* S1 — state tokens (light). Success = mastered, warning = due now,
+     danger = lapsed/destructive. Never decorative. */
   --success: oklch(0.55 0.15 150);
+  --success-foreground: oklch(0.99 0 0);
+  --success-soft: oklch(0.95 0.05 150);
+  --warning: oklch(0.72 0.15 75);
+  --warning-foreground: oklch(0.2 0.03 75);
+  --warning-soft: oklch(0.96 0.06 85);
+  --danger: oklch(0.577 0.245 27.325);
+  --danger-foreground: oklch(0.99 0 0);
+  --danger-soft: oklch(0.95 0.04 25);
 
   /* Study Canvas syntax tokens — light */
   --code-keyword: oklch(0.52 0.19 300);
