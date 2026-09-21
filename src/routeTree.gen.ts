@@ -25,6 +25,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedStudyIndexRouteImport } from './routes/_authenticated/study.index'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedStudySessionRouteImport } from './routes/_authenticated/study.session'
 import { Route as AuthenticatedStudyReportRouteImport } from './routes/_authenticated/study.report'
 import { Route as AuthenticatedStudySlugRouteImport } from './routes/_authenticated/study.$slug'
@@ -109,6 +110,11 @@ const AuthenticatedStudyIndexRoute = AuthenticatedStudyIndexRouteImport.update({
   path: '/study/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedStudySessionRoute =
   AuthenticatedStudySessionRouteImport.update({
     id: '/study/session',
@@ -137,7 +143,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/estimator': typeof AuthenticatedEstimatorRoute
@@ -151,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/study/$slug': typeof AuthenticatedStudySlugRoute
   '/study/report': typeof AuthenticatedStudyReportRoute
   '/study/session': typeof AuthenticatedStudySessionRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/study/': typeof AuthenticatedStudyIndexRoute
   '/api/public/cron/refresh-library': typeof ApiPublicCronRefreshLibraryRoute
 }
@@ -158,7 +165,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/admin': typeof AuthenticatedAdminRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/estimator': typeof AuthenticatedEstimatorRoute
@@ -172,6 +178,7 @@ export interface FileRoutesByTo {
   '/study/$slug': typeof AuthenticatedStudySlugRoute
   '/study/report': typeof AuthenticatedStudyReportRoute
   '/study/session': typeof AuthenticatedStudySessionRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/study': typeof AuthenticatedStudyIndexRoute
   '/api/public/cron/refresh-library': typeof ApiPublicCronRefreshLibraryRoute
 }
@@ -181,7 +188,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/estimator': typeof AuthenticatedEstimatorRoute
@@ -195,6 +202,7 @@ export interface FileRoutesById {
   '/_authenticated/study/$slug': typeof AuthenticatedStudySlugRoute
   '/_authenticated/study/report': typeof AuthenticatedStudyReportRoute
   '/_authenticated/study/session': typeof AuthenticatedStudySessionRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/study/': typeof AuthenticatedStudyIndexRoute
   '/api/public/cron/refresh-library': typeof ApiPublicCronRefreshLibraryRoute
 }
@@ -218,6 +226,7 @@ export interface FileRouteTypes {
     | '/study/$slug'
     | '/study/report'
     | '/study/session'
+    | '/admin/'
     | '/study/'
     | '/api/public/cron/refresh-library'
   fileRoutesByTo: FileRoutesByTo
@@ -225,7 +234,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
-    | '/admin'
     | '/analytics'
     | '/dashboard'
     | '/estimator'
@@ -239,6 +247,7 @@ export interface FileRouteTypes {
     | '/study/$slug'
     | '/study/report'
     | '/study/session'
+    | '/admin'
     | '/study'
     | '/api/public/cron/refresh-library'
   id:
@@ -261,6 +270,7 @@ export interface FileRouteTypes {
     | '/_authenticated/study/$slug'
     | '/_authenticated/study/report'
     | '/_authenticated/study/session'
+    | '/_authenticated/admin/'
     | '/_authenticated/study/'
     | '/api/public/cron/refresh-library'
   fileRoutesById: FileRoutesById
@@ -388,6 +398,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudyIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/study/session': {
       id: '/_authenticated/study/session'
       path: '/study/session'
@@ -419,8 +436,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEstimatorRoute: typeof AuthenticatedEstimatorRoute
@@ -437,7 +465,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEstimatorRoute: AuthenticatedEstimatorRoute,
