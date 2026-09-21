@@ -35,6 +35,12 @@ function ResetPassword() {
         const tokenHash = query.get("token_hash");
         const accessToken = hash.get("access_token");
         const refreshToken = hash.get("refresh_token");
+        const isRecoveryLink =
+          query.get("type") === "recovery" ||
+          hash.get("type") === "recovery" ||
+          Boolean(code || tokenHash || (accessToken && refreshToken));
+        const recoveryEventPending =
+          window.sessionStorage.getItem("cca-password-recovery") === "pending";
 
         let sessionEstablished = false;
 
@@ -56,16 +62,17 @@ function ResetPassword() {
           });
           if (sessionError) throw sessionError;
           sessionEstablished = true;
-        } else {
+        } else if (recoveryEventPending) {
           const { data, error: sessionError } = await supabase.auth.getSession();
           if (sessionError) throw sessionError;
           sessionEstablished = Boolean(data.session);
         }
 
-        if (!sessionEstablished) {
+        if ((!isRecoveryLink && !recoveryEventPending) || !sessionEstablished) {
           throw new Error("This password reset link is invalid or has expired. Request a new link from Sign In.");
         }
 
+        window.sessionStorage.removeItem("cca-password-recovery");
         window.history.replaceState(window.history.state, "", "/reset-password");
         if (active) setRecoveryReady(true);
       } catch (err) {
@@ -150,42 +157,42 @@ function ResetPassword() {
             </Link>
           </div>
         ) : (
-        <form onSubmit={handleSubmit} className="space-y-4 border border-border bg-card p-6">
-          <div className="space-y-1">
-            <label
-              htmlFor="password"
-              className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground"
+          <form onSubmit={handleSubmit} className="space-y-4 border border-border bg-card p-6">
+            <div className="space-y-1">
+              <label
+                htmlFor="password"
+                className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground"
+              >
+                New_Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full border border-border bg-background px-3 py-2.5 font-mono text-sm outline-none focus:border-primary"
+              />
+            </div>
+            {error && (
+              <div className="border border-destructive/40 bg-destructive/10 px-3 py-2 font-mono text-[10px] text-destructive">
+                {error}
+              </div>
+            )}
+            {done && (
+              <div className="border border-primary/40 bg-primary/10 px-3 py-2 font-mono text-[10px] text-primary">
+                Password updated. Returning to Sign_In...
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={busy || done}
+              className="w-full bg-primary py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-60"
             >
-              New_Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-border bg-background px-3 py-2.5 font-mono text-sm outline-none focus:border-primary"
-            />
-          </div>
-          {error && (
-            <div className="border border-destructive/40 bg-destructive/10 px-3 py-2 font-mono text-[10px] text-destructive">
-              {error}
-            </div>
-          )}
-          {done && (
-            <div className="border border-primary/40 bg-primary/10 px-3 py-2 font-mono text-[10px] text-primary">
-              Password updated. Returning to Sign_In...
-            </div>
-          )}
-          <button
-            type="submit"
-            disabled={busy || done}
-            className="w-full bg-primary py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-60"
-          >
-            {busy ? "Updating..." : "Update_Password"}
-          </button>
-        </form>
+              {busy ? "Updating..." : "Update_Password"}
+            </button>
+          </form>
         )}
       </main>
     </div>

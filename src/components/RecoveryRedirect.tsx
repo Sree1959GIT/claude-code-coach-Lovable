@@ -45,6 +45,7 @@ export function RecoveryRedirect() {
 
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
+        window.sessionStorage.setItem("cca-password-recovery", "pending");
         window.location.replace("/reset-password");
       }
     });
