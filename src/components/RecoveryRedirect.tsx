@@ -10,36 +10,46 @@
  */
 
 import { useEffect } from "react";
-import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
-function hashLooksLikeRecovery() {
+function urlLooksLikeRecovery() {
   if (typeof window === "undefined") return false;
   const hash = window.location.hash.replace(/^#/, "");
   const search = window.location.search.replace(/^\?/, "");
-  const params = new URLSearchParams(hash || search);
-  return params.get("type") === "recovery";
+  const hashParams = new URLSearchParams(hash);
+  const searchParams = new URLSearchParams(search);
+  return (
+    hashParams.get("type") === "recovery" ||
+    searchParams.get("type") === "recovery" ||
+    searchParams.has("code") ||
+    searchParams.has("token_hash")
+  );
 }
 
 export function RecoveryRedirect() {
-  const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
     if (pathname === "/reset-password") return;
 
-    if (hashLooksLikeRecovery()) {
-      navigate({ to: "/reset-password", replace: true });
+    if (urlLooksLikeRecovery()) {
+      // A recovery URL can carry its one-time credentials in either the query
+      // string or hash. A router navigation without both discards them, so use
+      // a same-origin replacement and let the reset page complete the exchange.
+      window.location.replace(
+        `/reset-password${window.location.search}${window.location.hash}`,
+      );
       return;
     }
 
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
-        navigate({ to: "/reset-password", replace: true });
+        window.location.replace("/reset-password");
       }
     });
     return () => sub.subscription.unsubscribe();
-  }, [navigate, pathname]);
+  }, [pathname]);
 
   return null;
 }
