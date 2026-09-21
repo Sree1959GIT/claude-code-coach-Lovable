@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiMentorStreamRouteImport } from './routes/api/mentor-stream'
 import { Route as AuthenticatedTracesRouteImport } from './routes/_authenticated/traces'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReviewsRouteImport } from './routes/_authenticated/reviews'
 import { Route as AuthenticatedMockExamRouteImport } from './routes/_authenticated/mock-exam'
 import { Route as AuthenticatedMistakesRouteImport } from './routes/_authenticated/mistakes'
@@ -63,6 +64,11 @@ const ApiMentorStreamRoute = ApiMentorStreamRouteImport.update({
 const AuthenticatedTracesRoute = AuthenticatedTracesRouteImport.update({
   id: '/traces',
   path: '/traces',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedReviewsRoute = AuthenticatedReviewsRouteImport.update({
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/mistakes': typeof AuthenticatedMistakesRoute
   '/mock-exam': typeof AuthenticatedMockExamRoute
   '/reviews': typeof AuthenticatedReviewsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/traces': typeof AuthenticatedTracesRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/admin/content': typeof AuthenticatedAdminContentRoute
@@ -213,6 +220,7 @@ export interface FileRoutesByTo {
   '/mistakes': typeof AuthenticatedMistakesRoute
   '/mock-exam': typeof AuthenticatedMockExamRoute
   '/reviews': typeof AuthenticatedReviewsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/traces': typeof AuthenticatedTracesRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/admin/content': typeof AuthenticatedAdminContentRoute
@@ -242,6 +250,7 @@ export interface FileRoutesById {
   '/_authenticated/mistakes': typeof AuthenticatedMistakesRoute
   '/_authenticated/mock-exam': typeof AuthenticatedMockExamRoute
   '/_authenticated/reviews': typeof AuthenticatedReviewsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/traces': typeof AuthenticatedTracesRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
   '/_authenticated/admin/content': typeof AuthenticatedAdminContentRoute
@@ -271,6 +280,7 @@ export interface FileRouteTypes {
     | '/mistakes'
     | '/mock-exam'
     | '/reviews'
+    | '/settings'
     | '/traces'
     | '/api/mentor-stream'
     | '/admin/content'
@@ -297,6 +307,7 @@ export interface FileRouteTypes {
     | '/mistakes'
     | '/mock-exam'
     | '/reviews'
+    | '/settings'
     | '/traces'
     | '/api/mentor-stream'
     | '/admin/content'
@@ -325,6 +336,7 @@ export interface FileRouteTypes {
     | '/_authenticated/mistakes'
     | '/_authenticated/mock-exam'
     | '/_authenticated/reviews'
+    | '/_authenticated/settings'
     | '/_authenticated/traces'
     | '/api/mentor-stream'
     | '/_authenticated/admin/content'
@@ -391,6 +403,13 @@ declare module '@tanstack/react-router' {
       path: '/traces'
       fullPath: '/traces'
       preLoaderRoute: typeof AuthenticatedTracesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/reviews': {
@@ -567,6 +586,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMistakesRoute: typeof AuthenticatedMistakesRoute
   AuthenticatedMockExamRoute: typeof AuthenticatedMockExamRoute
   AuthenticatedReviewsRoute: typeof AuthenticatedReviewsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTracesRoute: typeof AuthenticatedTracesRoute
   AuthenticatedStudySlugRoute: typeof AuthenticatedStudySlugRoute
   AuthenticatedStudyReportRoute: typeof AuthenticatedStudyReportRoute
@@ -584,6 +604,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMistakesRoute: AuthenticatedMistakesRoute,
   AuthenticatedMockExamRoute: AuthenticatedMockExamRoute,
   AuthenticatedReviewsRoute: AuthenticatedReviewsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTracesRoute: AuthenticatedTracesRoute,
   AuthenticatedStudySlugRoute: AuthenticatedStudySlugRoute,
   AuthenticatedStudyReportRoute: AuthenticatedStudyReportRoute,
