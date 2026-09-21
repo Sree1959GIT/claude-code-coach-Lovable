@@ -80,7 +80,8 @@
 - [x] Password recovery callback repair — recovery credentials now survive the hosted email handoff and are validated before password entry.
 - [x] **S1 (Next Build Wave):** Colour and type tokens — success / warning / danger state tokens with soft + foreground pairs in both themes, a canvas → surface → raised surface ladder (Study Canvas sits on raised), and `touch-target` (44px) plus `surface-raised` utilities. Radius stays 6px.
 - [x] **S2:** Typography pass — 12px minimum text size, 15px sentence-case body copy, header links/buttons in sentence case (uppercase kept only as section labels), and underscore labels removed app-wide.
-- **Next:** S3 — navigation: four destinations (Dashboard, Study, Mock exam, Progress menu holding analytics/mistakes/history/readiness report), clear current-section marker, streak chip, theme toggle and one account menu; operator tools (Library, Traces, Estimator) leave the student header.
+- [x] **S3:** Navigation — four destinations (Dashboard, Study, Mock exam, Progress menu), active-section marker, streak chip, theme toggle and a single account menu holding Library plus operator tools (Review queue, Traces, Estimator, Admin console).
+- **Next:** S4 — mobile bottom bar (Home / Study / Exam / Progress) plus a focus mode for the question runner.
 
 
 

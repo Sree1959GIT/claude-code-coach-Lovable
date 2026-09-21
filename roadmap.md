@@ -11,7 +11,7 @@
 ### S — Shell first
 - [x] S1: Colour + state tokens (success / warning / danger), surface ladder, radius, spacing, 44px touch target
 - [x] S2: Typography pass — 12px floor, 15px body, sentence case, monospace budget, drop Snake_Case chrome
-- [ ] S3: Navigation — four destinations + Progress menu + account menu; operator tools leave the student header
+- [x] S3: Navigation — four destinations + Progress menu + account menu; operator tools leave the student header
 - [ ] S4: Mobile bottom bar + session focus mode
 - [ ] S5: Split /admin into five grouped routes, promote the review queue, admin overview
 - [ ] S6: Settings page (Study / Mentor & voice / Models / Account & plan)
