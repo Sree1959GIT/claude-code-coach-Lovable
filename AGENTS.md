@@ -77,7 +77,8 @@
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
 - [x] Phase H2: Semantic accessible tags pass — completed (focus-management hook, dialog semantics on Study Canvas / Mentor / video modal, Ctrl+Shift+C canvas toggle and Escape precedence, full tab/tabpanel contract with arrow/Home/End keys, console live regions, reduced-motion support).
-- **Next:** No pending backlog sub-tasks — Phases D–H are all complete. Await the user's next feature request or launch/publish instruction.
+- [x] Password recovery callback repair — recovery credentials now survive the hosted email handoff and are validated before password entry.
+- **Next:** No pending backlog sub-tasks — Phases D–H and the password recovery repair are complete. Await the user's next feature request or launch/publish instruction.
 
 
 
