@@ -52,6 +52,7 @@ function MockExamPage() {
   const navigate = useNavigate();
   const start = useServerFn(startSession);
   const [busy, setBusy] = useState(false);
+  const [launchError, setLaunchError] = useState<string | null>(null);
 
   const domainsQ = useQuery({ queryKey: ["domains"], queryFn: fetchDomains });
   const countsQ = useQuery({
@@ -71,6 +72,7 @@ function MockExamPage() {
 
   async function launch() {
     if (!user || effectiveCount === 0) return;
+    setLaunchError(null);
     setBusy(true);
     try {
       const result = await start({
@@ -83,7 +85,7 @@ function MockExamPage() {
       navigate({ to: "/study/session", search: { sessionId: result.sessionId } });
     } catch (err) {
       console.error(err);
-      alert("Could not start the mock exam. Try again.");
+      setLaunchError("We couldn't start the mock exam. Check your connection and try again.");
     } finally {
       setBusy(false);
     }
@@ -97,6 +99,11 @@ function MockExamPage() {
       <SiteHeader />
 
       <main className="mx-auto w-full max-w-4xl px-4 py-8">
+        {launchError && (
+          <div role="alert" className="mb-6 rounded-md border border-danger/40 bg-danger-soft px-4 py-3 text-sm text-danger">
+            {launchError}
+          </div>
+        )}
         <header className="mb-8 animate-enter">
           <div className="font-mono text-xs uppercase tracking-[0.3em] text-primary">
             {"// Exam Simulation"}

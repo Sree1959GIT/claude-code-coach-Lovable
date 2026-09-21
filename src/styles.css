@@ -177,6 +177,13 @@
   }
 }
 
+/* S4 — leave room for the mobile bottom bar. */
+@media (max-width: 767px) {
+  body:has(nav[data-mobile-tabbar]) {
+    padding-bottom: 4.5rem;
+  }
+}
+
 @keyframes cca-entrance {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }

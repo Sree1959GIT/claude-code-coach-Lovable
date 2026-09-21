@@ -67,6 +67,17 @@ function SessionRunner() {
   const [mentorOpen, setMentorOpen] = useState(false);
   const [mentorWidth, setMentorWidth] = useState(400);
   const [navOpen, setNavOpen] = useState(true);
+  // S4 — focus mode: the session screen drops its chrome.
+  const [focusMode, setFocusMode] = useState(false);
+  useEffect(() => {
+    setFocusMode(localStorage.getItem("ccaf.focus_mode") === "1");
+  }, []);
+  function toggleFocusMode() {
+    setFocusMode((v) => {
+      localStorage.setItem("ccaf.focus_mode", v ? "0" : "1");
+      return !v;
+    });
+  }
   const [focus, setFocus] = useState<HighlightTarget>(null);
   const draggingRef = useRef(false);
 
@@ -196,12 +207,12 @@ function SessionRunner() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
-      <SiteHeader />
+      {!focusMode && <SiteHeader />}
 
       <div className="flex min-h-0 flex-1">
         {/* Frame 1 — collapsible question navigator */}
         <aside
-          className={`hidden shrink-0 flex-col border-r border-border bg-card/40 transition-all lg:flex ${
+          className={`${focusMode ? "hidden" : "hidden lg:flex"} shrink-0 flex-col border-r border-border bg-card/40 transition-all ${
             navOpen ? "w-52" : "w-12"
           }`}
         >
@@ -260,10 +271,18 @@ function SessionRunner() {
             </button>
             <Link
               to="/study"
-              className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
+              className="text-sm text-muted-foreground hover:text-foreground"
             >
               ← Study hub
             </Link>
+            <button
+              type="button"
+              onClick={toggleFocusMode}
+              aria-pressed={focusMode}
+              className="rounded-md border border-border px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground"
+            >
+              {focusMode ? "Exit focus mode" : "Focus mode"}
+            </button>
             <div className="ml-auto flex items-center gap-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
               {timerDisplay && (
                 <span className={`${timerWarn ? "text-destructive font-bold" : ""}`}>

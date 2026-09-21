@@ -75,19 +75,60 @@ function Dashboard() {
   );
 
 
+  // S7 — one clear next action, and a real first task for a brand-new learner.
+  const firstGap = readiness?.gaps?.[0];
+  const todayTask =
+    due > 0
+      ? {
+          title: `${due} review${due === 1 ? "" : "s"} due today`,
+          detail: "Clear what is due before it lapses — this is what keeps your recall steady.",
+          cta: "Start today's session",
+          to: "/study" as const,
+          params: undefined,
+        }
+      : total === 0
+        ? {
+            title: "Start with a short warm-up",
+            detail:
+              "Answer your first ten questions. That is all it takes to produce a readiness score and a study plan built around your weak spots.",
+            cta: "Answer your first questions",
+            to: "/study" as const,
+            params: undefined,
+          }
+        : firstGap
+          ? {
+              title: `Drill ${firstGap.title}`,
+              detail: "Your weakest domain right now. A focused set here moves your readiness the most.",
+              cta: `Practise ${firstGap.title}`,
+              to: "/study/$slug" as const,
+              params: { slug: firstGap.slug },
+            }
+          : {
+              title: "Nothing is due — take a timed run",
+              detail: "Reviews are clear. A full mock exam is the best use of today.",
+              cta: "Start a mock exam",
+              to: "/mock-exam" as const,
+              params: undefined,
+            };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
       <OnboardingWizard readiness={readiness} />
       <main className="mx-auto max-w-7xl px-6 py-24">
-        <div className="mb-8">
-          <div className="mb-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
-            {"> Session active"}
-          </div>
-          <h1 className="font-mono text-4xl font-bold uppercase tracking-tight">
-            Welcome, {name}
-          </h1>
-        </div>
+        {/* S7 — the day's task leads, with exactly one primary action. */}
+        <section className="mb-8 rounded-md border border-border bg-card p-6">
+          <div className="text-sm text-muted-foreground">Welcome back, {name}</div>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">{todayTask.title}</h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{todayTask.detail}</p>
+          <Link
+            to={todayTask.to}
+            params={todayTask.params as never}
+            className="mt-5 inline-flex touch-target items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground hover:opacity-90"
+          >
+            {todayTask.cta}
+          </Link>
+        </section>
 
         {/* Quick stats */}
         {masteryQ.isLoading ? (
@@ -130,8 +171,8 @@ function Dashboard() {
               retrying={readinessQ.isFetching}
             />
           ) : !readiness ? (
-            <div className="font-mono text-xs text-muted-foreground">
-              Readiness unavailable. Practice a session to generate signals.
+            <div className="text-sm text-muted-foreground">
+              No readiness score yet. Answer your first questions and this fills in straight away.
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-[220px_1fr]">

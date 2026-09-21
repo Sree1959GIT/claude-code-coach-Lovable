@@ -36,6 +36,7 @@ function StudyHub() {
   const start = useServerFn(startSession);
   const domainsQ = useQuery({ queryKey: ["domains"], queryFn: fetchDomains });
   const [busy, setBusy] = useState(false);
+  const [launchError, setLaunchError] = useState<string | null>(null);
   const [activeMode, setActiveMode] = useState<string | null>(null);
 
   async function launch(
@@ -44,6 +45,7 @@ function StudyHub() {
     domainId: string | null = null,
   ) {
     if (!user) return;
+    setLaunchError(null);
     setBusy(true);
     setActiveMode(`${mode}-${count}`);
     try {
@@ -52,7 +54,7 @@ function StudyHub() {
       navigate({ to: "/study/session", search: { sessionId: result.sessionId } });
     } catch (err) {
       console.error(err);
-      alert("Could not start session. Try again.");
+      setLaunchError("We couldn't start that session. Check your connection and try again.");
     } finally {
       setBusy(false);
       setActiveMode(null);
@@ -66,6 +68,11 @@ function StudyHub() {
       <SiteHeader />
 
       <main className="mx-auto w-full max-w-6xl px-4 py-6">
+        {launchError && (
+          <div role="alert" className="mb-6 rounded-md border border-danger/40 bg-danger-soft px-4 py-3 text-sm text-danger">
+            {launchError}
+          </div>
+        )}
         <header className="mb-8 animate-enter">
           <div className="font-mono text-xs uppercase tracking-[0.3em] text-primary">
             {"// Study Hub"}

@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiMentorStreamRouteImport } from './routes/api/mentor-stream'
 import { Route as AuthenticatedTracesRouteImport } from './routes/_authenticated/traces'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReviewsRouteImport } from './routes/_authenticated/reviews'
 import { Route as AuthenticatedMockExamRouteImport } from './routes/_authenticated/mock-exam'
 import { Route as AuthenticatedMistakesRouteImport } from './routes/_authenticated/mistakes'
@@ -25,9 +26,15 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedStudyIndexRouteImport } from './routes/_authenticated/study.index'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedStudySessionRouteImport } from './routes/_authenticated/study.session'
 import { Route as AuthenticatedStudyReportRouteImport } from './routes/_authenticated/study.report'
 import { Route as AuthenticatedStudySlugRouteImport } from './routes/_authenticated/study.$slug'
+import { Route as AuthenticatedAdminRetrievalRouteImport } from './routes/_authenticated/admin.retrieval'
+import { Route as AuthenticatedAdminQualityRouteImport } from './routes/_authenticated/admin.quality'
+import { Route as AuthenticatedAdminOperationsRouteImport } from './routes/_authenticated/admin.operations'
+import { Route as AuthenticatedAdminLearnersRouteImport } from './routes/_authenticated/admin.learners'
+import { Route as AuthenticatedAdminContentRouteImport } from './routes/_authenticated/admin.content'
 import { Route as ApiPublicCronRefreshLibraryRouteImport } from './routes/api/public/cron/refresh-library'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -57,6 +64,11 @@ const ApiMentorStreamRoute = ApiMentorStreamRouteImport.update({
 const AuthenticatedTracesRoute = AuthenticatedTracesRouteImport.update({
   id: '/traces',
   path: '/traces',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedReviewsRoute = AuthenticatedReviewsRouteImport.update({
@@ -109,6 +121,11 @@ const AuthenticatedStudyIndexRoute = AuthenticatedStudyIndexRouteImport.update({
   path: '/study/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedStudySessionRoute =
   AuthenticatedStudySessionRouteImport.update({
     id: '/study/session',
@@ -126,6 +143,36 @@ const AuthenticatedStudySlugRoute = AuthenticatedStudySlugRouteImport.update({
   path: '/study/$slug',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRetrievalRoute =
+  AuthenticatedAdminRetrievalRouteImport.update({
+    id: '/retrieval',
+    path: '/retrieval',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminQualityRoute =
+  AuthenticatedAdminQualityRouteImport.update({
+    id: '/quality',
+    path: '/quality',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminOperationsRoute =
+  AuthenticatedAdminOperationsRouteImport.update({
+    id: '/operations',
+    path: '/operations',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminLearnersRoute =
+  AuthenticatedAdminLearnersRouteImport.update({
+    id: '/learners',
+    path: '/learners',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminContentRoute =
+  AuthenticatedAdminContentRouteImport.update({
+    id: '/content',
+    path: '/content',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const ApiPublicCronRefreshLibraryRoute =
   ApiPublicCronRefreshLibraryRouteImport.update({
     id: '/api/public/cron/refresh-library',
@@ -137,7 +184,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/estimator': typeof AuthenticatedEstimatorRoute
@@ -146,11 +193,18 @@ export interface FileRoutesByFullPath {
   '/mistakes': typeof AuthenticatedMistakesRoute
   '/mock-exam': typeof AuthenticatedMockExamRoute
   '/reviews': typeof AuthenticatedReviewsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/traces': typeof AuthenticatedTracesRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
+  '/admin/content': typeof AuthenticatedAdminContentRoute
+  '/admin/learners': typeof AuthenticatedAdminLearnersRoute
+  '/admin/operations': typeof AuthenticatedAdminOperationsRoute
+  '/admin/quality': typeof AuthenticatedAdminQualityRoute
+  '/admin/retrieval': typeof AuthenticatedAdminRetrievalRoute
   '/study/$slug': typeof AuthenticatedStudySlugRoute
   '/study/report': typeof AuthenticatedStudyReportRoute
   '/study/session': typeof AuthenticatedStudySessionRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/study/': typeof AuthenticatedStudyIndexRoute
   '/api/public/cron/refresh-library': typeof ApiPublicCronRefreshLibraryRoute
 }
@@ -158,7 +212,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/admin': typeof AuthenticatedAdminRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/estimator': typeof AuthenticatedEstimatorRoute
@@ -167,11 +220,18 @@ export interface FileRoutesByTo {
   '/mistakes': typeof AuthenticatedMistakesRoute
   '/mock-exam': typeof AuthenticatedMockExamRoute
   '/reviews': typeof AuthenticatedReviewsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/traces': typeof AuthenticatedTracesRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
+  '/admin/content': typeof AuthenticatedAdminContentRoute
+  '/admin/learners': typeof AuthenticatedAdminLearnersRoute
+  '/admin/operations': typeof AuthenticatedAdminOperationsRoute
+  '/admin/quality': typeof AuthenticatedAdminQualityRoute
+  '/admin/retrieval': typeof AuthenticatedAdminRetrievalRoute
   '/study/$slug': typeof AuthenticatedStudySlugRoute
   '/study/report': typeof AuthenticatedStudyReportRoute
   '/study/session': typeof AuthenticatedStudySessionRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/study': typeof AuthenticatedStudyIndexRoute
   '/api/public/cron/refresh-library': typeof ApiPublicCronRefreshLibraryRoute
 }
@@ -181,7 +241,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/estimator': typeof AuthenticatedEstimatorRoute
@@ -190,11 +250,18 @@ export interface FileRoutesById {
   '/_authenticated/mistakes': typeof AuthenticatedMistakesRoute
   '/_authenticated/mock-exam': typeof AuthenticatedMockExamRoute
   '/_authenticated/reviews': typeof AuthenticatedReviewsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/traces': typeof AuthenticatedTracesRoute
   '/api/mentor-stream': typeof ApiMentorStreamRoute
+  '/_authenticated/admin/content': typeof AuthenticatedAdminContentRoute
+  '/_authenticated/admin/learners': typeof AuthenticatedAdminLearnersRoute
+  '/_authenticated/admin/operations': typeof AuthenticatedAdminOperationsRoute
+  '/_authenticated/admin/quality': typeof AuthenticatedAdminQualityRoute
+  '/_authenticated/admin/retrieval': typeof AuthenticatedAdminRetrievalRoute
   '/_authenticated/study/$slug': typeof AuthenticatedStudySlugRoute
   '/_authenticated/study/report': typeof AuthenticatedStudyReportRoute
   '/_authenticated/study/session': typeof AuthenticatedStudySessionRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/study/': typeof AuthenticatedStudyIndexRoute
   '/api/public/cron/refresh-library': typeof ApiPublicCronRefreshLibraryRoute
 }
@@ -213,11 +280,18 @@ export interface FileRouteTypes {
     | '/mistakes'
     | '/mock-exam'
     | '/reviews'
+    | '/settings'
     | '/traces'
     | '/api/mentor-stream'
+    | '/admin/content'
+    | '/admin/learners'
+    | '/admin/operations'
+    | '/admin/quality'
+    | '/admin/retrieval'
     | '/study/$slug'
     | '/study/report'
     | '/study/session'
+    | '/admin/'
     | '/study/'
     | '/api/public/cron/refresh-library'
   fileRoutesByTo: FileRoutesByTo
@@ -225,7 +299,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
-    | '/admin'
     | '/analytics'
     | '/dashboard'
     | '/estimator'
@@ -234,11 +307,18 @@ export interface FileRouteTypes {
     | '/mistakes'
     | '/mock-exam'
     | '/reviews'
+    | '/settings'
     | '/traces'
     | '/api/mentor-stream'
+    | '/admin/content'
+    | '/admin/learners'
+    | '/admin/operations'
+    | '/admin/quality'
+    | '/admin/retrieval'
     | '/study/$slug'
     | '/study/report'
     | '/study/session'
+    | '/admin'
     | '/study'
     | '/api/public/cron/refresh-library'
   id:
@@ -256,11 +336,18 @@ export interface FileRouteTypes {
     | '/_authenticated/mistakes'
     | '/_authenticated/mock-exam'
     | '/_authenticated/reviews'
+    | '/_authenticated/settings'
     | '/_authenticated/traces'
     | '/api/mentor-stream'
+    | '/_authenticated/admin/content'
+    | '/_authenticated/admin/learners'
+    | '/_authenticated/admin/operations'
+    | '/_authenticated/admin/quality'
+    | '/_authenticated/admin/retrieval'
     | '/_authenticated/study/$slug'
     | '/_authenticated/study/report'
     | '/_authenticated/study/session'
+    | '/_authenticated/admin/'
     | '/_authenticated/study/'
     | '/api/public/cron/refresh-library'
   fileRoutesById: FileRoutesById
@@ -316,6 +403,13 @@ declare module '@tanstack/react-router' {
       path: '/traces'
       fullPath: '/traces'
       preLoaderRoute: typeof AuthenticatedTracesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/reviews': {
@@ -388,6 +482,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudyIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/study/session': {
       id: '/_authenticated/study/session'
       path: '/study/session'
@@ -409,6 +510,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudySlugRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/retrieval': {
+      id: '/_authenticated/admin/retrieval'
+      path: '/retrieval'
+      fullPath: '/admin/retrieval'
+      preLoaderRoute: typeof AuthenticatedAdminRetrievalRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/quality': {
+      id: '/_authenticated/admin/quality'
+      path: '/quality'
+      fullPath: '/admin/quality'
+      preLoaderRoute: typeof AuthenticatedAdminQualityRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/operations': {
+      id: '/_authenticated/admin/operations'
+      path: '/operations'
+      fullPath: '/admin/operations'
+      preLoaderRoute: typeof AuthenticatedAdminOperationsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/learners': {
+      id: '/_authenticated/admin/learners'
+      path: '/learners'
+      fullPath: '/admin/learners'
+      preLoaderRoute: typeof AuthenticatedAdminLearnersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/content': {
+      id: '/_authenticated/admin/content'
+      path: '/content'
+      fullPath: '/admin/content'
+      preLoaderRoute: typeof AuthenticatedAdminContentRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/api/public/cron/refresh-library': {
       id: '/api/public/cron/refresh-library'
       path: '/api/public/cron/refresh-library'
@@ -419,8 +555,29 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminContentRoute: typeof AuthenticatedAdminContentRoute
+  AuthenticatedAdminLearnersRoute: typeof AuthenticatedAdminLearnersRoute
+  AuthenticatedAdminOperationsRoute: typeof AuthenticatedAdminOperationsRoute
+  AuthenticatedAdminQualityRoute: typeof AuthenticatedAdminQualityRoute
+  AuthenticatedAdminRetrievalRoute: typeof AuthenticatedAdminRetrievalRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminContentRoute: AuthenticatedAdminContentRoute,
+  AuthenticatedAdminLearnersRoute: AuthenticatedAdminLearnersRoute,
+  AuthenticatedAdminOperationsRoute: AuthenticatedAdminOperationsRoute,
+  AuthenticatedAdminQualityRoute: AuthenticatedAdminQualityRoute,
+  AuthenticatedAdminRetrievalRoute: AuthenticatedAdminRetrievalRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEstimatorRoute: typeof AuthenticatedEstimatorRoute
@@ -429,6 +586,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMistakesRoute: typeof AuthenticatedMistakesRoute
   AuthenticatedMockExamRoute: typeof AuthenticatedMockExamRoute
   AuthenticatedReviewsRoute: typeof AuthenticatedReviewsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTracesRoute: typeof AuthenticatedTracesRoute
   AuthenticatedStudySlugRoute: typeof AuthenticatedStudySlugRoute
   AuthenticatedStudyReportRoute: typeof AuthenticatedStudyReportRoute
@@ -437,7 +595,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEstimatorRoute: AuthenticatedEstimatorRoute,
@@ -446,6 +604,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMistakesRoute: AuthenticatedMistakesRoute,
   AuthenticatedMockExamRoute: AuthenticatedMockExamRoute,
   AuthenticatedReviewsRoute: AuthenticatedReviewsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTracesRoute: AuthenticatedTracesRoute,
   AuthenticatedStudySlugRoute: AuthenticatedStudySlugRoute,
   AuthenticatedStudyReportRoute: AuthenticatedStudyReportRoute,
