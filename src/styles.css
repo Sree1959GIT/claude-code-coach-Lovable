@@ -135,7 +135,20 @@
   --border: oklch(0.98 0.003 260 / 0.12);
   --input: oklch(0.98 0.003 260 / 0.15);
   --ring: oklch(0.68 0.19 256);
-  --success: oklch(0.75 0.16 155);
+  /* S1 — surface ladder (dark): canvas #0F1013 < surface #17181C < raised #1D1F24 */
+  --surface: oklch(0.198 0.005 270);
+  --surface-raised: oklch(0.232 0.006 270);
+
+  /* S1 — state tokens (dark) */
+  --success: oklch(0.83 0.18 152);
+  --success-foreground: oklch(0.18 0.03 152);
+  --success-soft: oklch(0.32 0.07 152);
+  --warning: oklch(0.83 0.16 85);
+  --warning-foreground: oklch(0.2 0.04 85);
+  --warning-soft: oklch(0.33 0.07 85);
+  --danger: oklch(0.72 0.17 22);
+  --danger-foreground: oklch(0.18 0.03 22);
+  --danger-soft: oklch(0.32 0.08 22);
 
   /* Study Canvas syntax tokens — dark */
   --code-keyword: oklch(0.76 0.15 300);
