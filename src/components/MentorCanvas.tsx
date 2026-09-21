@@ -647,7 +647,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
     ];
     if (context.selectedOption) {
       base.unshift({
-        label: `Rate_Option_${context.selectedOption}`,
+        label: `Rate option ${context.selectedOption}`,
         text: `I picked option ${context.selectedOption}. How apt is that option for this question — what does it get right, what does it miss, and which words in the stem decide it?`,
       });
     }
