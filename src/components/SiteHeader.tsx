@@ -157,6 +157,9 @@ export function SiteHeader() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
+                    <Link to="/settings">Settings</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/library">Library</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
