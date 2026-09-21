@@ -119,7 +119,7 @@ export function SiteHeader() {
                 search={{ mode: "signin" }}
                 className="text-sm text-muted-foreground hover:text-foreground"
               >
-                Sign In
+                Sign in
               </Link>
               <Link
                 to="/auth"
