@@ -208,7 +208,7 @@ function SessionRunner() {
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
             {navOpen && (
               <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-                Session_Viewer
+                Session viewer
               </span>
             )}
             <button
@@ -256,13 +256,13 @@ function SessionRunner() {
               aria-controls="mentor-canvas"
               className="inline-flex min-h-11 items-center gap-2 border-2 border-primary bg-primary px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground shadow-sm hover:opacity-90"
             >
-              <UserRound className="h-4 w-4" /> Ask_Mentor
+              <UserRound className="h-4 w-4" /> Ask mentor
             </button>
             <Link
               to="/study"
               className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
             >
-              ← Study_Hub
+              ← Study hub
             </Link>
             <div className="ml-auto flex items-center gap-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
               {timerDisplay && (
@@ -288,7 +288,7 @@ function SessionRunner() {
             <div className="border border-destructive/40 bg-destructive/10 p-6 font-mono text-xs">
               Missing session id.{" "}
               <Link to="/study" className="underline">
-                Back to Study_Hub
+                Back to Study hub
               </Link>
             </div>
           )}
@@ -325,7 +325,7 @@ function SessionRunner() {
                   }}
                   className="border border-border bg-background px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
                 >
-                  Retry_Same
+                  Retry same
                 </button>
                 <button
                   onClick={() =>
@@ -333,13 +333,13 @@ function SessionRunner() {
                   }
                   className="bg-primary px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
                 >
-                  Score_Report
+                  Score report
                 </button>
                 <button
                   onClick={() => navigate({ to: "/analytics" })}
                   className="border border-border bg-background px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
                 >
-                  View_Analytics
+                  View analytics
                 </button>
               </div>
             </div>
@@ -435,7 +435,7 @@ function SessionRunner() {
                       disabled={!selected}
                       className="bg-primary px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-40"
                     >
-                      Submit_Answer
+                      Submit answer
                     </button>
                   ) : (
                     <button

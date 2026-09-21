@@ -74,7 +74,7 @@ export function ExamDayCard({ readiness }: { readiness: ReadinessReport | undefi
     <section className="mb-8 border border-border bg-card p-6">
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
-          <CalendarCheck className="h-4 w-4" /> Exam_Day
+          <CalendarCheck className="h-4 w-4" /> Exam day
         </div>
         <a
           href={BOOKING_URL}
@@ -82,7 +82,7 @@ export function ExamDayCard({ readiness }: { readiness: ReadinessReport | undefi
           rel="noreferrer noopener"
           className="ml-auto inline-flex items-center gap-1 border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary hover:text-primary"
         >
-          Booking_Page <ExternalLink className="h-3 w-3" />
+          Booking page <ExternalLink className="h-3 w-3" />
         </a>
       </div>
 

@@ -111,7 +111,7 @@ function Dashboard() {
         {/* Exam readiness */}
         <section className="mb-8 border border-border bg-card p-6">
           <div className="mb-4 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
-            <Target className="h-4 w-4" /> Exam_Readiness
+            <Target className="h-4 w-4" /> Exam readiness
           </div>
           {readinessQ.isLoading ? (
             <div className="grid gap-6 md:grid-cols-[220px_1fr]">
@@ -214,7 +214,7 @@ function Dashboard() {
           >
             <div>
               <div className="mb-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary">
-                <Brain className="h-4 w-4" /> Study_Hub
+                <Brain className="h-4 w-4" /> Study hub
               </div>
               <h2 className="mb-3 font-mono text-xl font-bold uppercase tracking-tight">
                 Adaptive Practice
@@ -233,7 +233,7 @@ function Dashboard() {
           >
             <div>
               <div className="mb-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary">
-                <Clock className="h-4 w-4" /> Timed_Exam
+                <Clock className="h-4 w-4" /> Timed exam
               </div>
               <h2 className="mb-3 font-mono text-xl font-bold uppercase tracking-tight">
                 Exam Simulation
@@ -255,7 +255,7 @@ function Dashboard() {
                 <TrendingUp className="h-4 w-4" /> Analytics
               </div>
               <h2 className="mb-3 font-mono text-xl font-bold uppercase tracking-tight">
-                Progress_Signals
+                Progress signals
               </h2>
               <p className="text-sm text-muted-foreground">
                 Per-domain accuracy, response times, and mastery curves.

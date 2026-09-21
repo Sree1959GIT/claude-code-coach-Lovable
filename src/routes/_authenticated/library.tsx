@@ -173,7 +173,7 @@ function LibraryPage() {
       <SiteHeader />
       <main className="mx-auto max-w-5xl px-6 py-10">
         <h1 className="font-mono text-lg font-bold uppercase tracking-tight">
-          Library_Console
+          Library console
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
           The retrieval library grounds the SME Voice Mentor. Seed the curated corpus,
@@ -366,7 +366,7 @@ function LibraryPage() {
                 ))}
                 {docs.length === 0 && (
                   <li className="p-3 text-xs text-muted-foreground">
-                    No documents yet — run Seed_Library.
+                    No documents yet — run Seed library.
                   </li>
                 )}
               </ul>

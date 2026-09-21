@@ -37,7 +37,7 @@ export function DailyGoalCard({ suggestedGoal }: { suggestedGoal: number }) {
     <section className="mb-8 border border-border bg-card p-6">
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
-          <Flame className="h-4 w-4" /> Daily_Goal
+          <Flame className="h-4 w-4" /> Daily goal
         </div>
         <label className="ml-auto flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Goal / day

@@ -369,7 +369,7 @@ function DomainRunner() {
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
             {navOpen && (
               <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-                Course_Viewer
+                Course viewer
               </span>
             )}
             <button
@@ -417,7 +417,7 @@ function DomainRunner() {
               aria-controls="mentor-canvas"
               className="inline-flex min-h-11 items-center gap-2 border-2 border-primary bg-primary px-3 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground shadow-sm hover:opacity-90 sm:px-4 sm:text-xs"
             >
-              <UserRound className="h-4 w-4" /> Ask_Mentor
+              <UserRound className="h-4 w-4" /> Ask mentor
             </button>
             <button
               type="button"
@@ -427,14 +427,14 @@ function DomainRunner() {
               aria-keyshortcuts="Control+Shift+C"
               className="inline-flex min-h-11 items-center gap-2 border-2 border-border px-3 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:border-primary sm:px-4 sm:text-xs"
             >
-              <Code2 className="h-4 w-4" /> Study_Canvas
+              <Code2 className="h-4 w-4" /> Study canvas
             </button>
 
             <Link
               to="/study"
               className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
             >
-              ← Study_Hub
+              ← Study hub
             </Link>
             <div className="ml-auto min-w-0 truncate font-mono text-xs uppercase tracking-widest text-muted-foreground">
               {domainQ.data?.title} · Q{Math.min(idx + 1, questions.length)}/{questions.length}
@@ -477,13 +477,13 @@ function DomainRunner() {
                   }}
                   className="border border-border bg-background px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
                 >
-                  Retry_Set
+                  Retry set
                 </button>
                 <button
                   onClick={() => navigate({ to: "/analytics" })}
                   className="bg-primary px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
                 >
-                  View_Analytics
+                  View analytics
                 </button>
               </div>
             </div>
@@ -579,7 +579,7 @@ function DomainRunner() {
                       disabled={!selected}
                       className="bg-primary px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-40"
                     >
-                      Submit_Answer
+                      Submit answer
                     </button>
                   ) : (
                     <button

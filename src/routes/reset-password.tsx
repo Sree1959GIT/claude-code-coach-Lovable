@@ -135,13 +135,13 @@ function ResetPassword() {
             {"> Reset credentials"}
           </div>
           <h1 className="font-mono text-3xl font-bold uppercase tracking-tight">
-            New_Password
+            New password
           </h1>
         </div>
 
         {checkingLink ? (
           <div className="border border-border bg-card p-6 font-mono text-xs uppercase tracking-widest text-muted-foreground" role="status">
-            Validating_Reset_Link...
+            Validating reset link...
           </div>
         ) : !recoveryReady ? (
           <div className="space-y-4 border border-border bg-card p-6">
@@ -153,7 +153,7 @@ function ResetPassword() {
               search={{ mode: "signin" }}
               className="block w-full bg-primary py-3 text-center font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
             >
-              Return_To_Sign_In
+              Return to sign in
             </Link>
           </div>
         ) : (
@@ -163,7 +163,7 @@ function ResetPassword() {
                 htmlFor="password"
                 className="block font-mono text-xs uppercase tracking-widest text-muted-foreground"
               >
-                New_Password
+                New password
               </label>
               <input
                 id="password"
@@ -182,7 +182,7 @@ function ResetPassword() {
             )}
             {done && (
               <div className="border border-primary/40 bg-primary/10 px-3 py-2 font-mono text-xs text-primary">
-                Password updated. Returning to Sign_In...
+                Password updated. Returning to Sign in...
               </div>
             )}
             <button

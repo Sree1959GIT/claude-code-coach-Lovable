@@ -88,7 +88,7 @@ function Landing() {
                 }
                 className="bg-primary px-8 py-4 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground shadow-xl shadow-primary/20 transition-transform hover:-translate-y-0.5"
               >
-                Initialize_Prep
+                Initialize prep
               </Link>
               <Link
                 to="/auth"
@@ -98,7 +98,7 @@ function Landing() {
                 }
                 className="flex items-center gap-3 border border-border bg-transparent px-8 py-4 font-mono text-xs font-bold uppercase tracking-widest text-foreground transition-colors hover:bg-secondary"
               >
-                Google_Auth
+                Google auth
               </Link>
             </div>
           </div>
@@ -131,14 +131,14 @@ function Landing() {
                 <div className="flex flex-1 flex-col">
                   <span className="font-mono text-2xl font-bold">12</span>
                   <span className="font-mono text-xs uppercase text-muted-foreground">
-                    Day_Streak
+                    Day streak
                   </span>
                 </div>
                 <div className="h-10 w-px bg-border" />
                 <div className="flex flex-1 flex-col">
                   <span className="font-mono text-2xl font-bold">84.2</span>
                   <span className="font-mono text-xs uppercase text-muted-foreground">
-                    Mastery_Index
+                    Mastery index
                   </span>
                 </div>
               </div>
@@ -151,7 +151,7 @@ function Landing() {
       <section className="border-y border-border py-8">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-6 px-6 opacity-40">
           <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">
-            Built_By_Engineers_For_Engineers
+            Built by engineers for engineers
           </span>
           <div className="flex flex-wrap gap-8 font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground sm:gap-12">
             <span>Agentic loops</span>
@@ -167,7 +167,7 @@ function Landing() {
       <section className="mx-auto max-w-7xl px-6 py-24">
         <div className="mb-12">
           <h2 className="mb-3 font-mono text-xs font-bold uppercase tracking-[0.3em] text-primary">
-            Exam_Domain_Weighting
+            Exam domain weighting
           </h2>
           <p className="max-w-xl text-sm text-muted-foreground">
             Study paths are structured against the official domain distribution so your time
@@ -193,7 +193,7 @@ function Landing() {
       <section className="mx-auto max-w-7xl px-6 py-24">
         <div className="mb-16">
           <h2 className="mb-4 font-mono text-xs font-bold uppercase tracking-[0.3em] text-primary">
-            System_Capabilities
+            System capabilities
           </h2>
           <div className="h-px w-full bg-border" />
         </div>
@@ -214,7 +214,7 @@ function Landing() {
       <section className="mx-auto max-w-7xl px-6 py-24">
         <div className="mb-8">
           <h2 className="mb-3 font-mono text-xs font-bold uppercase tracking-[0.3em] text-primary">
-            Dashboard_Preview
+            Dashboard preview
           </h2>
           <p className="max-w-xl text-sm text-muted-foreground">
             Every session feeds the readiness model. See your weakest domain, response-time
@@ -237,14 +237,14 @@ function Landing() {
       <section className="mx-auto max-w-7xl border-t border-border px-6 py-24">
         <div className="mb-12">
           <h2 className="mb-3 font-mono text-xs font-bold uppercase tracking-[0.3em] text-primary">
-            Access_Tiers
+            Access tiers
           </h2>
           <p className="max-w-xl text-sm text-muted-foreground">Start free. Upgrade when you're ready to simulate the real thing.</p>
         </div>
         <div className="grid gap-8 lg:grid-cols-2">
           <div className="border border-border bg-card p-10">
             <h4 className="mb-2 font-mono text-xs font-bold uppercase tracking-widest">
-              Standard_Access
+              Standard access
             </h4>
             <div className="mb-8 font-mono text-4xl font-bold">
               $0<span className="text-xs text-muted-foreground">/MO</span>
@@ -259,7 +259,7 @@ function Landing() {
               search={{ mode: "signup" }}
               className="block w-full border border-border py-4 text-center font-mono text-xs font-bold uppercase tracking-widest transition-colors hover:bg-secondary"
             >
-              Deploy_Free
+              Deploy free
             </Link>
           </div>
           <div className="relative border-2 border-primary bg-card p-10">
@@ -267,7 +267,7 @@ function Landing() {
               RECOMMENDED
             </div>
             <h4 className="mb-2 font-mono text-xs font-bold uppercase tracking-widest text-primary">
-              Architect_Plus
+              Architect plus
             </h4>
             <div className="mb-8 font-mono text-4xl font-bold">
               $29<span className="text-xs text-muted-foreground">/MO</span>
@@ -292,7 +292,7 @@ function Landing() {
               onClick={() => logEvent("cta_click", { location: "pricing", cta: "pro" })}
               className="block w-full bg-primary py-4 text-center font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground shadow-xl shadow-primary/20"
             >
-              Initialize_Pro
+              Initialize pro
             </Link>
           </div>
         </div>

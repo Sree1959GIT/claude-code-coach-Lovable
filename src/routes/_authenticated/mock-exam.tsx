@@ -133,7 +133,7 @@ function MockExamPage() {
 
         <section className="mb-8 border border-border bg-card">
           <div className="border-b border-border px-4 py-3 font-mono text-xs uppercase tracking-[0.3em] text-primary">
-            Blueprint_Allocation
+            Blueprint allocation
           </div>
           <div className="divide-y divide-border">
             {loading &&

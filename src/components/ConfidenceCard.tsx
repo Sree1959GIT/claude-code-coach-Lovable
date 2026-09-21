@@ -56,7 +56,7 @@ export function ConfidenceCard({ readiness }: { readiness?: ReadinessReport }) {
     <section className="border border-border bg-card p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary">
-          <Gauge className="h-4 w-4" /> Self_Confidence
+          <Gauge className="h-4 w-4" /> Self confidence
         </div>
         {adjusted && adjusted.confidence !== null ? (
           <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">

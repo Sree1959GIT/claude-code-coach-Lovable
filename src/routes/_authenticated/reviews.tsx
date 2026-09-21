@@ -197,7 +197,7 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
           </div>
           <div className="border border-border p-3">
             <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              Proposed_Revision · {item.diff.length} field change(s)
+              Proposed revision · {item.diff.length} field change(s)
             </p>
             <ul className="mt-1 space-y-1">
               {item.diff.map((f, i) => (
@@ -340,7 +340,7 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
           search={{ runId: item.runId }}
           className="mt-1 inline-block font-mono text-xs uppercase tracking-widest underline"
         >
-          View_Agent_Trace
+          View agent trace
         </Link>
       )}
 
@@ -368,7 +368,7 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
             disabled={saveMutation.isPending || lockedByOther}
             onClick={() => saveMutation.mutate()}
           >
-            Save_Edits
+            Save edits
           </button>
         )}
         <button
@@ -387,7 +387,7 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
         </button>
         <label className="flex items-center gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           <input type="checkbox" checked={selfOverride} onChange={(e) => setSelfOverride(e.target.checked)} />
-          Override_Self_Review
+          Override self review
         </label>
       </div>
 
@@ -467,10 +467,10 @@ function ReviewsPage() {
             ))}
           </select>
           <button onClick={() => setMine((v) => !v)} className={`${btn} ${mine ? "bg-muted" : ""}`}>
-            Claimed_By_Me
+            Claimed by me
           </button>
           <Link to="/admin" className={btn}>
-            Admin_Console
+            Admin console
           </Link>
         </div>
 

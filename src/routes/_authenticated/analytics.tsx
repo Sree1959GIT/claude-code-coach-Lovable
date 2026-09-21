@@ -147,7 +147,7 @@ function AnalyticsPage() {
             {"> Analytics"}
           </div>
           <h1 className="font-mono text-4xl font-bold uppercase tracking-tight">
-            Progress_Signals
+            Progress signals
           </h1>
         </header>
 
@@ -169,7 +169,7 @@ function AnalyticsPage() {
         {/* Predicted pass */}
         <section className="mb-8 border border-border bg-card p-6">
           <div className="mb-4 font-mono text-xs uppercase tracking-[0.3em] text-primary">
-            Predicted_Pass
+            Predicted pass
           </div>
           {readinessQ.isLoading || !passEstimate || !readinessQ.data ? (
             <div className="font-mono text-xs text-muted-foreground">
@@ -236,7 +236,7 @@ function AnalyticsPage() {
         <section className="mb-8 border border-border bg-card p-6">
           <div className="mb-4 flex flex-wrap items-baseline gap-3">
             <div className="font-mono text-xs uppercase tracking-[0.3em] text-primary">
-              Readiness_Trend_30d
+              Readiness trend 30d
             </div>
             {trendDelta !== null ? (
               <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
@@ -350,7 +350,7 @@ function AnalyticsPage() {
 
         {totals.total === 0 && (
           <div className="mt-8 border border-dashed border-border p-6 text-center font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            No attempts yet — head to the Study_Hub to begin capturing signal.
+            No attempts yet — head to the Study hub to begin capturing signal.
           </div>
         )}
       </main>

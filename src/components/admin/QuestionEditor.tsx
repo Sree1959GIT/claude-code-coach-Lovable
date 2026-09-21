@@ -221,7 +221,7 @@ export function QuestionEditor({
           onClick={() => setDraft((d) => ({ ...d, options: [...d.options, blankOption(d.options.length)] }))}
           className="border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted"
         >
-          Add_Option
+          Add option
         </button>
       </div>
 

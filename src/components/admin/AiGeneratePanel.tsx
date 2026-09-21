@@ -97,7 +97,7 @@ export function AiGeneratePanel() {
         </label>
 
         <label className="flex min-w-[240px] flex-1 flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-          Topic_Hint (optional)
+          Topic hint (optional)
           <input
             value={topicHint}
             onChange={(e) => setTopicHint(e.target.value)}
@@ -122,7 +122,7 @@ export function AiGeneratePanel() {
           disabled={!domainId || mutation.isPending}
           onClick={() => mutation.mutate(true)}
         >
-          Generate_And_Queue
+          Generate and queue
         </button>
         <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Drafts land in the review queue — never published directly

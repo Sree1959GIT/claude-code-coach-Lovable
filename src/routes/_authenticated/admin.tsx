@@ -316,7 +316,7 @@ function ContentPanel() {
                       onClick={() => setEditor({ domainId: d.id })}
                       className="mb-3 bg-primary px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
                     >
-                      New_Question
+                      New question
                     </button>
                     {d.questions.length === 0 ? (
                       <p className="font-mono text-xs text-muted-foreground">No questions in this domain.</p>
@@ -789,7 +789,7 @@ function AdminPage() {
               to="/dashboard"
               className="mt-6 inline-block bg-primary px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
             >
-              Back_To_Dashboard
+              Back to dashboard
             </Link>
           </div>
         ) : (
@@ -992,13 +992,13 @@ function AdminPage() {
                 to="/library"
                 className="border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted"
               >
-                Library_Console
+                Library console
               </Link>
               <Link
                 to="/traces"
                 className="border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted"
               >
-                Agent_Traces
+                Agent traces
               </Link>
             </div>
           </>

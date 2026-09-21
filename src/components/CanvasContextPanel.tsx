@@ -43,7 +43,7 @@ export function CanvasContextPanel({
     <div className="space-y-4 p-3">
       <section>
         <h3 className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-primary">
-          Question_Context
+          Question context
         </h3>
         {context ? (
           <div>
@@ -63,7 +63,7 @@ export function CanvasContextPanel({
           </div>
         ) : (
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            No_Active_Question
+            No active question
           </p>
         )}
       </section>
@@ -100,7 +100,7 @@ export function CanvasContextPanel({
           </div>
         ) : (
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            Not_Yet_Scheduled — answer this question to start tracking.
+            Not yet scheduled — answer this question to start tracking.
           </p>
         )}
       </section>
@@ -108,7 +108,7 @@ export function CanvasContextPanel({
       {advice && advice.conceptLinks.length > 0 && (
         <section>
           <h3 className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-primary">
-            Concept_Links
+            Concept links
           </h3>
           <ul className="flex flex-wrap gap-1.5">
             {advice.conceptLinks.map((c, i) => (
@@ -125,11 +125,11 @@ export function CanvasContextPanel({
 
       <section>
         <h3 className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-primary">
-          Reference_Docs
+          Reference docs
         </h3>
         {docs.length === 0 ? (
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            No_Docs_Matched
+            No docs matched
           </p>
         ) : (
           <ul className="space-y-1">

@@ -44,7 +44,7 @@ export function SiteHeader() {
                 className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
                 activeProps={{ className: "font-mono text-xs uppercase tracking-widest text-foreground" }}
               >
-                Mock_Exam
+                Mock exam
               </Link>
               <Link
                 to="/mistakes"
@@ -109,7 +109,7 @@ export function SiteHeader() {
                 onClick={handleSignOut}
                 className="bg-primary px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
               >
-                Sign_Out
+                Sign out
               </button>
             </>
           ) : (
@@ -127,7 +127,7 @@ export function SiteHeader() {
                 onClick={() => logEvent("cta_click", { location: "header", cta: "get_started" })}
                 className="bg-primary px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
               >
-                Get_Started
+                Get started
               </Link>
             </>
           )}

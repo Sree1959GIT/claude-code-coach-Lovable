@@ -60,7 +60,7 @@ export function CalibrationPanel() {
           disabled={mutation.isPending || !result}
           onClick={() => mutation.mutate(true)}
         >
-          Apply_Calibration
+          Apply calibration
         </button>
       </div>
 

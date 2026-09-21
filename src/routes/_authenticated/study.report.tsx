@@ -87,7 +87,7 @@ function ReportPage() {
           <div className="border border-destructive/40 bg-destructive/10 p-6 font-mono text-xs">
             Missing session id.{" "}
             <Link to="/study" className="underline">
-              Back to Study_Hub
+              Back to Study hub
             </Link>
           </div>
         )}
@@ -109,7 +109,7 @@ function ReportPage() {
                 onClick={() => window.print()}
                 className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
               >
-                <Printer className="h-3 w-3" /> Print_Report
+                <Printer className="h-3 w-3" /> Print report
               </button>
               <button
                 onClick={async () => {
@@ -122,7 +122,7 @@ function ReportPage() {
                 }}
                 className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
               >
-                <ClipboardCopy className="h-3 w-3" /> Copy_Summary
+                <ClipboardCopy className="h-3 w-3" /> Copy summary
               </button>
             </div>
 
@@ -193,7 +193,7 @@ function ReportPage() {
 
             <section className="mb-8 border border-border bg-card">
               <div className="border-b border-border px-4 py-3 font-mono text-xs uppercase tracking-[0.3em] text-primary">
-                Domain_Breakdown
+                Domain breakdown
               </div>
               <div className="divide-y divide-border">
                 {r.domains.map((d) => (
@@ -227,7 +227,7 @@ function ReportPage() {
 
             <section className="mb-8 border border-border bg-card">
               <div className="border-b border-border px-4 py-3 font-mono text-xs uppercase tracking-[0.3em] text-primary">
-                Remediation_Plan
+                Remediation plan
               </div>
               <ul className="divide-y divide-border">
                 {weakest.map((d) => (
@@ -262,7 +262,7 @@ function ReportPage() {
             {r.missed.length > 0 && (
               <section className="mb-8 border border-border bg-card">
                 <div className="border-b border-border px-4 py-3 font-mono text-xs uppercase tracking-[0.3em] text-primary">
-                  Missed_Items
+                  Missed items
                 </div>
                 <ul className="divide-y divide-border">
                   {r.missed.map((m) => (
@@ -291,19 +291,19 @@ function ReportPage() {
                 to="/mock-exam"
                 className="bg-primary px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
               >
-                New_Mock_Exam
+                New mock exam
               </Link>
               <Link
                 to="/analytics"
                 className="border border-border px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
               >
-                View_Analytics
+                View analytics
               </Link>
               <Link
                 to="/study"
                 className="border border-border px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
               >
-                Study_Hub
+                Study hub
               </Link>
             </div>
           </>

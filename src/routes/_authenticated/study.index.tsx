@@ -136,7 +136,7 @@ function StudyHub() {
         {/* Domain practice */}
         <section className="animate-enter" style={{ animationDelay: "100ms" }}>
           <div className="mb-4 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
-            <LayoutGrid className="h-4 w-4" /> Domain_Practice
+            <LayoutGrid className="h-4 w-4" /> Domain practice
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             {domains.map((d) => (

@@ -46,7 +46,7 @@ export function StudyPlanCard({ readiness }: { readiness: ReadinessReport | unde
     <section className="mb-8 border border-border bg-card p-6">
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
-          <CalendarClock className="h-4 w-4" /> Study_Plan
+          <CalendarClock className="h-4 w-4" /> Study plan
         </div>
         <label className="ml-auto flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Exam date

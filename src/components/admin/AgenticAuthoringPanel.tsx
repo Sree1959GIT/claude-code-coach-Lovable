@@ -431,7 +431,7 @@ export function AgenticAuthoringPanel() {
       {/* Approved research sources */}
       <div className="mt-6 border-t border-border pt-4">
         <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          Approved_Research_Sources
+          Approved research sources
         </h3>
         <p className="mt-1 font-mono text-xs text-muted-foreground">
           The library is always searched first. Agents may only reference the hosts listed here — there are no default
@@ -473,7 +473,7 @@ export function AgenticAuthoringPanel() {
             disabled={!srcLabel.trim() || !srcUrl.trim() || sourceMutation.isPending}
             onClick={() => sourceMutation.mutate()}
           >
-            Add_Source
+            Add source
           </button>
           <button
             className={btn}
@@ -708,7 +708,7 @@ export function AgenticAuthoringPanel() {
               href={`/traces?runId=${result.runId}`}
               className="mt-1 inline-block font-mono text-xs uppercase tracking-widest underline"
             >
-              View_Agent_Trace
+              View agent trace
             </a>
           )}
 
@@ -757,10 +757,10 @@ export function AgenticAuthoringPanel() {
                 className="underline"
                 onClick={() => setAccepted(Object.fromEntries(result.drafts.map((_, i) => [i, true])))}
               >
-                Accept_All
+                Accept all
               </button>
               <button className="underline" onClick={() => setAccepted({})}>
-                Reject_All
+                Reject all
               </button>
               <label className="flex items-center gap-1">
                 <input
@@ -768,7 +768,7 @@ export function AgenticAuthoringPanel() {
                   checked={allowDuplicates}
                   onChange={(e) => setAllowDuplicates(e.target.checked)}
                 />
-                Allow_Duplicates
+                Allow duplicates
               </label>
               <button
                 className={`${btn} ml-auto`}
@@ -818,7 +818,7 @@ export function AgenticAuthoringPanel() {
                 {d.isRevision && (
                   <div className="mt-2 border border-border p-2">
                     <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                      Field_Diff ({d.diff.length})
+                      Field diff ({d.diff.length})
                     </p>
                     {d.diff.length === 0 ? (
                       <p className="mt-1 font-mono text-xs text-muted-foreground">No changes proposed.</p>

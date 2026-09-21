@@ -147,7 +147,7 @@ function AuthPage() {
             className="mb-6 flex w-full items-center justify-center gap-3 border border-border py-3 font-mono text-xs font-bold uppercase tracking-widest transition-colors hover:bg-secondary"
           >
             <GoogleIcon />
-            Continue_With_Google
+            Continue with google
           </button>
 
           <div className="mb-6 flex items-center gap-3">
@@ -165,7 +165,7 @@ function AuthPage() {
                   htmlFor="name"
                   className="block font-mono text-xs uppercase tracking-widest text-muted-foreground"
                 >
-                  Display_Name
+                  Display name
                 </label>
                 <input
                   id="name"
@@ -259,7 +259,7 @@ function AuthPage() {
           to="/"
           className="mt-8 text-center font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
         >
-          ← Return_Home
+          ← Return home
         </Link>
       </main>
     </div>

@@ -122,7 +122,7 @@ function EstimatorPage() {
             Planning
           </p>
           <h1 className="mt-2 font-mono text-2xl font-bold tracking-tight">
-            Credit_Estimator
+            Credit estimator
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
             Pick the options you want in each stage to see the expected build-credit

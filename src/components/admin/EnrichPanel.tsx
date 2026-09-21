@@ -52,7 +52,7 @@ export function EnrichPanel() {
           disabled={mutation.isPending || !result || result.drafts.length === 0}
           onClick={() => mutation.mutate(true)}
         >
-          Approve_And_Write
+          Approve and write
         </button>
       </div>
 

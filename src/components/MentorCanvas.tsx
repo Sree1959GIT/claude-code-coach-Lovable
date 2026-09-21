@@ -399,7 +399,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
     }
   }, [highlight]);
 
-  /** Speaks a full written answer on demand (Read_Response button). */
+  /** Speaks a full written answer on demand (Read response button). */
   function readAloud(text: string) {
     unlockAudio();
     const sentences = text.match(/[^.!?]+[.!?]*/g) ?? [text];
@@ -763,7 +763,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
                     onClick={() => readAloud(m.content)}
                     className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground hover:text-primary"
                   >
-                    <Volume2 className="h-3 w-3" /> Read_Response
+                    <Volume2 className="h-3 w-3" /> Read response
                   </button>
                   {refs.length > 0 && (
                     <button
@@ -820,7 +820,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
               {!isUser && shownCitations.length > 0 && (
                 <div className="mt-2 border-t border-primary/20 pt-2">
                   <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
-                    Library_sources
+                    Library sources
                   </div>
                   <ol className="space-y-1">
                     {shownCitations.map((c) => (
@@ -877,7 +877,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
         <div className="border-t border-border pt-3">
 
           <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
-            Watch_This
+            Watch this
           </div>
           <div className="grid grid-cols-2 gap-2">
             {resources.map((r) => {
@@ -936,7 +936,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
               onChange={(e) => setVoiceOn(e.target.checked)}
               className="accent-primary"
             />
-            Voice_reply
+            Voice reply
           </label>
           <div className="flex items-center gap-1.5">
             <button
@@ -959,7 +959,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
               </button>
             ) : (
               <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-                Mic_unsupported
+                Mic unsupported
               </span>
             )}
           </div>

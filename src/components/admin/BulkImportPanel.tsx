@@ -60,7 +60,7 @@ export function BulkImportPanel() {
           </button>
         ))}
         <label className={`${btn} cursor-pointer`}>
-          Upload_File
+          Upload file
           <input
             type="file"
             accept=".csv,.json,text/csv,application/json"
@@ -69,7 +69,7 @@ export function BulkImportPanel() {
           />
         </label>
         <button type="button" className={btn} onClick={() => { setFormat("csv"); setText(IMPORT_CSV_TEMPLATE); setResult(null); }}>
-          Load_Template
+          Load template
         </button>
         <label className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           <input
@@ -78,7 +78,7 @@ export function BulkImportPanel() {
             onChange={(e) => setSkipDuplicates(e.target.checked)}
             className="accent-primary"
           />
-          Skip_Duplicates
+          Skip duplicates
         </label>
       </div>
 
@@ -113,7 +113,7 @@ export function BulkImportPanel() {
           disabled={!result?.dryRun || !result.valid || mutation.isPending}
           onClick={() => mutation.mutate(false)}
         >
-          Commit_Import
+          Commit import
         </button>
         <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Dry run first, then commit

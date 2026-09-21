@@ -100,7 +100,7 @@ export function SpiderPanel() {
             disabled={busy !== null}
             onClick={() => setOnlyDue((v) => !v)}
           >
-            {onlyDue ? "Show all" : `Show_Due (${dueCount})`}
+            {onlyDue ? "Show all" : `Show due (${dueCount})`}
           </button>
           <button
             className={btn}

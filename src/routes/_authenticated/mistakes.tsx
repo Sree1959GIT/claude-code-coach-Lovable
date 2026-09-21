@@ -218,7 +218,7 @@ function MistakesPage() {
                         params={{ slug: m.domainSlug }}
                         className="border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
                       >
-                        Drill_Domain →
+                        Drill domain →
                       </Link>
                       <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
                         last miss {new Date(m.lastMissedAt).toLocaleDateString()}

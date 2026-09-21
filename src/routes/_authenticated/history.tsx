@@ -57,7 +57,7 @@ function HistoryPage() {
       <main className="mx-auto w-full max-w-6xl px-4 py-8">
         <header className="mb-6">
           <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
-            <HistoryIcon className="h-4 w-4" /> Session_History
+            <HistoryIcon className="h-4 w-4" /> Session history
           </div>
           <h1 className="mt-1 font-mono text-2xl font-bold uppercase tracking-tight">
             Past sessions

@@ -195,7 +195,7 @@ export function CodeGenPanel() {
             checked={persist}
             onChange={(e) => setPersist(e.target.checked)}
           />
-          Save_If_Verified
+          Save if verified
         </label>
         <button
           type="button"
@@ -211,7 +211,7 @@ export function CodeGenPanel() {
 
       <div className="mt-6">
         <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          Recent_Runs
+          Recent runs
         </h3>
         <div className="mt-2 overflow-x-auto border border-border">
           <table className="w-full min-w-[560px] border-collapse font-mono text-xs">
