@@ -78,7 +78,8 @@
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
 - [x] Phase H2: Semantic accessible tags pass — completed (focus-management hook, dialog semantics on Study Canvas / Mentor / video modal, Ctrl+Shift+C canvas toggle and Escape precedence, full tab/tabpanel contract with arrow/Home/End keys, console live regions, reduced-motion support).
 - [x] Password recovery callback repair — recovery credentials now survive the hosted email handoff and are validated before password entry.
-- **Next:** No pending backlog sub-tasks — Phases D–H and the password recovery repair are complete. Await the user's next feature request or launch/publish instruction.
+- [x] **S1 (Next Build Wave):** Colour and type tokens — success / warning / danger state tokens with soft + foreground pairs in both themes, a canvas → surface → raised surface ladder (Study Canvas sits on raised), and `touch-target` (44px) plus `surface-raised` utilities. Radius stays 6px.
+- **Next:** S2 — typography pass: 12px minimum text size, 15px sentence-case body copy, uppercase only as a section label, monospace restricted to machine values (scores, timers, routes, IDs, code), and Snake_Case removed from navigation and buttons.
 
 
 
