@@ -183,6 +183,19 @@
   animation: cca-entrance 0.6s var(--ease-out-terminal) both;
 }
 
+/* S1 — minimum comfortable hit area for any interactive control. */
+@utility touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* S1 — the raised tier of the surface ladder (Study Canvas, popovers, sheets). */
+@utility surface-raised {
+  background-color: var(--color-surface-raised);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px -12px oklch(0 0 0 / 0.45);
+}
+
 @keyframes cca-focus-blink {
   0%, 100% {
     background-color: color-mix(in oklab, var(--color-primary) 8%, transparent);
