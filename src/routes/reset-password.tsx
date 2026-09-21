@@ -91,7 +91,7 @@ function ResetPassword() {
           )}
           {done && (
             <div className="border border-primary/40 bg-primary/10 px-3 py-2 font-mono text-[10px] text-primary">
-              Password updated. Redirecting...
+              Password updated. Returning to Sign_In...
             </div>
           )}
           <button
