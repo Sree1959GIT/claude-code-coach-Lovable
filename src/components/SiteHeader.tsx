@@ -1,7 +1,7 @@
 /**
  * S3 — Student navigation: four destinations (Dashboard, Study, Mock exam,
  * Progress) with a clear current-section marker, a streak chip, the theme
- * toggle and one account menu. Operator tools (Library, Traces, Estimator,
+ * toggle and one account menu. Operator tools (Traces, Estimator,
  * Review queue, Admin) live inside the account menu, not the student header.
  */
 
