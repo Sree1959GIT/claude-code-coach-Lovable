@@ -35,7 +35,6 @@ const PROGRESS_LINKS = [
 ] as const;
 
 const OPERATOR_LINKS = [
-  { to: "/library", label: "Library" },
   { to: "/reviews", label: "Review queue" },
   { to: "/traces", label: "Traces" },
   { to: "/estimator", label: "Estimator" },
@@ -154,6 +153,10 @@ export function SiteHeader() {
                   <DropdownMenuLabel className="truncate text-xs font-normal text-muted-foreground">
                     {user.email}
                   </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/library">Library</Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   {isAdmin && (
                     <>
