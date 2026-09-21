@@ -232,8 +232,8 @@ function DomainRunner() {
         moreQ.data && moreQ.data.length > 0 ? ` · +${moreQ.data.length}_More` : ""
       }`
     : conceptTag && codebaseQ.isLoading
-      ? "Loading_Example"
-      : "Code_Workspace";
+      ? "Loading example"
+      : "Code workspace";
 
   // Phase E9 — FSRS state for the active question, refreshed after each answer.
   const masteryQ = useQuery({
@@ -390,7 +390,7 @@ function DomainRunner() {
                 key={qq.id}
                 onClick={() => setIdx(i)}
                 title={`Q${i + 1} · ${qq.difficulty}`}
-                className={`block w-full border-l-2 px-2 py-1.5 text-left font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                className={`block w-full border-l-2 px-2 py-1.5 text-left font-mono text-xs uppercase tracking-widest transition-colors ${
                   i === idx
                     ? "border-primary bg-secondary text-foreground"
                     : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
@@ -401,7 +401,7 @@ function DomainRunner() {
             ))}
           </nav>
           {navOpen && (
-            <div className="border-t border-border px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <div className="border-t border-border px-3 py-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
               Score: {score.correct}/{score.total}
             </div>
           )}
@@ -415,7 +415,7 @@ function DomainRunner() {
               onClick={() => setMentorOpen(true)}
               aria-expanded={mentorOpen}
               aria-controls="mentor-canvas"
-              className="inline-flex min-h-11 items-center gap-2 border-2 border-primary bg-primary px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground shadow-sm hover:opacity-90 sm:px-4 sm:text-[11px]"
+              className="inline-flex min-h-11 items-center gap-2 border-2 border-primary bg-primary px-3 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground shadow-sm hover:opacity-90 sm:px-4 sm:text-xs"
             >
               <UserRound className="h-4 w-4" /> Ask_Mentor
             </button>
@@ -425,18 +425,18 @@ function DomainRunner() {
               aria-expanded={canvasOpen}
               aria-controls="study-canvas"
               aria-keyshortcuts="Control+Shift+C"
-              className="inline-flex min-h-11 items-center gap-2 border-2 border-border px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:border-primary sm:px-4 sm:text-[11px]"
+              className="inline-flex min-h-11 items-center gap-2 border-2 border-border px-3 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:border-primary sm:px-4 sm:text-xs"
             >
               <Code2 className="h-4 w-4" /> Study_Canvas
             </button>
 
             <Link
               to="/study"
-              className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+              className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
             >
               ← Study_Hub
             </Link>
-            <div className="ml-auto min-w-0 truncate font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <div className="ml-auto min-w-0 truncate font-mono text-xs uppercase tracking-widest text-muted-foreground">
               {domainQ.data?.title} · Q{Math.min(idx + 1, questions.length)}/{questions.length}
             </div>
           </div>
@@ -463,8 +463,8 @@ function DomainRunner() {
 
           {finished && (
             <div className="border border-border bg-card p-8 text-center">
-              <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
-                {"> Set_Complete"}
+              <div className="mb-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
+                {"> Set complete"}
               </div>
               <h1 className="mb-6 font-mono text-3xl font-bold uppercase">
                 {score.correct} / {score.total}
@@ -475,13 +475,13 @@ function DomainRunner() {
                     setIdx(0);
                     setScore({ correct: 0, total: 0 });
                   }}
-                  className="border border-border bg-background px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-secondary"
+                  className="border border-border bg-background px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
                 >
                   Retry_Set
                 </button>
                 <button
                   onClick={() => navigate({ to: "/analytics" })}
-                  className="bg-primary px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
+                  className="bg-primary px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
                 >
                   View_Analytics
                 </button>
@@ -560,7 +560,7 @@ function DomainRunner() {
                           </span>
                         </button>
                         {revealed && (opt.is_correct || isSelected) && opt.explanation && (
-                          <div className="mt-1 border-l-2 border-primary/40 bg-secondary/30 px-3 py-1.5 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                          <div className="mt-1 border-l-2 border-primary/40 bg-secondary/30 px-3 py-1.5 font-mono text-xs leading-relaxed text-muted-foreground">
                             {opt.explanation}
                           </div>
                         )}
@@ -570,23 +570,23 @@ function DomainRunner() {
                 </ul>
 
                 <div className="mt-4 flex items-center justify-between">
-                  <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                     Score: {score.correct}/{score.total}
                   </div>
                   {!revealed ? (
                     <button
                       onClick={handleSubmit}
                       disabled={!selected}
-                      className="bg-primary px-5 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-40"
+                      className="bg-primary px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-40"
                     >
                       Submit_Answer
                     </button>
                   ) : (
                     <button
                       onClick={() => setIdx((i) => i + 1)}
-                      className="bg-primary px-5 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
+                      className="bg-primary px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
                     >
-                      {idx + 1 >= questions.length ? "Finish_Set" : "Next_Question →"}
+                      {idx + 1 >= questions.length ? "Finish set" : "Next question →"}
                     </button>
                   )}
                 </div>
@@ -632,7 +632,7 @@ function DomainRunner() {
       <FloatingWindow
         id="study-canvas"
         open={canvasOpen}
-        title="Study_Canvas"
+        title="Study canvas"
         subtitle={canvasSubtitle}
         rect={canvasRect}
         onRectChange={(r) => {

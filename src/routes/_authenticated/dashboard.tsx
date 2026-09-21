@@ -81,8 +81,8 @@ function Dashboard() {
       <OnboardingWizard readiness={readiness} />
       <main className="mx-auto max-w-7xl px-6 py-24">
         <div className="mb-8">
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
-            {"> Session_Active"}
+          <div className="mb-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
+            {"> Session active"}
           </div>
           <h1 className="font-mono text-4xl font-bold uppercase tracking-tight">
             Welcome, {name}
@@ -110,7 +110,7 @@ function Dashboard() {
 
         {/* Exam readiness */}
         <section className="mb-8 border border-border bg-card p-6">
-          <div className="mb-4 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+          <div className="mb-4 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
             <Target className="h-4 w-4" /> Exam_Readiness
           </div>
           {readinessQ.isLoading ? (
@@ -137,7 +137,7 @@ function Dashboard() {
             <div className="grid gap-6 md:grid-cols-[220px_1fr]">
               <div>
                 <div className="font-mono text-5xl font-bold tabular-nums">{readiness.score}</div>
-                <div className="mt-1 font-mono text-[10px] uppercase tracking-widest text-primary">
+                <div className="mt-1 font-mono text-xs uppercase tracking-widest text-primary">
                   {READINESS_BAND_LABEL[readiness.band]}
                 </div>
                 <div className="mt-4 h-2 w-full bg-muted">
@@ -146,7 +146,7 @@ function Dashboard() {
                     style={{ width: `${readiness.score}%` }}
                   />
                 </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <div className="mt-3 grid grid-cols-3 gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                   <div>
                     Mastery
                     <div className="text-sm text-foreground">{readiness.mastery}</div>
@@ -162,7 +162,7 @@ function Dashboard() {
                 </div>
               </div>
               <div>
-                <div className="mb-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <div className="mb-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                   Weakest domains ({readiness.attemptedQuestions}/{readiness.totalQuestions} items
                   touched)
                 </div>
@@ -188,7 +188,7 @@ function Dashboard() {
                   <Link
                     to="/study/$slug"
                     params={{ slug: readiness.gaps[0].slug }}
-                    className="mt-4 inline-block border border-primary px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+                    className="mt-4 inline-block border border-primary px-3 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
                   >
                     Drill {readiness.gaps[0].title} →
                   </Link>
@@ -213,7 +213,7 @@ function Dashboard() {
             className="group flex flex-col justify-between border border-border bg-card p-8 transition-colors hover:border-primary"
           >
             <div>
-              <div className="mb-2 flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-primary">
+              <div className="mb-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary">
                 <Brain className="h-4 w-4" /> Study_Hub
               </div>
               <h2 className="mb-3 font-mono text-xl font-bold uppercase tracking-tight">
@@ -223,7 +223,7 @@ function Dashboard() {
                 Adaptive reviews, weak-area drills, and timed exams.
               </p>
             </div>
-            <div className="mt-6 font-mono text-[10px] uppercase tracking-widest text-primary group-hover:underline">
+            <div className="mt-6 font-mono text-xs uppercase tracking-widest text-primary group-hover:underline">
               Open →
             </div>
           </Link>
@@ -232,7 +232,7 @@ function Dashboard() {
             className="group flex flex-col justify-between border border-border bg-card p-8 transition-colors hover:border-primary"
           >
             <div>
-              <div className="mb-2 flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-primary">
+              <div className="mb-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary">
                 <Clock className="h-4 w-4" /> Timed_Exam
               </div>
               <h2 className="mb-3 font-mono text-xl font-bold uppercase tracking-tight">
@@ -242,7 +242,7 @@ function Dashboard() {
                 65 questions, 90 minutes, domain-weighted distribution.
               </p>
             </div>
-            <div className="mt-6 font-mono text-[10px] uppercase tracking-widest text-primary group-hover:underline">
+            <div className="mt-6 font-mono text-xs uppercase tracking-widest text-primary group-hover:underline">
               Open →
             </div>
           </Link>
@@ -251,7 +251,7 @@ function Dashboard() {
             className="group flex flex-col justify-between border border-border bg-card p-8 transition-colors hover:border-primary"
           >
             <div>
-              <div className="mb-2 flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-primary">
+              <div className="mb-2 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary">
                 <TrendingUp className="h-4 w-4" /> Analytics
               </div>
               <h2 className="mb-3 font-mono text-xl font-bold uppercase tracking-tight">
@@ -261,7 +261,7 @@ function Dashboard() {
                 Per-domain accuracy, response times, and mastery curves.
               </p>
             </div>
-            <div className="mt-6 font-mono text-[10px] uppercase tracking-widest text-primary group-hover:underline">
+            <div className="mt-6 font-mono text-xs uppercase tracking-widest text-primary group-hover:underline">
               Open →
             </div>
           </Link>
@@ -276,7 +276,7 @@ function StatBox(props: { label: string; value: number; icon: React.ReactNode })
     <div className="border border-border bg-card p-4">
       <div className="mb-2 flex items-center gap-2 text-primary">{props.icon}</div>
       <div className="font-mono text-2xl font-bold">{props.value}</div>
-      <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+      <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
         {props.label}
       </div>
     </div>

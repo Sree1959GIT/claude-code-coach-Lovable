@@ -13,7 +13,7 @@ import {
 } from "@/lib/citations.functions";
 
 const btn =
-  "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
+  "border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
 
 function CoverageTable({ rows }: { rows: CitationCoverageRow[] }) {
   const totalQuestions = rows.reduce((n, r) => n + r.totalQuestions, 0);
@@ -22,7 +22,7 @@ function CoverageTable({ rows }: { rows: CitationCoverageRow[] }) {
 
   return (
     <div className="mt-4 overflow-x-auto border border-border">
-      <table className="w-full min-w-[520px] border-collapse font-mono text-[11px]">
+      <table className="w-full min-w-[520px] border-collapse font-mono text-xs">
         <thead>
           <tr className="border-b border-border bg-muted/30 text-left uppercase tracking-widest">
             <th className="px-3 py-2">Domain</th>
@@ -59,7 +59,7 @@ function CoverageTable({ rows }: { rows: CitationCoverageRow[] }) {
           )}
         </tbody>
       </table>
-      <div className="border-t border-border bg-muted/20 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+      <div className="border-t border-border bg-muted/20 px-3 py-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
         {rows.length} domains · {totalQuestions} questions · {totalCited} cited · {overall}% overall
       </div>
     </div>
@@ -92,7 +92,7 @@ export function CitationPanel() {
   return (
     <div className="mt-4 border border-border bg-background p-5">
       <div className="flex flex-wrap items-end gap-4">
-        <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Chunks per question · {topK}
           <input
             type="range"
@@ -104,7 +104,7 @@ export function CitationPanel() {
             className="w-40"
           />
         </label>
-        <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Min similarity · {minSimilarity.toFixed(2)}
           <input
             type="range"
@@ -117,7 +117,7 @@ export function CitationPanel() {
           />
         </label>
         <button type="button" className={btn} disabled={mutation.isPending} onClick={() => mutation.mutate()}>
-          {mutation.isPending ? "Linking…" : "Refresh_Links"}
+          {mutation.isPending ? "Linking…" : "Refresh links"}
         </button>
       </div>
 

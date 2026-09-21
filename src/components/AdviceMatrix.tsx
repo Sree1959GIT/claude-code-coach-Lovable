@@ -22,7 +22,7 @@ export function AdviceMatrix({
   const walk = advice.walkthrough;
 
   return (
-    <div className="space-y-5 px-3 py-3 text-[11px] leading-relaxed">
+    <div className="space-y-5 px-3 py-3 text-xs leading-relaxed">
       {advice.summary && (
         <section className="space-y-1.5">
           <h3 className={HEAD}>
@@ -57,7 +57,7 @@ export function AdviceMatrix({
                   </button>
                   <div>
                     {step.label && (
-                      <p className="font-mono text-[10px] uppercase tracking-widest text-foreground">
+                      <p className="font-mono text-xs uppercase tracking-widest text-foreground">
                         {step.label}
                       </p>
                     )}

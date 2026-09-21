@@ -138,7 +138,7 @@ export function InlineError({
       className="border border-destructive/40 bg-destructive/5 p-6 text-center"
     >
       <AlertTriangle className="mx-auto h-5 w-5 text-destructive" aria-hidden="true" />
-      <p className="mt-3 font-mono text-[10px] font-bold uppercase tracking-widest text-destructive">
+      <p className="mt-3 font-mono text-xs font-bold uppercase tracking-widest text-destructive">
         {title}
       </p>
       <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
@@ -149,10 +149,10 @@ export function InlineError({
           type="button"
           onClick={onRetry}
           disabled={retrying}
-          className="mt-4 inline-flex items-center gap-2 border border-border bg-background px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-secondary disabled:opacity-50"
+          className="mt-4 inline-flex items-center gap-2 border border-border bg-background px-3 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary disabled:opacity-50"
         >
           <RotateCw className={cn("h-3.5 w-3.5", retrying && "animate-spin")} aria-hidden="true" />
-          {retrying ? "Retrying…" : "Try_Again"}
+          {retrying ? "Retrying…" : "Try again"}
         </button>
       )}
     </div>

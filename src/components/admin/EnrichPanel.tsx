@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { enrichExplanations, type EnrichResult } from "@/lib/enrich.functions";
 
 const btn =
-  "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
+  "border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
 
 export function EnrichPanel() {
   const run = useServerFn(enrichExplanations);
@@ -31,7 +31,7 @@ export function EnrichPanel() {
   return (
     <div className="mt-4 border border-border bg-background p-5">
       <div className="flex flex-wrap items-end gap-4">
-        <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Questions per run · {limit}
           <input
             type="range"
@@ -44,7 +44,7 @@ export function EnrichPanel() {
           />
         </label>
         <button type="button" className={btn} disabled={mutation.isPending} onClick={() => mutation.mutate(false)}>
-          {mutation.isPending ? "Working…" : "Draft_Explanations"}
+          {mutation.isPending ? "Working…" : "Draft explanations"}
         </button>
         <button
           type="button"
@@ -58,7 +58,7 @@ export function EnrichPanel() {
 
       {result && (
         <>
-          <p className="mt-4 font-mono text-[11px] text-muted-foreground">
+          <p className="mt-4 font-mono text-xs text-muted-foreground">
             {result.missingOptions} option(s) missing explanations across {result.questionsWithGaps} question(s) ·{" "}
             {result.processed} processed this run · {result.drafted} drafted
             {result.committed ? ` · ${result.written} written` : ""}
@@ -67,7 +67,7 @@ export function EnrichPanel() {
           {result.issues.length > 0 && (
             <ul className="mt-2 space-y-1">
               {result.issues.map((i, idx) => (
-                <li key={idx} className="font-mono text-[10px] text-muted-foreground">
+                <li key={idx} className="font-mono text-xs text-muted-foreground">
                   ! {i}
                 </li>
               ))}
@@ -75,20 +75,20 @@ export function EnrichPanel() {
           )}
 
           {result.drafts.length === 0 ? (
-            <p className="mt-3 font-mono text-[11px] text-muted-foreground">Nothing to enrich right now.</p>
+            <p className="mt-3 font-mono text-xs text-muted-foreground">Nothing to enrich right now.</p>
           ) : (
             <div className="mt-3 space-y-3">
               {result.drafts.map((d) => (
                 <div key={d.questionId} className="border border-border p-3">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <p className="max-w-[70ch] font-mono text-[11px]">{d.stem}</p>
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    <p className="max-w-[70ch] font-mono text-xs">{d.stem}</p>
+                    <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                       {d.domainTitle}
                     </span>
                   </div>
                   <ul className="mt-2 space-y-2">
                     {d.options.map((o) => (
-                      <li key={o.optionId} className="font-mono text-[11px] text-muted-foreground">
+                      <li key={o.optionId} className="font-mono text-xs text-muted-foreground">
                         <span className="font-bold">
                           {o.label}. {o.isCorrect ? "(correct) " : ""}
                         </span>
@@ -98,7 +98,7 @@ export function EnrichPanel() {
                     ))}
                   </ul>
                   {d.citations.length > 0 && (
-                    <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    <p className="mt-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                       Sources: {d.citations.map((c) => c.title).join(" · ")}
                     </p>
                   )}

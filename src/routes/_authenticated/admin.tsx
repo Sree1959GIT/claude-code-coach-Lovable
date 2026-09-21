@@ -123,9 +123,9 @@ function LearnersTable() {
 
   return (
     <div className="mt-4 overflow-x-auto border border-border">
-      <table className="w-full min-w-[720px] border-collapse font-mono text-[11px]">
+      <table className="w-full min-w-[720px] border-collapse font-mono text-xs">
         <thead>
-          <tr className="border-b border-border bg-muted/40 text-left uppercase tracking-widest text-[10px] text-muted-foreground">
+          <tr className="border-b border-border bg-muted/40 text-left uppercase tracking-widest text-xs text-muted-foreground">
             <th className="px-3 py-2">Learner</th>
             <th className="px-3 py-2">Roles</th>
             <th className="px-3 py-2">Tier</th>
@@ -148,9 +148,9 @@ function LearnersTable() {
               <tr key={r.userId} className="border-b border-border/60 last:border-0">
                 <td className="px-3 py-2">
                   <span className="font-bold">{r.displayName || "Unnamed"}</span>
-                  <span className="ml-2 text-[10px] text-muted-foreground">{r.userId.slice(0, 8)}</span>
+                  <span className="ml-2 text-xs text-muted-foreground">{r.userId.slice(0, 8)}</span>
                 </td>
-                <td className="px-3 py-2 uppercase tracking-widest text-[10px] text-muted-foreground">
+                <td className="px-3 py-2 uppercase tracking-widest text-xs text-muted-foreground">
                   <div>{r.roles.length ? r.roles.join(" · ") : "user"}</div>
                   <div className="mt-1 flex gap-2">
                     {(["author", "reviewer"] as const).map((role) => (
@@ -170,7 +170,7 @@ function LearnersTable() {
 
                 <td className="px-3 py-2">
                   <select
-                    className="border border-border bg-background px-1 py-0.5 font-mono text-[10px] uppercase tracking-widest disabled:opacity-40"
+                    className="border border-border bg-background px-1 py-0.5 font-mono text-xs uppercase tracking-widest disabled:opacity-40"
                     value={r.tier}
                     disabled={tierMutation.isPending}
                     onChange={(e) =>
@@ -195,7 +195,7 @@ function LearnersTable() {
           )}
         </tbody>
       </table>
-      <div className="border-t border-border bg-muted/20 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+      <div className="border-t border-border bg-muted/20 px-3 py-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
         {rows.length} learners · {totalAttempts} attempts logged
       </div>
     </div>
@@ -206,7 +206,7 @@ function LearnersTable() {
 function AuthoringSection() {
   const [mode, setMode] = useState<"manual" | "agentic">("manual");
   const tab = (m: "manual" | "agentic") =>
-    `border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted ${
+    `border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted ${
       mode === m ? "bg-muted" : ""
     }`;
   return (
@@ -223,7 +223,7 @@ function AuthoringSection() {
         <ContentPanel />
       ) : (
         <>
-          <p className="mt-3 font-mono text-[11px] text-muted-foreground">
+          <p className="mt-3 font-mono text-xs text-muted-foreground">
             Setter → Researcher → Adversary → Reviewer. Grounded in the RAG library first, then only admin-approved
             sources. Output is always a draft: nothing reaches learners without human approval in the review queue.
           </p>
@@ -297,9 +297,9 @@ function ContentPanel() {
                 >
                   <span className="font-mono text-xs font-bold uppercase tracking-tight">
                     {d.title}
-                    <span className="ml-2 text-[10px] font-normal text-muted-foreground">/{d.slug}</span>
+                    <span className="ml-2 text-xs font-normal text-muted-foreground">/{d.slug}</span>
                   </span>
-                  <span className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <span className="flex items-center gap-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                     <span>{d.questionCount} q</span>
                     <span>weight {d.weight}%</span>
                     <span>{d.attemptCount} attempts</span>
@@ -314,12 +314,12 @@ function ContentPanel() {
                     <button
                       type="button"
                       onClick={() => setEditor({ domainId: d.id })}
-                      className="mb-3 bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
+                      className="mb-3 bg-primary px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
                     >
                       New_Question
                     </button>
                     {d.questions.length === 0 ? (
-                      <p className="font-mono text-[11px] text-muted-foreground">No questions in this domain.</p>
+                      <p className="font-mono text-xs text-muted-foreground">No questions in this domain.</p>
                     ) : (
                       <ul className="space-y-2">
                         {d.questions.map((q) => {
@@ -327,27 +327,27 @@ function ContentPanel() {
                           return (
                             <li key={q.id} className="border border-border/60 p-3">
                               <div className="flex items-start justify-between gap-3">
-                                <p className="font-mono text-[11px] leading-relaxed">{q.stem}</p>
+                                <p className="font-mono text-xs leading-relaxed">{q.stem}</p>
                                 <div className="flex shrink-0 gap-2">
                                   <button
                                     type="button"
                                     onClick={() => queueReview.mutate(q.id)}
                                     disabled={queueReview.isPending}
-                                    className="border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-widest hover:bg-muted disabled:opacity-50"
+                                    className="border border-border px-2 py-1 font-mono text-xs uppercase tracking-widest hover:bg-muted disabled:opacity-50"
                                   >
-                                    {queuedIds.includes(q.id) ? "Queued" : "Send_To_Review"}
+                                    {queuedIds.includes(q.id) ? "Queued" : "Send to review"}
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => setEditor({ domainId: d.id, questionId: q.id })}
-                                    className="border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-widest hover:bg-muted"
+                                    className="border border-border px-2 py-1 font-mono text-xs uppercase tracking-widest hover:bg-muted"
                                   >
                                     Edit
                                   </button>
                                 </div>
                               </div>
 
-                              <div className="mt-2 flex flex-wrap gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                              <div className="mt-2 flex flex-wrap gap-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                                 <span>{q.difficulty}</span>
                                 <span>{q.optionCount} options</span>
                                 <span>{q.attempts} attempts</span>
@@ -418,7 +418,7 @@ function ReviewQueue() {
             key={f}
             type="button"
             onClick={() => setFilter(f)}
-            className={`border px-2 py-1 font-mono text-[10px] uppercase tracking-widest ${
+            className={`border px-2 py-1 font-mono text-xs uppercase tracking-widest ${
               filter === f ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-muted"
             }`}
           >
@@ -439,7 +439,7 @@ function ReviewQueue() {
             const pending = r.status === "pending";
             return (
               <div key={r.id} className="bg-background p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                   <span>
                     {r.domainTitle} · {r.source}
                   </span>
@@ -455,8 +455,8 @@ function ReviewQueue() {
                     {r.status} · {fmt(r.reviewedAt ?? r.createdAt)}
                   </span>
                 </div>
-                <p className="mt-2 font-mono text-[11px] leading-relaxed">{r.stem}</p>
-                <div className="mt-2 flex flex-wrap gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <p className="mt-2 font-mono text-xs leading-relaxed">{r.stem}</p>
+                <div className="mt-2 flex flex-wrap gap-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                   <span>{r.optionCount} options</span>
                   {bad && (
                     <span className="text-destructive">
@@ -465,7 +465,7 @@ function ReviewQueue() {
                   )}
                 </div>
                 {r.notes && !pending && (
-                  <p className="mt-2 font-mono text-[10px] text-muted-foreground">Notes: {r.notes}</p>
+                  <p className="mt-2 font-mono text-xs text-muted-foreground">Notes: {r.notes}</p>
                 )}
 
                 {pending && (
@@ -474,13 +474,13 @@ function ReviewQueue() {
                       value={notes[r.id] ?? ""}
                       onChange={(e) => setNotes((prev) => ({ ...prev, [r.id]: e.target.value }))}
                       placeholder="Reviewer note (optional)"
-                      className="min-w-[220px] flex-1 border border-border bg-background px-2 py-1 font-mono text-[11px]"
+                      className="min-w-[220px] flex-1 border border-border bg-background px-2 py-1 font-mono text-xs"
                     />
                     <button
                       type="button"
                       disabled={resolve.isPending}
                       onClick={() => resolve.mutate({ id: r.id, status: "approved", notes: notes[r.id] ?? null })}
-                      className="bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50"
+                      className="bg-primary px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50"
                     >
                       Approve
                     </button>
@@ -488,7 +488,7 @@ function ReviewQueue() {
                       type="button"
                       disabled={resolve.isPending}
                       onClick={() => resolve.mutate({ id: r.id, status: "rejected", notes: notes[r.id] ?? null })}
-                      className="border border-destructive px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-destructive disabled:opacity-50"
+                      className="border border-destructive px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-destructive disabled:opacity-50"
                     >
                       Reject
                     </button>
@@ -500,7 +500,7 @@ function ReviewQueue() {
         )}
       </div>
       {resolve.error && (
-        <p className="mt-2 font-mono text-[11px] text-destructive">{(resolve.error as Error).message}</p>
+        <p className="mt-2 font-mono text-xs text-destructive">{(resolve.error as Error).message}</p>
       )}
     </div>
   );
@@ -531,17 +531,17 @@ function JobsPanel() {
         type="button"
         onClick={() => trigger.mutate()}
         disabled={trigger.isPending}
-        className="bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50"
+        className="bg-primary px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50"
       >
-        {trigger.isPending ? "Running…" : "Run_Refresh_Now"}
+        {trigger.isPending ? "Running…" : "Run refresh now"}
       </button>
       {trigger.data && (
-        <span className="ml-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <span className="ml-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           repaired {trigger.data.repaired} · missing {trigger.data.missing}
         </span>
       )}
       {trigger.error && (
-        <p className="mt-2 font-mono text-[11px] text-destructive">{(trigger.error as Error).message}</p>
+        <p className="mt-2 font-mono text-xs text-destructive">{(trigger.error as Error).message}</p>
       )}
 
       {isLoading ? (
@@ -550,9 +550,9 @@ function JobsPanel() {
         <p className="mt-4 font-mono text-xs text-destructive">Could not load jobs: {(error as Error).message}</p>
       ) : (
         <div className="mt-4 overflow-x-auto border border-border">
-          <table className="w-full min-w-[680px] border-collapse font-mono text-[11px]">
+          <table className="w-full min-w-[680px] border-collapse font-mono text-xs">
             <thead>
-              <tr className="border-b border-border bg-muted/40 text-left uppercase tracking-widest text-[10px] text-muted-foreground">
+              <tr className="border-b border-border bg-muted/40 text-left uppercase tracking-widest text-xs text-muted-foreground">
                 <th className="px-3 py-2">Job</th>
                 <th className="px-3 py-2">Status</th>
                 <th className="px-3 py-2">Summary</th>
@@ -574,7 +574,7 @@ function JobsPanel() {
                   <tr key={r.id} className="border-b border-border/60 last:border-0">
                     <td className="px-3 py-2 font-bold">{r.jobName}</td>
                     <td
-                      className={`px-3 py-2 uppercase tracking-widest text-[10px] ${
+                      className={`px-3 py-2 uppercase tracking-widest text-xs ${
                         r.status === "ok" ? "text-primary" : "text-destructive"
                       }`}
                     >
@@ -633,17 +633,17 @@ function EvalsPanel() {
         type="button"
         onClick={() => trigger.mutate()}
         disabled={trigger.isPending}
-        className="bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50"
+        className="bg-primary px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50"
       >
-        {trigger.isPending ? "Replaying golden set…" : "Run_Evals_Now"}
+        {trigger.isPending ? "Replaying golden set…" : "Run evals now"}
       </button>
       {trigger.data && (
-        <span className="ml-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <span className="ml-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           {trigger.data.passed}/{trigger.data.total} passed · avg {trigger.data.avgScore}
         </span>
       )}
       {trigger.error && (
-        <p className="mt-2 font-mono text-[11px] text-destructive">{(trigger.error as Error).message}</p>
+        <p className="mt-2 font-mono text-xs text-destructive">{(trigger.error as Error).message}</p>
       )}
 
       {isLoading ? (
@@ -652,9 +652,9 @@ function EvalsPanel() {
         <p className="mt-4 font-mono text-xs text-destructive">Could not load evals: {(error as Error).message}</p>
       ) : (
         <div className="mt-4 overflow-x-auto border border-border">
-          <table className="w-full min-w-[680px] border-collapse font-mono text-[11px]">
+          <table className="w-full min-w-[680px] border-collapse font-mono text-xs">
             <thead>
-              <tr className="border-b border-border bg-muted/40 text-left uppercase tracking-widest text-[10px] text-muted-foreground">
+              <tr className="border-b border-border bg-muted/40 text-left uppercase tracking-widest text-xs text-muted-foreground">
                 <th className="px-3 py-2">Batch</th>
                 <th className="px-3 py-2">Status</th>
                 <th className="px-3 py-2 text-right">Total</th>
@@ -677,7 +677,7 @@ function EvalsPanel() {
                   <tr key={r.id} className="border-b border-border/60 last:border-0 align-top">
                     <td className="px-3 py-2 font-bold">{r.label}</td>
                     <td
-                      className={`px-3 py-2 uppercase tracking-widest text-[10px] ${
+                      className={`px-3 py-2 uppercase tracking-widest text-xs ${
                         r.status === "done" ? "text-primary" : "text-muted-foreground"
                       }`}
                     >
@@ -692,7 +692,7 @@ function EvalsPanel() {
                       <button
                         type="button"
                         onClick={() => setOpenRun(openRun === r.id ? null : r.id)}
-                        className="border border-border px-2 py-1 text-[10px] font-bold uppercase tracking-widest hover:bg-muted"
+                        className="border border-border px-2 py-1 text-xs font-bold uppercase tracking-widest hover:bg-muted"
                       >
                         {openRun === r.id ? "Hide" : "Details"}
                       </button>
@@ -707,7 +707,7 @@ function EvalsPanel() {
 
       {openRun && (
         <div className="mt-4 border border-border p-4">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Case_Results</p>
+          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Case results</p>
           {results.isLoading ? (
             <SkeletonTable className="mt-3" rows={3} columns={3} />
           ) : results.error ? (
@@ -721,33 +721,33 @@ function EvalsPanel() {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-mono text-xs font-bold">{c.name}</span>
                     <span
-                      className={`font-mono text-[10px] font-bold uppercase tracking-widest ${
+                      className={`font-mono text-xs font-bold uppercase tracking-widest ${
                         c.passed ? "text-primary" : "text-destructive"
                       }`}
                     >
                       {c.passed ? "pass" : "fail"} · {c.score}
                     </span>
                   </div>
-                  <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <p className="mt-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                     {c.intent ?? "—"} · {c.agents.join(" → ") || "—"} ·{" "}
                     {c.durationMs === null ? "—" : `${c.durationMs} ms`}
                   </p>
                   {c.issues.length > 0 && (
                     <ul className="mt-2 space-y-1">
                       {c.issues.map((i, idx) => (
-                        <li key={idx} className="font-mono text-[11px] text-destructive">
+                        <li key={idx} className="font-mono text-xs text-destructive">
                           · {i}
                         </li>
                       ))}
                     </ul>
                   )}
                   {c.missingPoints.length > 0 && (
-                    <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+                    <p className="mt-2 font-mono text-xs text-muted-foreground">
                       Missing points: {c.missingPoints.join("; ")}
                     </p>
                   )}
                   {c.answer && (
-                    <p className="mt-2 line-clamp-4 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                    <p className="mt-2 line-clamp-4 font-mono text-xs leading-relaxed text-muted-foreground">
                       {c.answer}
                     </p>
                   )}
@@ -773,21 +773,21 @@ function AdminPage() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main className="mx-auto max-w-5xl px-6 py-12">
-        <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Stage_06B</p>
-        <h1 className="mt-2 font-mono text-2xl font-bold tracking-tight uppercase">Admin_Console</h1>
+        <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Stage 06B</p>
+        <h1 className="mt-2 font-mono text-2xl font-bold tracking-tight uppercase">Admin console</h1>
 
         {loading ? (
           <p className="mt-8 font-mono text-xs text-muted-foreground">Checking permissions…</p>
         ) : !isAdmin ? (
           <div className="mt-8 border border-destructive/40 bg-destructive/5 p-6">
-            <p className="font-mono text-xs font-bold uppercase tracking-widest text-destructive">Access_Denied</p>
+            <p className="font-mono text-xs font-bold uppercase tracking-widest text-destructive">Access denied</p>
             <p className="mt-3 max-w-xl font-mono text-xs leading-relaxed text-muted-foreground">
               This console is restricted to accounts holding the admin role. Ask an existing admin to grant it, then
               reload this page.
             </p>
             <Link
               to="/dashboard"
-              className="mt-6 inline-block bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
+              className="mt-6 inline-block bg-primary px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
             >
               Back_To_Dashboard
             </Link>
@@ -802,20 +802,20 @@ function AdminPage() {
               {SECTIONS.map((s) => (
                 <div key={s.code} className="bg-background p-5">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-[10px] text-muted-foreground">{s.code}</span>
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    <span className="font-mono text-xs text-muted-foreground">{s.code}</span>
+                    <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                       {s.status}
                     </span>
                   </div>
                   <h2 className="mt-3 font-mono text-sm font-bold uppercase tracking-tight">{s.title}</h2>
-                  <p className="mt-2 font-mono text-[11px] leading-relaxed text-muted-foreground">{s.body}</p>
+                  <p className="mt-2 font-mono text-xs leading-relaxed text-muted-foreground">{s.body}</p>
                 </div>
               ))}
             </div>
 
             <section className="mt-10">
               <h2 className="font-mono text-sm font-bold uppercase tracking-tight">01 · Learners</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Every account with attempts, accuracy, tracked cards and last activity.
               </p>
               <LearnersTable />
@@ -823,7 +823,7 @@ function AdminPage() {
 
             <section className="mt-10">
               <h2 className="font-mono text-sm font-bold uppercase tracking-tight">02 · Content_&amp;_Authoring</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Domains and their questions, with option health and live difficulty from real attempts. Manual
                 authoring is the default; switch to Agentic to run the drafting loop.
               </p>
@@ -832,8 +832,8 @@ function AdminPage() {
 
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">03 · Review_Queue</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">03 · Review queue</h2>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Drafted or flagged questions awaiting a human decision. Approve or reject with an optional note, or
                 open the{" "}
                 <Link to="/reviews" className="underline">
@@ -845,24 +845,24 @@ function AdminPage() {
             </section>
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">04 · Scheduled_Jobs</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">04 · Scheduled jobs</h2>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Library re-index history from the cron endpoint, plus a manual trigger.
               </p>
               <JobsPanel />
             </section>
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">05 · Agent_Evals</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">05 · Agent evals</h2>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Replay the golden prompt set through the live agent path and score each answer with the critic.
               </p>
               <EvalsPanel />
             </section>
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">06 · Bulk_Import</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">06 · Bulk import</h2>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Paste or upload CSV/JSON questions, validate them against the blueprint domains with a dry run, then
                 commit. Duplicate stems are flagged and skipped by default.
               </p>
@@ -871,7 +871,7 @@ function AdminPage() {
 
             <section className="mt-10">
               <h2 className="font-mono text-sm font-bold uppercase tracking-tight">07 · AI_Question_Generator</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Draft blueprint-aligned questions grounded in retrieved library chunks. Preview first, then queue them
                 into the review queue for a human decision.
               </p>
@@ -879,8 +879,8 @@ function AdminPage() {
             </section>
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">08 · Duplicate_Detector</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">08 · Duplicate detector</h2>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Embeds every question (scenario + stem + options) and flags near-duplicate pairs above the chosen
                 cosine-similarity threshold. Vectors are cached and only re-embedded when the text changes.
               </p>
@@ -888,8 +888,8 @@ function AdminPage() {
             </section>
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">09 · Distractor_Audit</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">09 · Distractor audit</h2>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Flags distractors that no learner ever picks, distractors chosen more often than the threshold, and any
                 option missing an explanation.
               </p>
@@ -897,8 +897,8 @@ function AdminPage() {
             </section>
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">09 · Explanation_Enrichment</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">09 · Explanation enrichment</h2>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Drafts grounded, cited explanations for options that are missing one. Review the drafts first, then
                 approve to write them back onto the options.
               </p>
@@ -906,8 +906,8 @@ function AdminPage() {
             </section>
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">10 · Citation_Coverage</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">10 · Citation coverage</h2>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Percentage of questions per domain that have at least one linked library chunk. Refresh links to
                 recompute semantic citations against the current library.
               </p>
@@ -915,8 +915,8 @@ function AdminPage() {
             </section>
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">11 · Difficulty_Calibration</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">11 · Difficulty calibration</h2>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Recomputes each question's difficulty band from live first-attempt accuracy, then stores the calibrated
                 value on the question. Preview first, then apply.
               </p>
@@ -924,8 +924,8 @@ function AdminPage() {
             </section>
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">12 · Code_Generation</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">12 · Code generation</h2>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Runs the four-agent code example loop and streams each agent's live status. Verified examples are saved
                 to the shared codebase library.
               </p>
@@ -933,8 +933,8 @@ function AdminPage() {
             </section>
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">13 · Spider_Control_Desk</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">13 · Spider control desk</h2>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Catalogue the exact source pages worth re-checking, set how often each should be re-crawled, and see
                 when each was last fetched and what came back. Crawls reuse stored credentials and feed the library.
               </p>
@@ -942,8 +942,8 @@ function AdminPage() {
             </section>
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">14 · Corpus_Defrag</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">14 · Corpus defrag</h2>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Consolidates fragmented library sections, strips empty structural leftovers, and re-embeds whatever
                 changed. Run the dry run first to preview, then apply.
               </p>
@@ -951,8 +951,8 @@ function AdminPage() {
             </section>
 
             <section className="mt-10">
-              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">15 · Coverage_Parity</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-tight">15 · Coverage parity</h2>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Maps the live question bank against the certification blueprint weights: which domains are
                 under-served, by how many questions, and how their difficulty mix and citations stack up.
               </p>
@@ -961,7 +961,7 @@ function AdminPage() {
 
             <section className="mt-10">
               <h2 className="font-mono text-sm font-bold uppercase tracking-tight">16 · AI_Usage_Board</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 What the AI actually costs: cache hit rate and credits saved by reused answers, spend and token volume
                 per task and model, and the concepts learners ask for most.
               </p>
@@ -970,7 +970,7 @@ function AdminPage() {
 
             <section className="mt-10">
               <h2 className="font-mono text-sm font-bold uppercase tracking-tight">17 · BYOK_Key_Vault</h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 Store your own Anthropic or Google keys. They are encrypted before saving, verified against
                 the provider, and only ever displayed as the last four characters.
               </p>
@@ -990,13 +990,13 @@ function AdminPage() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 to="/library"
-                className="border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted"
+                className="border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted"
               >
                 Library_Console
               </Link>
               <Link
                 to="/traces"
-                className="border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted"
+                className="border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted"
               >
                 Agent_Traces
               </Link>

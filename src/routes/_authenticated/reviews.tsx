@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/reviews")({
 });
 
 const btn =
-  "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
+  "border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
 
 type OriginFilter = "all" | "agentic" | "manual" | "ai";
 type StatusFilter = "pending" | "approved" | "rejected" | "all";
@@ -160,11 +160,11 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
   const hasOneCorrect = draft.options.filter((o) => o.isCorrect).length === 1;
   const missingExplanations = draft.options.filter((o) => !o.explanation?.trim()).length;
   const input =
-    "w-full border border-border bg-background px-2 py-1 font-mono text-[11px] text-foreground";
+    "w-full border border-border bg-background px-2 py-1 font-mono text-xs text-foreground";
 
   return (
     <article className="border border-border bg-background p-5">
-      <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
         <span>{item.domainTitle}</span>
         <span>{draft.difficulty}</span>
         <span>origin: {item.origin}</span>
@@ -182,12 +182,12 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
       {item.kind === "revision" && (
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           <div className="border border-border p-3">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Live_Question</p>
-            {item.scenario && <p className="mt-1 font-mono text-[11px] text-muted-foreground">{item.scenario}</p>}
+            <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Live question</p>
+            {item.scenario && <p className="mt-1 font-mono text-xs text-muted-foreground">{item.scenario}</p>}
             <p className="mt-1 text-sm">{item.stem}</p>
             <ul className="mt-2 space-y-1">
               {item.options.map((o) => (
-                <li key={o.id} className="font-mono text-[11px]">
+                <li key={o.id} className="font-mono text-xs">
                   <span className={o.isCorrect ? "font-bold text-primary" : ""}>
                     {o.label}. {o.text}
                   </span>
@@ -196,12 +196,12 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
             </ul>
           </div>
           <div className="border border-border p-3">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
               Proposed_Revision · {item.diff.length} field change(s)
             </p>
             <ul className="mt-1 space-y-1">
               {item.diff.map((f, i) => (
-                <li key={i} className="font-mono text-[11px]">
+                <li key={i} className="font-mono text-xs">
                   <span className="uppercase tracking-widest text-muted-foreground">{f.field}</span>
                   <div className="text-destructive">− {f.before || "(empty)"}</div>
                   <div className="text-primary">+ {f.after || "(empty)"}</div>
@@ -245,7 +245,7 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
           {draft.options.map((o, i) => (
             <div key={o.label} className="space-y-1 border border-border p-2">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[11px] font-bold">{o.label}</span>
+                <span className="font-mono text-xs font-bold">{o.label}</span>
                 <input
                   className={input}
                   value={o.text}
@@ -257,7 +257,7 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
                     })
                   }
                 />
-                <label className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <label className="flex items-center gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                   <input
                     type="radio"
                     name={`correct-${item.reviewId}`}
@@ -290,11 +290,11 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
       ) : (
         item.kind !== "revision" && (
           <>
-            {item.scenario && <p className="mt-3 font-mono text-[11px] text-muted-foreground">{item.scenario}</p>}
+            {item.scenario && <p className="mt-3 font-mono text-xs text-muted-foreground">{item.scenario}</p>}
             <h3 className="mt-2 text-sm font-medium">{item.stem}</h3>
             <ul className="mt-3 space-y-1">
               {item.options.map((o) => (
-                <li key={o.id} className="font-mono text-[11px]">
+                <li key={o.id} className="font-mono text-xs">
                   <span className={o.isCorrect ? "font-bold text-primary" : ""}>
                     {o.label}. {o.text}
                   </span>
@@ -310,7 +310,7 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
         )
       )}
 
-      <ul className="mt-3 flex flex-wrap gap-2 font-mono text-[10px] uppercase tracking-widest">
+      <ul className="mt-3 flex flex-wrap gap-2 font-mono text-xs uppercase tracking-widest">
         <li className={`border border-border px-2 py-1 ${hasOneCorrect ? "text-foreground" : "text-destructive"}`}>
           {hasOneCorrect ? "single correct" : "correct-answer problem"}
         </li>
@@ -323,14 +323,14 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
       </ul>
 
       {item.rationale && (
-        <p className="mt-3 font-mono text-[11px] text-muted-foreground">Setter rationale: {item.rationale}</p>
+        <p className="mt-3 font-mono text-xs text-muted-foreground">Setter rationale: {item.rationale}</p>
       )}
       {item.reviewNotes && (
-        <p className="mt-1 font-mono text-[11px] text-muted-foreground">Reviewer notes: {item.reviewNotes}</p>
+        <p className="mt-1 font-mono text-xs text-muted-foreground">Reviewer notes: {item.reviewNotes}</p>
       )}
-      {item.notes && <p className="mt-1 font-mono text-[11px] text-muted-foreground">Queue note: {item.notes}</p>}
+      {item.notes && <p className="mt-1 font-mono text-xs text-muted-foreground">Queue note: {item.notes}</p>}
       {item.citations.length > 0 && (
-        <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+        <p className="mt-1 font-mono text-xs text-muted-foreground">
           Evidence: {item.citations.slice(0, 4).map((c) => c.title).join("; ")}
         </p>
       )}
@@ -338,7 +338,7 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
         <Link
           to="/traces"
           search={{ runId: item.runId }}
-          className="mt-1 inline-block font-mono text-[10px] uppercase tracking-widest underline"
+          className="mt-1 inline-block font-mono text-xs uppercase tracking-widest underline"
         >
           View_Agent_Trace
         </Link>
@@ -357,10 +357,10 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
           disabled={claimMutation.isPending || lockedByOther}
           onClick={() => claimMutation.mutate(!item.claimedByMe)}
         >
-          {item.claimedByMe ? "Release_Claim" : "Claim_Review"}
+          {item.claimedByMe ? "Release claim" : "Claim review"}
         </button>
         <button className={btn} disabled={lockedByOther} onClick={() => setEditing((v) => !v)}>
-          {editing ? "Close_Editor" : "Edit_Inline"}
+          {editing ? "Close editor" : "Edit inline"}
         </button>
         {editing && item.kind === "new" && (
           <button
@@ -376,7 +376,7 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
           disabled={mutation.isPending || !hasOneCorrect || lockedByOther || item.status !== "pending"}
           onClick={() => mutation.mutate("approved")}
         >
-          {item.kind === "revision" ? "Approve_And_Apply" : "Approve_And_Publish"}
+          {item.kind === "revision" ? "Approve and apply" : "Approve and publish"}
         </button>
         <button
           className={btn}
@@ -385,7 +385,7 @@ function ReviewCard({ item }: { item: DraftReviewItem }) {
         >
           Reject
         </button>
-        <label className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex items-center gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           <input type="checkbox" checked={selfOverride} onChange={(e) => setSelfOverride(e.target.checked)} />
           Override_Self_Review
         </label>
@@ -430,8 +430,8 @@ function ReviewsPage() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main className="mx-auto max-w-5xl px-6 py-10">
-        <h1 className="font-mono text-lg font-bold uppercase tracking-tight">Draft_Review_Queue</h1>
-        <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+        <h1 className="font-mono text-lg font-bold uppercase tracking-tight">Draft review queue</h1>
+        <p className="mt-1 font-mono text-xs text-muted-foreground">
           Drafts stay invisible to learners until approved here. Approving publishes the question; rejecting archives
           it.
         </p>
@@ -457,7 +457,7 @@ function ReviewsPage() {
           <select
             value={domainId}
             onChange={(e) => setDomainId(e.target.value)}
-            className="border border-border bg-background px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-foreground"
+            className="border border-border bg-background px-2 py-1 font-mono text-xs uppercase tracking-widest text-foreground"
           >
             <option value="all">all domains</option>
             {domains.map(([id, title]) => (

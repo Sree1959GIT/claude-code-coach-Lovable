@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { scanQuestionDuplicates, type DuplicateScan } from "@/lib/duplicates.functions";
 
 const btn =
-  "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
+  "border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
 
 export function DuplicatePanel() {
   const run = useServerFn(scanQuestionDuplicates);
@@ -31,7 +31,7 @@ export function DuplicatePanel() {
   return (
     <div className="mt-4 border border-border bg-background p-5">
       <div className="flex flex-wrap items-end gap-4">
-        <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Similarity threshold · {threshold.toFixed(2)}
           <input
             type="range"
@@ -44,24 +44,24 @@ export function DuplicatePanel() {
           />
         </label>
         <button type="button" className={btn} disabled={mutation.isPending} onClick={() => mutation.mutate()}>
-          {mutation.isPending ? "Scanning…" : "Scan_Duplicates"}
+          {mutation.isPending ? "Scanning…" : "Scan duplicates"}
         </button>
       </div>
 
       {result && (
         <>
-          <p className="mt-4 font-mono text-[11px] text-muted-foreground">
+          <p className="mt-4 font-mono text-xs text-muted-foreground">
             {result.questions} questions · {result.embedded} newly embedded · {result.reused} cached ·{" "}
             {result.pairs.length} pair(s) ≥ {result.threshold.toFixed(2)}
           </p>
 
           {result.pairs.length === 0 ? (
-            <p className="mt-3 font-mono text-[11px] text-muted-foreground">
+            <p className="mt-3 font-mono text-xs text-muted-foreground">
               Nothing to review — no question pair crosses the threshold.
             </p>
           ) : (
             <div className="mt-3 overflow-x-auto border border-border">
-              <table className="w-full min-w-[760px] border-collapse font-mono text-[11px]">
+              <table className="w-full min-w-[760px] border-collapse font-mono text-xs">
                 <thead>
                   <tr className="border-b border-border bg-muted/30 text-left uppercase tracking-widest">
                     <th className="px-3 py-2">Sim</th>
@@ -76,7 +76,7 @@ export function DuplicatePanel() {
                       <td className="px-3 py-2 font-bold">{(p.similarity * 100).toFixed(1)}%</td>
                       <td className="max-w-[280px] px-3 py-2 text-muted-foreground">{p.a.stem}</td>
                       <td className="max-w-[280px] px-3 py-2 text-muted-foreground">{p.b.stem}</td>
-                      <td className="px-3 py-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+                      <td className="px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground">
                         {p.sameDomain ? p.a.domainTitle : `${p.a.domainTitle} / ${p.b.domainTitle}`}
                       </td>
                     </tr>

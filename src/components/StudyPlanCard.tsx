@@ -45,10 +45,10 @@ export function StudyPlanCard({ readiness }: { readiness: ReadinessReport | unde
   return (
     <section className="mb-8 border border-border bg-card p-6">
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+        <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
           <CalendarClock className="h-4 w-4" /> Study_Plan
         </div>
-        <label className="ml-auto flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="ml-auto flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Exam date
           <input
             type="date"
@@ -80,7 +80,7 @@ export function StudyPlanCard({ readiness }: { readiness: ReadinessReport | unde
             }`}
           >
             {plan.headline}{" "}
-            <span className="font-mono text-[10px] uppercase tracking-widest text-primary">
+            <span className="font-mono text-xs uppercase tracking-widest text-primary">
               · {PACE_LABEL[plan.pace]}
             </span>
           </p>
@@ -93,7 +93,7 @@ export function StudyPlanCard({ readiness }: { readiness: ReadinessReport | unde
                     <div className="truncate font-mono text-xs font-bold uppercase tracking-wide">
                       {t.title}
                     </div>
-                    <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                       {t.reason} · readiness {t.score}
                     </div>
                   </div>
@@ -101,7 +101,7 @@ export function StudyPlanCard({ readiness }: { readiness: ReadinessReport | unde
                   <Link
                     to="/study/$slug"
                     params={{ slug: t.slug }}
-                    className="border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-secondary"
+                    className="border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
                   >
                     Drill →
                   </Link>
@@ -119,7 +119,7 @@ function Metric(props: { label: string; value: string }) {
   return (
     <div className="border border-border p-3">
       <div className="font-mono text-2xl font-bold tabular-nums">{props.value}</div>
-      <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+      <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
         {props.label}
       </div>
     </div>

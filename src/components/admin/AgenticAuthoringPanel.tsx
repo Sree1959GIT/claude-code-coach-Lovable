@@ -28,7 +28,7 @@ type AuthType = "none" | "bearer" | "header" | "basic" | "cookie";
 
 
 const btn =
-  "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
+  "border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
 
 async function fetchDomains() {
   const { data, error } = await supabase.from("domains").select("id, title, sort_order").order("sort_order");
@@ -328,7 +328,7 @@ export function AgenticAuthoringPanel() {
   return (
     <div className="mt-4 border border-border bg-background p-5">
       <div className="flex flex-wrap items-end gap-4">
-        <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Domain
           <select
             value={domainId}
@@ -346,7 +346,7 @@ export function AgenticAuthoringPanel() {
           </select>
         </label>
 
-        <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Items
           <input
             type="number"
@@ -360,7 +360,7 @@ export function AgenticAuthoringPanel() {
         </label>
 
 
-        <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Difficulty
           <select
             value={difficulty}
@@ -374,7 +374,7 @@ export function AgenticAuthoringPanel() {
           </select>
         </label>
 
-        <label className="flex flex-1 flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex flex-1 flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Focus topic (optional)
           <input
             value={topicHint}
@@ -386,17 +386,17 @@ export function AgenticAuthoringPanel() {
 
         <div className="flex gap-2">
           <button className={btn} disabled={!domainId || mutation.isPending} onClick={() => mutation.mutate(true)}>
-            {mutation.isPending ? "Running…" : "Preview_Loop"}
+            {mutation.isPending ? "Running…" : "Preview loop"}
           </button>
           <button className={btn} disabled={!domainId || mutation.isPending} onClick={() => mutation.mutate(false)}>
-            {baseQuestionId ? "Queue_Revision" : "Queue_Drafts"}
+            {baseQuestionId ? "Queue revision" : "Queue drafts"}
           </button>
         </div>
       </div>
 
       {/* B7 — edit mode */}
       <div className="mt-4 flex flex-wrap items-end gap-4 border-t border-border pt-4">
-        <label className="flex min-w-[18rem] flex-1 flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex min-w-[18rem] flex-1 flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Edit mode — revise an existing question (optional)
           <select
             value={baseQuestionId}
@@ -415,7 +415,7 @@ export function AgenticAuthoringPanel() {
           </select>
         </label>
 
-        <label className="flex min-w-[14rem] flex-1 flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex min-w-[14rem] flex-1 flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Revision notes
           <input
             value={revisionNotes}
@@ -430,10 +430,10 @@ export function AgenticAuthoringPanel() {
 
       {/* Approved research sources */}
       <div className="mt-6 border-t border-border pt-4">
-        <h3 className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
           Approved_Research_Sources
         </h3>
-        <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+        <p className="mt-1 font-mono text-xs text-muted-foreground">
           The library is always searched first. Agents may only reference the hosts listed here — there are no default
           external sources.
         </p>
@@ -480,16 +480,16 @@ export function AgenticAuthoringPanel() {
             disabled={sources.length === 0 || testAllMutation.isPending}
             onClick={() => testAllMutation.mutate()}
           >
-            {testAllMutation.isPending ? "Testing…" : "Test_All"}
+            {testAllMutation.isPending ? "Testing…" : "Test all"}
           </button>
         </div>
         {sources.length === 0 ? (
-          <p className="mt-3 border border-border px-3 py-2 font-mono text-[11px] text-muted-foreground">
+          <p className="mt-3 border border-border px-3 py-2 font-mono text-xs text-muted-foreground">
             No approved sources yet — the loop will run library-only. Add a source above to let the agents reference
             external documentation.
           </p>
         ) : sources.every((s) => !s.enabled) ? (
-          <p className="mt-3 border border-border px-3 py-2 font-mono text-[11px] text-muted-foreground">
+          <p className="mt-3 border border-border px-3 py-2 font-mono text-xs text-muted-foreground">
             Every source is disabled — the loop will run library-only.
           </p>
         ) : null}
@@ -497,7 +497,7 @@ export function AgenticAuthoringPanel() {
 
           <ul className="mt-3 space-y-1">
             {sources.map((s) => (
-              <li key={s.id} className="border border-border px-3 py-1.5 font-mono text-[11px]">
+              <li key={s.id} className="border border-border px-3 py-1.5 font-mono text-xs">
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="font-bold">{s.label}</span>
                   <span className="text-muted-foreground">{s.host}</span>
@@ -512,13 +512,13 @@ export function AgenticAuthoringPanel() {
                     disabled={testMutation.isPending && testingId === s.id}
                     onClick={() => testMutation.mutate(s.id)}
                   >
-                    {testMutation.isPending && testingId === s.id ? "Testing…" : "Test_Fetch"}
+                    {testMutation.isPending && testingId === s.id ? "Testing…" : "Test fetch"}
                   </button>
                   <button
                     className="underline"
                     onClick={() => (credId === s.id ? setCredId(null) : startCredential(s))}
                   >
-                    {credId === s.id ? "Close_Auth" : s.hasCredential ? "Auth ✓" : "Auth"}
+                    {credId === s.id ? "Close auth" : s.hasCredential ? "Auth ✓" : "Auth"}
                   </button>
                   <button className="underline" onClick={() => (editingId === s.id ? setEditingId(null) : startEdit(s))}>
                     {editingId === s.id ? "Cancel" : "Edit"}
@@ -599,7 +599,7 @@ export function AgenticAuthoringPanel() {
                         disabled={credentialMutation.isPending}
                         onClick={() => credentialMutation.mutate()}
                       >
-                        {credentialMutation.isPending ? "Saving…" : "Save_Credential"}
+                        {credentialMutation.isPending ? "Saving…" : "Save credential"}
                       </button>
                       {s.hasCredential && (
                         <button
@@ -623,7 +623,7 @@ export function AgenticAuthoringPanel() {
                         disabled={!ingestUrl.trim() || gatedIngestMutation.isPending}
                         onClick={() => gatedIngestMutation.mutate(s.id)}
                       >
-                        {gatedIngestMutation.isPending ? "Ingesting…" : "Ingest_URL"}
+                        {gatedIngestMutation.isPending ? "Ingesting…" : "Ingest uRL"}
                       </button>
                     </div>
                   </div>
@@ -682,7 +682,7 @@ export function AgenticAuthoringPanel() {
       {/* C9 — gateway failure surfacing with a one-click retry */}
       {mutation.isError && (
         <div className="mt-6 border border-destructive px-3 py-2">
-          <p className="font-mono text-[11px] text-destructive">
+          <p className="font-mono text-xs text-destructive">
             {(mutation.error as Error).message}
           </p>
           <button
@@ -690,7 +690,7 @@ export function AgenticAuthoringPanel() {
             disabled={mutation.isPending}
             onClick={() => mutation.mutate(mutation.variables ?? true)}
           >
-            {mutation.isPending ? "Retrying…" : "Retry_Run"}
+            {mutation.isPending ? "Retrying…" : "Retry run"}
           </button>
         </div>
       )}
@@ -698,7 +698,7 @@ export function AgenticAuthoringPanel() {
       {/* Run output */}
       {result && (
         <div className="mt-6 border-t border-border pt-4">
-          <p className="font-mono text-[11px] text-muted-foreground">
+          <p className="font-mono text-xs text-muted-foreground">
             {result.domainTitle} · {result.evidenceCount} evidence passage(s) · {result.drafts.length} drafted ·{" "}
             {result.queued} queued
           </p>
@@ -706,21 +706,21 @@ export function AgenticAuthoringPanel() {
           {result.runId && (
             <a
               href={`/traces?runId=${result.runId}`}
-              className="mt-1 inline-block font-mono text-[10px] uppercase tracking-widest underline"
+              className="mt-1 inline-block font-mono text-xs uppercase tracking-widest underline"
             >
               View_Agent_Trace
             </a>
           )}
 
           {result.evidenceCount === 0 && (
-            <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+            <p className="mt-2 font-mono text-xs text-muted-foreground">
               No library passages matched — items were written without grounding. Ingest material in the library or add
               an approved source before publishing.
             </p>
           )}
 
           {result.drafts.length === 0 && (
-            <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+            <p className="mt-2 font-mono text-xs text-muted-foreground">
               The loop returned no usable items. Try a narrower focus topic or re-run.
             </p>
           )}
@@ -730,7 +730,7 @@ export function AgenticAuthoringPanel() {
             {result.steps.map((s, i) => (
               <li
                 key={i}
-                className={`border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-widest ${
+                className={`border border-border px-2 py-1 font-mono text-xs uppercase tracking-widest ${
                   s.status === "ok" ? "text-foreground" : "text-destructive"
                 }`}
               >
@@ -740,7 +740,7 @@ export function AgenticAuthoringPanel() {
           </ul>
 
           {result.issues.length > 0 && (
-            <ul className="mt-3 space-y-1 font-mono text-[11px] text-destructive">
+            <ul className="mt-3 space-y-1 font-mono text-xs text-destructive">
               {result.issues.map((i, idx) => (
                 <li key={idx}>{i}</li>
               ))}
@@ -749,7 +749,7 @@ export function AgenticAuthoringPanel() {
 
           {/* C6 — per-item accept / reject for the batch */}
           {result.drafts.some((d) => !d.isRevision && !d.questionId) && (
-            <div className="mt-4 flex flex-wrap items-center gap-3 border border-border px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <div className="mt-4 flex flex-wrap items-center gap-3 border border-border px-3 py-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
               <span>
                 {Object.values(accepted).filter(Boolean).length}/{result.drafts.length} accepted
               </span>
@@ -775,7 +775,7 @@ export function AgenticAuthoringPanel() {
                 disabled={queueMutation.isPending || Object.values(accepted).filter(Boolean).length === 0}
                 onClick={() => queueMutation.mutate()}
               >
-                {queueMutation.isPending ? "Queueing…" : "Queue_Accepted"}
+                {queueMutation.isPending ? "Queueing…" : "Queue accepted"}
               </button>
             </div>
           )}
@@ -783,7 +783,7 @@ export function AgenticAuthoringPanel() {
           <div className="mt-4 space-y-4">
             {result.drafts.map((d, i) => (
               <article key={i} className="border border-border p-4">
-                <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                   {!d.isRevision && !d.questionId && (
                     <label className="flex items-center gap-1">
                       <input
@@ -811,21 +811,21 @@ export function AgenticAuthoringPanel() {
                   )}
                 </div>
                 {d.duplicate && (
-                  <p className="mt-1 font-mono text-[11px] text-destructive">
+                  <p className="mt-1 font-mono text-xs text-destructive">
                     Near-duplicate of: {d.duplicate.stem.slice(0, 110)}…
                   </p>
                 )}
                 {d.isRevision && (
                   <div className="mt-2 border border-border p-2">
-                    <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                       Field_Diff ({d.diff.length})
                     </p>
                     {d.diff.length === 0 ? (
-                      <p className="mt-1 font-mono text-[11px] text-muted-foreground">No changes proposed.</p>
+                      <p className="mt-1 font-mono text-xs text-muted-foreground">No changes proposed.</p>
                     ) : (
                       <ul className="mt-1 space-y-1">
                         {d.diff.map((f, k) => (
-                          <li key={k} className="font-mono text-[11px]">
+                          <li key={k} className="font-mono text-xs">
                             <span className="uppercase tracking-widest text-muted-foreground">{f.field}</span>
                             <div className="text-destructive">− {f.before || "(empty)"}</div>
                             <div className="text-primary">+ {f.after || "(empty)"}</div>
@@ -836,11 +836,11 @@ export function AgenticAuthoringPanel() {
                   </div>
                 )}
 
-                {d.scenario && <p className="mt-2 font-mono text-[11px] text-muted-foreground">{d.scenario}</p>}
+                {d.scenario && <p className="mt-2 font-mono text-xs text-muted-foreground">{d.scenario}</p>}
                 <p className="mt-2 text-sm font-medium">{d.stem}</p>
                 <ul className="mt-2 space-y-1">
                   {d.options.map((o) => (
-                    <li key={o.label} className="font-mono text-[11px]">
+                    <li key={o.label} className="font-mono text-xs">
                       <span className={o.isCorrect ? "font-bold text-primary" : ""}>
                         {o.label}. {o.text}
                       </span>
@@ -849,15 +849,15 @@ export function AgenticAuthoringPanel() {
                   ))}
                 </ul>
                 {d.adversaryIssues.length > 0 && (
-                  <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+                  <p className="mt-2 font-mono text-xs text-muted-foreground">
                     Adversary: {d.adversaryIssues.join(" · ")}
                   </p>
                 )}
                 {d.reviewNotes && (
-                  <p className="mt-1 font-mono text-[11px] text-muted-foreground">Reviewer: {d.reviewNotes}</p>
+                  <p className="mt-1 font-mono text-xs text-muted-foreground">Reviewer: {d.reviewNotes}</p>
                 )}
                 {d.citations.length > 0 && (
-                  <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                  <p className="mt-1 font-mono text-xs text-muted-foreground">
                     Sources: {d.citations.slice(0, 4).map((c) => c.title).join("; ")}
                   </p>
                 )}

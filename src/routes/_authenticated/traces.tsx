@@ -35,7 +35,7 @@ function statusClass(status: string) {
 function Json({ value }: { value: unknown }) {
   if (value == null) return <span className="text-muted-foreground">null</span>;
   return (
-    <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words bg-muted/40 p-3 font-mono text-[11px] leading-relaxed">
+    <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words bg-muted/40 p-3 font-mono text-xs leading-relaxed">
       {JSON.stringify(value, null, 2)}
     </pre>
   );
@@ -49,29 +49,29 @@ function StepRow({ step }: { step: AgentStep }) {
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center gap-4 px-4 py-2 text-left hover:bg-muted/40"
       >
-        <span className="w-6 font-mono text-[10px] text-muted-foreground">{step.step_index}</span>
-        <span className="w-28 font-mono text-[11px] font-bold uppercase tracking-widest">{step.agent}</span>
-        <span className="flex-1 truncate font-mono text-[11px] text-muted-foreground">
+        <span className="w-6 font-mono text-xs text-muted-foreground">{step.step_index}</span>
+        <span className="w-28 font-mono text-xs font-bold uppercase tracking-widest">{step.agent}</span>
+        <span className="flex-1 truncate font-mono text-xs text-muted-foreground">
           {step.role ?? ""} {step.model ? `· ${step.model}` : ""}
         </span>
-        <span className={`w-16 font-mono text-[10px] uppercase ${statusClass(step.status)}`}>{step.status}</span>
-        <span className="w-16 text-right font-mono text-[10px] text-muted-foreground">{ms(step.duration_ms)}</span>
-        <span className="w-24 text-right font-mono text-[10px] text-muted-foreground">
+        <span className={`w-16 font-mono text-xs uppercase ${statusClass(step.status)}`}>{step.status}</span>
+        <span className="w-16 text-right font-mono text-xs text-muted-foreground">{ms(step.duration_ms)}</span>
+        <span className="w-24 text-right font-mono text-xs text-muted-foreground">
           {step.prompt_tokens}/{step.completion_tokens} tok
         </span>
       </button>
       {open ? (
         <div className="grid gap-3 px-4 pb-4 md:grid-cols-2">
           <div>
-            <p className="mb-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Input</p>
+            <p className="mb-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">Input</p>
             <Json value={step.input} />
           </div>
           <div>
-            <p className="mb-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Output</p>
+            <p className="mb-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">Output</p>
             <Json value={step.output} />
           </div>
           {step.error ? (
-            <p className="md:col-span-2 font-mono text-[11px] text-destructive">{step.error}</p>
+            <p className="md:col-span-2 font-mono text-xs text-destructive">{step.error}</p>
           ) : null}
         </div>
       ) : null}
@@ -109,27 +109,27 @@ function RunCard({ run, expanded, onToggle }: { run: AgentRun; expanded: boolean
     <div className="border border-border bg-card">
       <button onClick={onToggle} className="flex w-full flex-col gap-2 p-4 text-left hover:bg-muted/30">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="bg-primary px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground">
+          <span className="bg-primary px-2 py-0.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground">
             {route.intent ?? run.mode}
           </span>
-          <span className={`font-mono text-[10px] uppercase ${statusClass(run.status)}`}>{run.status}</span>
-          <span className="font-mono text-[10px] text-muted-foreground">{ms(run.duration_ms)}</span>
-          <span className="font-mono text-[10px] text-muted-foreground">
+          <span className={`font-mono text-xs uppercase ${statusClass(run.status)}`}>{run.status}</span>
+          <span className="font-mono text-xs text-muted-foreground">{ms(run.duration_ms)}</span>
+          <span className="font-mono text-xs text-muted-foreground">
             {run.total_prompt_tokens}/{run.total_completion_tokens} tok
           </span>
           {critic?.score != null ? (
-            <span className={`font-mono text-[10px] uppercase ${scoreClass(critic.score)}`}>
+            <span className={`font-mono text-xs uppercase ${scoreClass(critic.score)}`}>
               quality {critic.score}
               {critic.issues?.length ? ` · ${critic.issues.length} issue${critic.issues.length > 1 ? "s" : ""}` : ""}
             </span>
           ) : null}
-          <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+          <span className="ml-auto font-mono text-xs text-muted-foreground">
             {new Date(run.created_at).toLocaleString()}
           </span>
         </div>
         <p className="line-clamp-2 text-sm">{run.question ?? "(no question captured)"}</p>
         {route.agents?.length ? (
-          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             path: {route.agents.join(" → ")}
           </p>
         ) : null}
@@ -140,14 +140,14 @@ function RunCard({ run, expanded, onToggle }: { run: AgentRun; expanded: boolean
         <div className="border-t border-border">
           {critic?.issues?.length ? (
             <div className="border-b border-border bg-muted/30 p-4">
-              <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <p className="mb-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 Critic findings · score {critic.score ?? "—"}
               </p>
               <ul className="space-y-1">
                 {critic.issues.map((i, idx) => (
                   <li
                     key={`${i.code}-${idx}`}
-                    className={`font-mono text-[11px] ${i.severity === "error" ? "text-destructive" : "text-muted-foreground"}`}
+                    className={`font-mono text-xs ${i.severity === "error" ? "text-destructive" : "text-muted-foreground"}`}
                   >
                     [{i.severity}] {i.code} — {i.detail}
                   </li>
@@ -156,25 +156,25 @@ function RunCard({ run, expanded, onToggle }: { run: AgentRun; expanded: boolean
             </div>
           ) : null}
           {stepsQ.isLoading ? (
-            <p className="p-4 font-mono text-[11px] text-muted-foreground">Loading steps…</p>
+            <p className="p-4 font-mono text-xs text-muted-foreground">Loading steps…</p>
           ) : stepsQ.error ? (
-            <p className="p-4 font-mono text-[11px] text-destructive">Could not load steps.</p>
+            <p className="p-4 font-mono text-xs text-destructive">Could not load steps.</p>
           ) : (stepsQ.data ?? []).length === 0 ? (
-            <p className="p-4 font-mono text-[11px] text-muted-foreground">No steps recorded.</p>
+            <p className="p-4 font-mono text-xs text-muted-foreground">No steps recorded.</p>
           ) : (
             (stepsQ.data ?? []).map((s) => <StepRow key={s.id} step={s} />)
           )}
 
           {run.final_answer ? (
             <div className="border-t border-border p-4">
-              <p className="mb-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <p className="mb-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 Final answer
               </p>
               <p className="whitespace-pre-wrap text-sm leading-relaxed">{run.final_answer}</p>
             </div>
           ) : null}
           {run.error ? (
-            <p className="border-t border-border p-4 font-mono text-[11px] text-destructive">{run.error}</p>
+            <p className="border-t border-border p-4 font-mono text-xs text-destructive">{run.error}</p>
           ) : null}
         </div>
       ) : null}
@@ -215,7 +215,7 @@ function TracesPage() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main className="mx-auto max-w-5xl px-6 py-10">
-        <h1 className="font-mono text-xl font-bold uppercase tracking-tight">Agent_Traces</h1>
+        <h1 className="font-mono text-xl font-bold uppercase tracking-tight">Agent traces</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
           Every mentor turn, with the routing decision, agent path, retrieval hits, latency, token
           usage and the critic's quality verdict. Expand a run to inspect each agent step.
@@ -230,7 +230,7 @@ function TracesPage() {
             ["Avg quality", avgScore == null ? "—" : String(avgScore)],
           ].map(([label, value]) => (
             <div key={label} className="bg-card p-4">
-              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
+              <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
               <p className="mt-1 font-mono text-lg font-bold">{value}</p>
             </div>
           ))}
@@ -238,7 +238,7 @@ function TracesPage() {
 
         <button
           onClick={() => setFlaggedOnly((v) => !v)}
-          className={`mt-6 border px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest ${
+          className={`mt-6 border px-3 py-1.5 font-mono text-xs uppercase tracking-widest ${
             flaggedOnly
               ? "border-primary bg-primary text-primary-foreground"
               : "border-border text-muted-foreground hover:bg-muted/40"
@@ -249,11 +249,11 @@ function TracesPage() {
 
         <div className="mt-4 space-y-3">
           {runsQ.isLoading ? (
-            <p className="font-mono text-[11px] text-muted-foreground">Loading traces…</p>
+            <p className="font-mono text-xs text-muted-foreground">Loading traces…</p>
           ) : runsQ.error ? (
-            <p className="font-mono text-[11px] text-destructive">Could not load traces.</p>
+            <p className="font-mono text-xs text-destructive">Could not load traces.</p>
           ) : runs.length === 0 ? (
-            <p className="font-mono text-[11px] text-muted-foreground">
+            <p className="font-mono text-xs text-muted-foreground">
               {flaggedOnly
                 ? "No runs flagged by the critic."
                 : "No agent runs yet — ask the mentor a question from a study session."}

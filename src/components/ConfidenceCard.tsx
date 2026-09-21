@@ -55,11 +55,11 @@ export function ConfidenceCard({ readiness }: { readiness?: ReadinessReport }) {
   return (
     <section className="border border-border bg-card p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-primary">
+        <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary">
           <Gauge className="h-4 w-4" /> Self_Confidence
         </div>
         {adjusted && adjusted.confidence !== null ? (
-          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             Confidence {adjusted.confidence} · Adjusted readiness{" "}
             <span className="text-foreground">{adjusted.adjustedScore}</span>{" "}
             <span className={adjusted.delta >= 0 ? "text-primary" : "text-destructive"}>
@@ -69,7 +69,7 @@ export function ConfidenceCard({ readiness }: { readiness?: ReadinessReport }) {
             · {READINESS_BAND_LABEL[adjusted.band]}
           </div>
         ) : (
-          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             Rate each domain to refine your readiness
           </div>
         )}
@@ -88,7 +88,7 @@ export function ConfidenceCard({ readiness }: { readiness?: ReadinessReport }) {
               >
                 <div className="min-w-0">
                   <div className="truncate text-sm text-foreground">{d.title}</div>
-                  <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                     Measured {d.score} · {Math.round(d.weight * 100)}% of exam
                     {current ? ` · You: ${SCALE_LABEL[current]}` : ""}
                   </div>

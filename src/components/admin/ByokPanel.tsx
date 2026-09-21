@@ -20,11 +20,11 @@ const PROVIDERS: { id: KeyProvider; name: string; hint: string }[] = [
   { id: "google", name: "Google AI", hint: "AIza…" },
 ];
 
-const label = "font-mono text-[10px] uppercase tracking-widest text-muted-foreground";
+const label = "font-mono text-xs uppercase tracking-widest text-muted-foreground";
 const btn =
-  "bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50";
+  "bg-primary px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50";
 const ghost =
-  "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 hover:bg-muted";
+  "border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest disabled:opacity-50 hover:bg-muted";
 const input =
   "w-full border border-border bg-background px-3 py-2 font-mono text-xs outline-none focus:border-primary";
 
@@ -68,7 +68,7 @@ export function ByokPanel() {
   return (
     <div className="mt-4 border border-border bg-background p-5">
       <p className={label}>BYOK_Vault</p>
-      <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+      <p className="mt-1 font-mono text-xs text-muted-foreground">
         Keys are encrypted before they are stored and are never shown again — only the last four
         characters.
       </p>
@@ -101,19 +101,19 @@ export function ByokPanel() {
           onChange={(e) => setName(e.target.value)}
         />
         <button className={btn} disabled={busy !== null}>
-          {busy === "save" ? "Saving…" : "Save_Key"}
+          {busy === "save" ? "Saving…" : "Save key"}
         </button>
       </form>
 
       {keys.isLoading && <p className={`${label} mt-4`}>Loading…</p>}
       {!keys.isLoading && stored.length === 0 && (
-        <p className="mt-4 font-mono text-[11px] text-muted-foreground">No keys stored yet.</p>
+        <p className="mt-4 font-mono text-xs text-muted-foreground">No keys stored yet.</p>
       )}
 
       {stored.length > 0 && (
         <div className="mt-4 overflow-x-auto border border-border">
-          <table className="w-full border-collapse font-mono text-[11px]">
-            <thead className="bg-muted/40 text-[10px] uppercase tracking-widest text-muted-foreground">
+          <table className="w-full border-collapse font-mono text-xs">
+            <thead className="bg-muted/40 text-xs uppercase tracking-widest text-muted-foreground">
               <tr>
                 <th className="px-3 py-2 text-left">Provider</th>
                 <th className="px-3 py-2 text-left">Key</th>
@@ -128,7 +128,7 @@ export function ByokPanel() {
                   <td className="px-3 py-2 font-bold">
                     {PROVIDERS.find((p) => p.id === k.provider)?.name ?? k.provider}
                     {k.label && (
-                      <span className="ml-2 text-[10px] text-muted-foreground">{k.label}</span>
+                      <span className="ml-2 text-xs text-muted-foreground">{k.label}</span>
                     )}
                   </td>
                   <td className="px-3 py-2">••••{k.last4}</td>

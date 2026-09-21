@@ -12,9 +12,9 @@ import { generateCodebaseDraft, startCodeGenJob } from "@/lib/codegen.functions"
 import { getCodeGenJob, listCodeGenJobs, type CodeGenJob } from "@/lib/codegen-jobs.functions";
 
 const btn =
-  "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
+  "border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
 const field =
-  "border border-border bg-background px-2 py-1.5 font-mono text-[11px] focus:outline-none focus:border-primary";
+  "border border-border bg-background px-2 py-1.5 font-mono text-xs focus:outline-none focus:border-primary";
 
 const AGENTS = ["research", "sme", "verifier", "documentation", "advice"] as const;
 const AGENT_LABEL: Record<string, string> = {
@@ -35,7 +35,7 @@ function StreamTracker({ job }: { job: CodeGenJob }) {
   const live = job.status === "queued" || job.status === "running";
   return (
     <div className="mt-4 border border-border">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-2 font-mono text-[10px] uppercase tracking-widest">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-2 font-mono text-xs uppercase tracking-widest">
         <span>
           {job.conceptLabel ?? job.conceptTag} · {job.language} · {job.difficulty}
         </span>
@@ -51,7 +51,7 @@ function StreamTracker({ job }: { job: CodeGenJob }) {
           const isCurrent = live && job.currentAgent === agent;
           const state = last ? last.status : isCurrent ? "running" : "pending";
           return (
-            <li key={agent} className="flex gap-3 px-3 py-2 font-mono text-[11px]">
+            <li key={agent} className="flex gap-3 px-3 py-2 font-mono text-xs">
               <span
                 className={`mt-[3px] inline-block h-2 w-2 shrink-0 ${
                   state === "ok"
@@ -88,7 +88,7 @@ function StreamTracker({ job }: { job: CodeGenJob }) {
       </ol>
 
       {(job.error || job.savedCodebaseId) && (
-        <div className="border-t border-border bg-muted/20 px-3 py-2 font-mono text-[10px] uppercase tracking-widest">
+        <div className="border-t border-border bg-muted/20 px-3 py-2 font-mono text-xs uppercase tracking-widest">
           {job.savedCodebaseId ? (
             <span className="text-primary">Saved to library · {job.savedCodebaseId.slice(0, 8)}</span>
           ) : (
@@ -155,7 +155,7 @@ export function CodeGenPanel() {
   return (
     <div className="mt-4 border border-border bg-background p-5">
       <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Concept
           <input
             className={`${field} w-56`}
@@ -164,7 +164,7 @@ export function CodeGenPanel() {
             onChange={(e) => setConceptTag(e.target.value)}
           />
         </label>
-        <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Language
           <select
             className={field}
@@ -175,7 +175,7 @@ export function CodeGenPanel() {
             <option value="javascript">javascript</option>
           </select>
         </label>
-        <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Difficulty
           <select
             className={field}
@@ -189,7 +189,7 @@ export function CodeGenPanel() {
             <option value="advanced">advanced</option>
           </select>
         </label>
-        <label className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           <input
             type="checkbox"
             checked={persist}
@@ -203,18 +203,18 @@ export function CodeGenPanel() {
           disabled={run.isPending || !conceptTag.trim()}
           onClick={() => run.mutate()}
         >
-          {run.isPending ? "Generating…" : "Run_Generation"}
+          {run.isPending ? "Generating…" : "Run generation"}
         </button>
       </div>
 
       {job && <StreamTracker job={job} />}
 
       <div className="mt-6">
-        <h3 className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
           Recent_Runs
         </h3>
         <div className="mt-2 overflow-x-auto border border-border">
-          <table className="w-full min-w-[560px] border-collapse font-mono text-[11px]">
+          <table className="w-full min-w-[560px] border-collapse font-mono text-xs">
             <thead>
               <tr className="border-b border-border bg-muted/30 text-left uppercase tracking-widest">
                 <th className="px-3 py-2">Concept</th>
