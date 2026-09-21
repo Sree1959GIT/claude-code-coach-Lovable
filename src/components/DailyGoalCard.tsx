@@ -36,10 +36,10 @@ export function DailyGoalCard({ suggestedGoal }: { suggestedGoal: number }) {
   return (
     <section className="mb-8 border border-border bg-card p-6">
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
-          <Flame className="h-4 w-4" /> Daily_Goal
+        <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
+          <Flame className="h-4 w-4" /> Daily goal
         </div>
-        <label className="ml-auto flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="ml-auto flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Goal / day
           <input
             type="number"
@@ -78,7 +78,7 @@ export function DailyGoalCard({ suggestedGoal }: { suggestedGoal: number }) {
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <Link
           to="/study"
-          className="border border-primary px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+          className="border border-primary px-3 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
         >
           Practice now →
         </Link>
@@ -102,7 +102,7 @@ function Metric(props: { label: string; value: string }) {
   return (
     <div className="border border-border p-3">
       <div className="font-mono text-2xl font-bold tabular-nums">{props.value}</div>
-      <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+      <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
         {props.label}
       </div>
     </div>

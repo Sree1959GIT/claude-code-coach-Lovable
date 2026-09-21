@@ -98,7 +98,7 @@ function MockExamPage() {
 
       <main className="mx-auto w-full max-w-4xl px-4 py-8">
         <header className="mb-8 animate-enter">
-          <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+          <div className="font-mono text-xs uppercase tracking-[0.3em] text-primary">
             {"// Exam Simulation"}
           </div>
           <h1 className="mt-1 font-mono text-2xl font-bold uppercase tracking-tight">
@@ -132,8 +132,8 @@ function MockExamPage() {
         </section>
 
         <section className="mb-8 border border-border bg-card">
-          <div className="border-b border-border px-4 py-3 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
-            Blueprint_Allocation
+          <div className="border-b border-border px-4 py-3 font-mono text-xs uppercase tracking-[0.3em] text-primary">
+            Blueprint allocation
           </div>
           <div className="divide-y divide-border">
             {loading &&
@@ -174,7 +174,7 @@ function MockExamPage() {
                       />
                     </div>
                   </div>
-                  <div className="w-14 text-right font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <div className="w-14 text-right font-mono text-xs uppercase tracking-widest text-muted-foreground">
                     {Math.round(r.weight * 100)}%
                   </div>
                   <div
@@ -214,7 +214,7 @@ function MockExamPage() {
           )}
           {busy ? "Building exam…" : `Start ${effectiveCount || MOCK_EXAM_COUNT}-question mock`}
         </button>
-        <p className="mt-3 text-center text-[11px] text-muted-foreground">
+        <p className="mt-3 text-center text-xs text-muted-foreground">
           The timer starts immediately and auto-submits when it hits zero.
         </p>
       </main>
@@ -231,11 +231,11 @@ function StatTile(props: {
   return (
     <div className="border border-border bg-card p-4">
       <div className="flex items-center gap-2 text-primary">{props.icon}</div>
-      <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+      <div className="mt-2 font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">
         {props.label}
       </div>
       <div className="mt-1 font-mono text-2xl font-bold">{props.value}</div>
-      <div className="mt-1 text-[11px] text-muted-foreground">{props.hint}</div>
+      <div className="mt-1 text-xs text-muted-foreground">{props.hint}</div>
     </div>
   );
 }

@@ -27,9 +27,9 @@ export const Route = createFileRoute("/_authenticated/library")({
 
 type Doc = Awaited<ReturnType<typeof listLibraryDocuments>>[number];
 
-const label = "font-mono text-[10px] uppercase tracking-widest text-muted-foreground";
+const label = "font-mono text-xs uppercase tracking-widest text-muted-foreground";
 const btn =
-  "bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50";
+  "bg-primary px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50";
 const input =
   "w-full border border-border bg-background px-3 py-2 font-mono text-xs outline-none focus:border-primary";
 
@@ -173,7 +173,7 @@ function LibraryPage() {
       <SiteHeader />
       <main className="mx-auto max-w-5xl px-6 py-10">
         <h1 className="font-mono text-lg font-bold uppercase tracking-tight">
-          Library_Console
+          Library console
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
           The retrieval library grounds the SME Voice Mentor. Seed the curated corpus,
@@ -209,10 +209,10 @@ function LibraryPage() {
                   disabled={busy !== null}
                   onClick={() => handleSeed(false)}
                 >
-                  {busy === "seed" ? "Seeding…" : "Seed_Library"}
+                  {busy === "seed" ? "Seeding…" : "Seed library"}
                 </button>
                 <button
-                  className="border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest disabled:opacity-50"
+                  className="border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest disabled:opacity-50"
                   disabled={busy !== null}
                   onClick={() => handleSeed(true)}
                 >
@@ -246,7 +246,7 @@ function LibraryPage() {
                         {busy === `preset:${p.id}` ? "Working…" : "Ingest"}
                       </button>
                       <button
-                        className="border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest disabled:opacity-50"
+                        className="border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest disabled:opacity-50"
                         disabled={busy !== null}
                         onClick={() => handlePreset(p.id, true)}
                       >
@@ -337,7 +337,7 @@ function LibraryPage() {
                           href={m.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="mt-2 inline-block font-mono text-[10px] uppercase tracking-widest text-primary"
+                          className="mt-2 inline-block font-mono text-xs uppercase tracking-widest text-primary"
                         >
                           Open source
                         </a>
@@ -366,7 +366,7 @@ function LibraryPage() {
                 ))}
                 {docs.length === 0 && (
                   <li className="p-3 text-xs text-muted-foreground">
-                    No documents yet — run Seed_Library.
+                    No documents yet — run Seed library.
                   </li>
                 )}
               </ul>

@@ -171,6 +171,9 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    /* S2 — 15px sentence-case body copy, comfortable reading line height. */
+    font-size: 15px;
+    line-height: 1.6;
   }
 }
 

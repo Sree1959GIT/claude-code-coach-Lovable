@@ -179,9 +179,9 @@ export function FloatingWindow({
         <div className="min-w-0">
           <div
             id={subtitleId}
-            className="truncate font-mono text-[10px] uppercase tracking-widest text-primary"
+            className="truncate font-mono text-xs uppercase tracking-widest text-primary"
           >
-            {subtitle ?? "Floating_Window"}
+            {subtitle ?? "Floating window"}
           </div>
           <div id={titleId} className="truncate text-sm font-semibold">
             {title}

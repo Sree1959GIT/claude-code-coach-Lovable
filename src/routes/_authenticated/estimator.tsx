@@ -118,11 +118,11 @@ function EstimatorPage() {
       <SiteHeader />
       <main className="mx-auto max-w-5xl px-6 py-12">
         <header className="mb-10">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             Planning
           </p>
           <h1 className="mt-2 font-mono text-2xl font-bold tracking-tight">
-            Credit_Estimator
+            Credit estimator
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
             Pick the options you want in each stage to see the expected build-credit
@@ -134,12 +134,12 @@ function EstimatorPage() {
 
         {/* Global assumptions */}
         <section className="mb-8 border border-border">
-          <div className="border-b border-border bg-muted/40 px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <div className="border-b border-border bg-muted/40 px-4 py-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
             Assumptions
           </div>
           <div className="grid gap-6 p-4 sm:grid-cols-2">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 Build depth
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -148,7 +148,7 @@ function EstimatorPage() {
                     key={key}
                     onClick={() => setComplexity(key)}
                     title={COMPLEXITY[key].hint}
-                    className={`border px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                    className={`border px-3 py-1.5 font-mono text-xs uppercase tracking-widest transition-colors ${
                       complexity === key
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border text-muted-foreground hover:text-foreground"
@@ -163,7 +163,7 @@ function EstimatorPage() {
               </p>
             </div>
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 Iteration rounds per stage: {iterations}
               </p>
               <input
@@ -187,7 +187,7 @@ function EstimatorPage() {
         <section className="mb-8 border border-primary/40 bg-primary/5 p-5">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 {includeDone ? "All stages" : "Remaining stages"}
               </p>
               <p className="mt-1 font-mono text-3xl font-bold tracking-tight">
@@ -196,13 +196,13 @@ function EstimatorPage() {
                   credits
                 </span>
               </p>
-              <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <p className="mt-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 Shipped so far {split.shipped.low}–{split.shipped.high} · Remaining{" "}
                 {split.remaining.low}–{split.remaining.high}
               </p>
             </div>
 
-            <label className="flex cursor-pointer items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <label className="flex cursor-pointer items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
               <input
                 type="checkbox"
                 checked={includeDone}
@@ -221,7 +221,7 @@ function EstimatorPage() {
               <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border px-4 py-3">
                 <div>
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-[10px] text-muted-foreground">
+                    <span className="font-mono text-xs text-muted-foreground">
                       {stage.code}
                     </span>
                     <h2 className="font-mono text-sm font-bold tracking-tight">
@@ -242,7 +242,7 @@ function EstimatorPage() {
                   <p className="mt-1 text-xs text-muted-foreground">{stage.summary}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                     Estimate
                   </p>
                   <p className="font-mono text-lg font-bold">

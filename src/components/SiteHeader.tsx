@@ -21,10 +21,10 @@ export function SiteHeader() {
     <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
         <Link to="/" className="flex items-center gap-4">
-          <div className="flex h-6 w-6 items-center justify-center bg-primary text-[10px] font-bold text-primary-foreground">
+          <div className="flex h-6 w-6 items-center justify-center bg-primary text-xs font-bold text-primary-foreground">
             CCA
           </div>
-          <span className="font-mono text-xs font-bold tracking-tight uppercase">
+          <span className="text-sm font-semibold tracking-tight">
             Foundation Prep
           </span>
         </Link>
@@ -34,72 +34,72 @@ export function SiteHeader() {
             <>
               <Link
                 to="/study"
-                className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
-                activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+                className="text-sm text-muted-foreground hover:text-foreground"
+                activeProps={{ className: "text-sm font-medium text-foreground" }}
               >
                 Study
               </Link>
               <Link
                 to="/mock-exam"
-                className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
-                activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+                className="text-sm text-muted-foreground hover:text-foreground"
+                activeProps={{ className: "text-sm font-medium text-foreground" }}
               >
-                Mock_Exam
+                Mock exam
               </Link>
               <Link
                 to="/mistakes"
-                className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
-                activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+                className="text-sm text-muted-foreground hover:text-foreground"
+                activeProps={{ className: "text-sm font-medium text-foreground" }}
               >
                 Mistakes
               </Link>
               <Link
                 to="/history"
-                className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
-                activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+                className="text-sm text-muted-foreground hover:text-foreground"
+                activeProps={{ className: "text-sm font-medium text-foreground" }}
               >
                 History
               </Link>
               <Link
                 to="/analytics"
-                className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
-                activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+                className="text-sm text-muted-foreground hover:text-foreground"
+                activeProps={{ className: "text-sm font-medium text-foreground" }}
               >
                 Analytics
               </Link>
               <Link
                 to="/estimator"
-                className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
-                activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+                className="text-sm text-muted-foreground hover:text-foreground"
+                activeProps={{ className: "text-sm font-medium text-foreground" }}
               >
                 Estimator
               </Link>
               <Link
                 to="/library"
-                className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
-                activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+                className="text-sm text-muted-foreground hover:text-foreground"
+                activeProps={{ className: "text-sm font-medium text-foreground" }}
               >
                 Library
               </Link>
               <Link
                 to="/traces"
-                className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
-                activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+                className="text-sm text-muted-foreground hover:text-foreground"
+                activeProps={{ className: "text-sm font-medium text-foreground" }}
               >
                 Traces
               </Link>
               <Link
                 to="/dashboard"
-                className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
-                activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+                className="text-sm text-muted-foreground hover:text-foreground"
+                activeProps={{ className: "text-sm font-medium text-foreground" }}
               >
                 Dashboard
               </Link>
               {isAdmin && (
                 <Link
                   to="/admin"
-                  className="font-mono text-[10px] uppercase tracking-widest text-primary hover:text-foreground"
-                  activeProps={{ className: "font-mono text-[10px] uppercase tracking-widest text-foreground" }}
+                  className="text-sm text-primary hover:text-foreground"
+                  activeProps={{ className: "text-sm font-medium text-foreground" }}
                 >
                   Admin
                 </Link>
@@ -107,9 +107,9 @@ export function SiteHeader() {
 
               <button
                 onClick={handleSignOut}
-                className="bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
+                className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
               >
-                Sign_Out
+                Sign out
               </button>
             </>
           ) : (
@@ -117,17 +117,17 @@ export function SiteHeader() {
               <Link
                 to="/auth"
                 search={{ mode: "signin" }}
-                className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                className="text-sm text-muted-foreground hover:text-foreground"
               >
-                Sign In
+                Sign in
               </Link>
               <Link
                 to="/auth"
                 search={{ mode: "signup" }}
                 onClick={() => logEvent("cta_click", { location: "header", cta: "get_started" })}
-                className="bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
+                className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
               >
-                Get_Started
+                Get started
               </Link>
             </>
           )}

@@ -59,7 +59,7 @@ function CitedText({ content, citations }: { content: string; citations: Citatio
         const cite = m ? citations.find((c) => c.n === Number(m[1])) : undefined;
         if (!cite) return <span key={idx}>{part}</span>;
         const inner = (
-          <span className="font-mono text-[10px] align-super text-primary">[{cite.n}]</span>
+          <span className="font-mono text-xs align-super text-primary">[{cite.n}]</span>
         );
         return cite.url ? (
           <a
@@ -399,7 +399,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
     }
   }, [highlight]);
 
-  /** Speaks a full written answer on demand (Read_Response button). */
+  /** Speaks a full written answer on demand (Read response button). */
   function readAloud(text: string) {
     unlockAudio();
     const sentences = text.match(/[^.!?]+[.!?]*/g) ?? [text];
@@ -431,7 +431,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
     setBusy(true);
     busyRef.current = true;
     setStreaming("");
-    setStatus("Mentor_thinking");
+    setStatus("Mentor thinking");
     // Mic off while the mentor talks so it doesn't hear itself.
     try {
       recogRef.current?.abort();
@@ -458,7 +458,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
       if (!res.ok || !res.body) {
         throw new Error((await res.text().catch(() => "")) || `Mentor failed (${res.status})`);
       }
-      setStatus("Mentor_speaking");
+      setStatus("Mentor speaking");
 
       // Library citations arrive in a response header (see /api/mentor-stream).
       const assistantIndex = next.length;
@@ -635,19 +635,19 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
 
   const quickPrompts = useMemo(() => {
     const base = [
-      { label: "Explain_Question", text: "Explain the question in simple words." },
+      { label: "Explain question", text: "Explain the question in simple words." },
       {
-        label: "Read_Fast",
+        label: "Read fast",
         text: "How do I read this question and its options quickly? Give me a reading strategy for this exact item.",
       },
       {
-        label: "Trap_Spotting",
+        label: "Trap spotting",
         text: "What are the distractor traps in these options and what keyword in the stem rules them out?",
       },
     ];
     if (context.selectedOption) {
       base.unshift({
-        label: `Rate_Option_${context.selectedOption}`,
+        label: `Rate option ${context.selectedOption}`,
         text: `I picked option ${context.selectedOption}. How apt is that option for this question — what does it get right, what does it miss, and which words in the stem decide it?`,
       });
     }
@@ -674,7 +674,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
           >
             <User className="h-3.5 w-3.5" /> SME_Mentor
           </div>
-          <div className="mt-0.5 truncate font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <div className="mt-0.5 truncate font-mono text-xs uppercase tracking-widest text-muted-foreground">
             {context.key_concept ?? "General"} · Talk it through
           </div>
         </div>
@@ -763,7 +763,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
                     onClick={() => readAloud(m.content)}
                     className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground hover:text-primary"
                   >
-                    <Volume2 className="h-3 w-3" /> Read_Response
+                    <Volume2 className="h-3 w-3" /> Read response
                   </button>
                   {refs.length > 0 && (
                     <button
@@ -804,7 +804,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
                           </span>
                         )}
                         <span className="min-w-0">
-                          <span className="block truncate text-[11px] font-medium">{r.title}</span>
+                          <span className="block truncate text-xs font-medium">{r.title}</span>
                           <span className="block font-mono text-[8px] uppercase tracking-widest text-muted-foreground">
                             {r.source}
                             {r.start
@@ -820,11 +820,11 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
               {!isUser && shownCitations.length > 0 && (
                 <div className="mt-2 border-t border-primary/20 pt-2">
                   <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
-                    Library_sources
+                    Library sources
                   </div>
                   <ol className="space-y-1">
                     {shownCitations.map((c) => (
-                      <li key={c.n} className="text-[11px] leading-snug">
+                      <li key={c.n} className="text-xs leading-snug">
                         <span className="font-mono text-primary">[{c.n}]</span>{" "}
                         {c.url ? (
                           <a
@@ -863,12 +863,12 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
           </div>
         )}
         {status && !streaming && (
-          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             {status}…
           </div>
         )}
         {error && (
-          <div className="border border-destructive/50 bg-destructive/10 p-3 font-mono text-[10px] uppercase tracking-widest text-destructive">
+          <div className="border border-destructive/50 bg-destructive/10 p-3 font-mono text-xs uppercase tracking-widest text-destructive">
             {error}
           </div>
         )}
@@ -877,7 +877,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
         <div className="border-t border-border pt-3">
 
           <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
-            Watch_This
+            Watch this
           </div>
           <div className="grid grid-cols-2 gap-2">
             {resources.map((r) => {
@@ -910,7 +910,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
                     )}
                   </div>
                   <div className="p-1.5">
-                    <div className="line-clamp-2 text-[11px] font-medium leading-tight group-hover:text-primary">
+                    <div className="line-clamp-2 text-xs font-medium leading-tight group-hover:text-primary">
                       {r.title}
                     </div>
                     <div className="mt-0.5 font-mono text-[8px] uppercase tracking-widest text-muted-foreground">
@@ -929,14 +929,14 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
 
       <footer className="border-t border-border p-3">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <label className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <label className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
             <input
               type="checkbox"
               checked={voiceOn}
               onChange={(e) => setVoiceOn(e.target.checked)}
               className="accent-primary"
             />
-            Voice_reply
+            Voice reply
           </label>
           <div className="flex items-center gap-1.5">
             <button
@@ -955,11 +955,11 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
                 }`}
                 aria-pressed={live}
               >
-                <Radio className="h-3 w-3" /> {live ? (listening ? "Listening" : "Live_On") : "Live_Talk"}
+                <Radio className="h-3 w-3" /> {live ? (listening ? "Listening" : "Live on") : "Live talk"}
               </button>
             ) : (
               <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-                Mic_unsupported
+                Mic unsupported
               </span>
             )}
           </div>
@@ -1003,7 +1003,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
           <button
             type="submit"
             disabled={busy || !input.trim()}
-            className="bg-primary px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-40"
+            className="bg-primary px-3 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-40"
           >
             Send
           </button>

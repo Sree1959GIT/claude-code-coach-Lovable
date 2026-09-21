@@ -85,7 +85,7 @@ function MistakesPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-4xl px-4 py-8">
         <header className="mb-8 animate-enter">
-          <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+          <div className="font-mono text-xs uppercase tracking-[0.3em] text-primary">
             {"// Mistake Bank"}
           </div>
           <h1 className="mt-1 font-mono text-2xl font-bold uppercase tracking-tight">
@@ -125,7 +125,7 @@ function MistakesPage() {
 
             <section className="mb-6 flex flex-wrap items-center gap-3 border border-primary/40 bg-primary/5 p-4">
               <div className="min-w-0 flex-1">
-                <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+                <div className="font-mono text-xs uppercase tracking-[0.3em] text-primary">
                   Re-test_Mode
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -139,7 +139,7 @@ function MistakesPage() {
               <select
                 value={retestCount}
                 onChange={(e) => setRetestCount(Number(e.target.value))}
-                className="border border-border bg-background px-2 py-1.5 font-mono text-[10px] uppercase tracking-widest"
+                className="border border-border bg-background px-2 py-1.5 font-mono text-xs uppercase tracking-widest"
               >
                 {[5, 10, 20, 30].map((n) => (
                   <option key={n} value={n}>
@@ -150,9 +150,9 @@ function MistakesPage() {
               <button
                 onClick={launchRetest}
                 disabled={starting || bank.openCount === 0}
-                className="bg-primary px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-40"
+                className="bg-primary px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-40"
               >
-                {starting ? "Starting…" : "Start_Re-test →"}
+                {starting ? "Starting…" : "Start re-test →"}
               </button>
             </section>
 
@@ -161,7 +161,7 @@ function MistakesPage() {
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest ${
+                  className={`border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest ${
                     filter === f
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border hover:bg-secondary"
@@ -174,7 +174,7 @@ function MistakesPage() {
                 <select
                   value={domain}
                   onChange={(e) => setDomain(e.target.value)}
-                  className="ml-auto border border-border bg-background px-2 py-1.5 font-mono text-[10px] uppercase tracking-widest"
+                  className="ml-auto border border-border bg-background px-2 py-1.5 font-mono text-xs uppercase tracking-widest"
                 >
                   <option value="all">All domains</option>
                   {domains.map((d) => (
@@ -208,7 +208,7 @@ function MistakesPage() {
                     </div>
                     <p className="mt-1 text-sm leading-relaxed">{m.stem}</p>
                     {m.explanation && (
-                      <p className="mt-2 border-l-2 border-primary/40 bg-secondary/30 px-3 py-1.5 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                      <p className="mt-2 border-l-2 border-primary/40 bg-secondary/30 px-3 py-1.5 font-mono text-xs leading-relaxed text-muted-foreground">
                         {m.explanation}
                       </p>
                     )}
@@ -216,9 +216,9 @@ function MistakesPage() {
                       <Link
                         to="/study/$slug"
                         params={{ slug: m.domainSlug }}
-                        className="border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-secondary"
+                        className="border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
                       >
-                        Drill_Domain →
+                        Drill domain →
                       </Link>
                       <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
                         last miss {new Date(m.lastMissedAt).toLocaleDateString()}
@@ -251,7 +251,7 @@ function Tile({
 }) {
   return (
     <div className="border border-border bg-card p-4">
-      <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+      <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
         {icon}
         {label}
       </div>

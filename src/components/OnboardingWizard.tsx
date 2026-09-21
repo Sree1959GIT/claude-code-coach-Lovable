@@ -101,7 +101,7 @@ export function OnboardingWizard({ readiness }: { readiness?: ReadinessReport })
 
   if (!open) return null;
 
-  const steps = ["Exam_Date", "Target_Score", "Weekly_Hours", "Confidence", "Plan"];
+  const steps = ["Exam date", "Target score", "Weekly hours", "Confidence", "Plan"];
 
   return (
     <div
@@ -111,8 +111,8 @@ export function OnboardingWizard({ readiness }: { readiness?: ReadinessReport })
       aria-labelledby="onboarding-title"
     >
       <div className="w-full max-w-2xl border border-border bg-card p-6 shadow-2xl">
-        <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
-          {"> Candidate_Setup"} · Step {step + 1}/{steps.length}
+        <div className="mb-1 font-mono text-xs uppercase tracking-[0.3em] text-primary">
+          {"> Candidate setup"} · Step {step + 1}/{steps.length}
         </div>
         <h2
           id="onboarding-title"
@@ -146,7 +146,7 @@ export function OnboardingWizard({ readiness }: { readiness?: ReadinessReport })
                 className="w-full border border-border bg-background px-3 py-2.5 font-mono text-sm outline-none focus:border-primary"
                 aria-label="Target exam date"
               />
-              <p className="mt-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <p className="mt-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 You can change this any time from your dashboard.
               </p>
             </div>
@@ -187,7 +187,7 @@ export function OnboardingWizard({ readiness }: { readiness?: ReadinessReport })
                   />
                 ))}
               </div>
-              <p className="mt-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <p className="mt-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 Daily target: {dailyQuestions} questions
               </p>
             </div>
@@ -271,15 +271,15 @@ export function OnboardingWizard({ readiness }: { readiness?: ReadinessReport })
           <button
             type="button"
             onClick={() => (step === 0 ? setDismissed(true) : setStep(step - 1))}
-            className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+            className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
           >
-            {step === 0 ? "Skip_For_Now" : "← Back"}
+            {step === 0 ? "Skip for now" : "← Back"}
           </button>
           {step < steps.length - 1 ? (
             <button
               type="button"
               onClick={() => setStep(step + 1)}
-              className="bg-primary px-6 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
+              className="bg-primary px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
             >
               Continue →
             </button>
@@ -288,9 +288,9 @@ export function OnboardingWizard({ readiness }: { readiness?: ReadinessReport })
               type="button"
               disabled={finish.isPending}
               onClick={() => finish.mutate()}
-              className="bg-primary px-6 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-60"
+              className="bg-primary px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-60"
             >
-              {finish.isPending ? "Saving..." : "Start_Studying"}
+              {finish.isPending ? "Saving..." : "Start studying"}
             </button>
           )}
         </div>
@@ -301,7 +301,7 @@ export function OnboardingWizard({ readiness }: { readiness?: ReadinessReport })
 
 function Legend({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="mb-4 flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-primary">
+    <div className="mb-4 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary">
       {icon} {children}
     </div>
   );
@@ -325,7 +325,7 @@ function Choice(props: {
       }`}
     >
       <div className="font-mono text-lg font-bold">{props.label}</div>
-      <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+      <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
         {props.hint}
       </div>
     </button>
@@ -335,7 +335,7 @@ function Choice(props: {
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div className="border border-border p-3">
-      <dt className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+      <dt className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
         {label}
       </dt>
       <dd className="mt-1 font-mono text-sm">{value}</dd>

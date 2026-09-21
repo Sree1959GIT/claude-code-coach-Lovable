@@ -87,7 +87,7 @@ function ReportPage() {
           <div className="border border-destructive/40 bg-destructive/10 p-6 font-mono text-xs">
             Missing session id.{" "}
             <Link to="/study" className="underline">
-              Back to Study_Hub
+              Back to Study hub
             </Link>
           </div>
         )}
@@ -107,9 +107,9 @@ function ReportPage() {
             <div className="mb-6 flex flex-wrap gap-3" data-print-hide>
               <button
                 onClick={() => window.print()}
-                className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-secondary"
+                className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
               >
-                <Printer className="h-3 w-3" /> Print_Report
+                <Printer className="h-3 w-3" /> Print report
               </button>
               <button
                 onClick={async () => {
@@ -120,14 +120,14 @@ function ReportPage() {
                     toast.error("Clipboard unavailable");
                   }
                 }}
-                className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-secondary"
+                className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
               >
-                <ClipboardCopy className="h-3 w-3" /> Copy_Summary
+                <ClipboardCopy className="h-3 w-3" /> Copy summary
               </button>
             </div>
 
             <header className="mb-8 animate-enter">
-              <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+              <div className="font-mono text-xs uppercase tracking-[0.3em] text-primary">
                 {"// Score Report"}
               </div>
               <h1 className="mt-1 font-mono text-2xl font-bold uppercase tracking-tight">
@@ -156,11 +156,11 @@ function ReportPage() {
                   <div className="font-mono text-3xl font-bold">
                     {pct(r.weightedScore)}
                   </div>
-                  <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                     Blueprint-weighted score · pass mark {pct(r.passMark)}
                   </div>
                 </div>
-                <div className="ml-auto font-mono text-[11px] uppercase tracking-widest">
+                <div className="ml-auto font-mono text-xs uppercase tracking-widest">
                   {r.passed ? "Projected pass" : "Below pass mark"}
                 </div>
               </div>
@@ -192,8 +192,8 @@ function ReportPage() {
             </section>
 
             <section className="mb-8 border border-border bg-card">
-              <div className="border-b border-border px-4 py-3 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
-                Domain_Breakdown
+              <div className="border-b border-border px-4 py-3 font-mono text-xs uppercase tracking-[0.3em] text-primary">
+                Domain breakdown
               </div>
               <div className="divide-y divide-border">
                 {r.domains.map((d) => (
@@ -211,7 +211,7 @@ function ReportPage() {
                         />
                       </div>
                     </div>
-                    <div className="w-16 text-right font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    <div className="w-16 text-right font-mono text-xs uppercase tracking-widest text-muted-foreground">
                       w {Math.round(d.weight * 100)}%
                     </div>
                     <div className="w-20 text-right font-mono text-xs">
@@ -226,8 +226,8 @@ function ReportPage() {
             </section>
 
             <section className="mb-8 border border-border bg-card">
-              <div className="border-b border-border px-4 py-3 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
-                Remediation_Plan
+              <div className="border-b border-border px-4 py-3 font-mono text-xs uppercase tracking-[0.3em] text-primary">
+                Remediation plan
               </div>
               <ul className="divide-y divide-border">
                 {weakest.map((d) => (
@@ -245,7 +245,7 @@ function ReportPage() {
                     <Link
                       to="/study/$slug"
                       params={{ slug: d.slug }}
-                      className="border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-secondary"
+                      className="border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
                     >
                       Drill →
                     </Link>
@@ -261,8 +261,8 @@ function ReportPage() {
 
             {r.missed.length > 0 && (
               <section className="mb-8 border border-border bg-card">
-                <div className="border-b border-border px-4 py-3 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
-                  Missed_Items
+                <div className="border-b border-border px-4 py-3 font-mono text-xs uppercase tracking-[0.3em] text-primary">
+                  Missed items
                 </div>
                 <ul className="divide-y divide-border">
                   {r.missed.map((m) => (
@@ -276,7 +276,7 @@ function ReportPage() {
                       </div>
                       <p className="mt-1 text-sm leading-relaxed">{m.stem}</p>
                       {m.explanation && (
-                        <p className="mt-1 border-l-2 border-primary/40 bg-secondary/30 px-3 py-1.5 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                        <p className="mt-1 border-l-2 border-primary/40 bg-secondary/30 px-3 py-1.5 font-mono text-xs leading-relaxed text-muted-foreground">
                           {m.explanation}
                         </p>
                       )}
@@ -289,21 +289,21 @@ function ReportPage() {
             <div className="flex flex-wrap gap-3" data-print-hide>
               <Link
                 to="/mock-exam"
-                className="bg-primary px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground"
+                className="bg-primary px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground"
               >
-                New_Mock_Exam
+                New mock exam
               </Link>
               <Link
                 to="/analytics"
-                className="border border-border px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-secondary"
+                className="border border-border px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
               >
-                View_Analytics
+                View analytics
               </Link>
               <Link
                 to="/study"
-                className="border border-border px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-secondary"
+                className="border border-border px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest hover:bg-secondary"
               >
-                Study_Hub
+                Study hub
               </Link>
             </div>
           </>
@@ -321,12 +321,12 @@ function Tile(props: {
 }) {
   return (
     <div className="border border-border bg-card p-4">
-      <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+      <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
         {props.icon}
         {props.label}
       </div>
       <div className="mt-2 font-mono text-2xl font-bold">{props.value}</div>
-      <div className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+      <div className="mt-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
         {props.hint}
       </div>
     </div>

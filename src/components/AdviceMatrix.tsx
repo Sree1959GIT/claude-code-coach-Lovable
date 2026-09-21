@@ -22,7 +22,7 @@ export function AdviceMatrix({
   const walk = advice.walkthrough;
 
   return (
-    <div className="space-y-5 px-3 py-3 text-[11px] leading-relaxed">
+    <div className="space-y-5 px-3 py-3 text-xs leading-relaxed">
       {advice.summary && (
         <section className="space-y-1.5">
           <h3 className={HEAD}>
@@ -35,7 +35,7 @@ export function AdviceMatrix({
       {walk.length > 0 && (
         <section className="space-y-1.5">
           <h3 className={HEAD}>
-            <BookOpen className="h-3 w-3" /> Line_By_Line · {walk.length} steps
+            <BookOpen className="h-3 w-3" /> Line by line · {walk.length} steps
           </h3>
           <ol className="divide-y divide-border border border-border">
             {walk.map((step, i) => {
@@ -57,7 +57,7 @@ export function AdviceMatrix({
                   </button>
                   <div>
                     {step.label && (
-                      <p className="font-mono text-[10px] uppercase tracking-widest text-foreground">
+                      <p className="font-mono text-xs uppercase tracking-widest text-foreground">
                         {step.label}
                       </p>
                     )}
@@ -78,7 +78,7 @@ export function AdviceMatrix({
       {advice.tradeoffs.length > 0 && (
         <section className="space-y-1.5">
           <h3 className={HEAD}>
-            <GitBranch className="h-3 w-3" /> Design_Tradeoffs
+            <GitBranch className="h-3 w-3" /> Design tradeoffs
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-border text-left">
@@ -116,7 +116,7 @@ export function AdviceMatrix({
       {advice.misconceptions.length > 0 && (
         <section className="space-y-1.5">
           <h3 className={HEAD}>
-            <Lightbulb className="h-3 w-3" /> Misconception_Checks
+            <Lightbulb className="h-3 w-3" /> Misconception checks
           </h3>
           <ul className="space-y-2">
             {advice.misconceptions.map((m, i) => (
@@ -148,7 +148,7 @@ export function AdviceMatrix({
       {advice.conceptLinks.length > 0 && (
         <section className="space-y-1.5">
           <h3 className={HEAD}>
-            <Link2 className="h-3 w-3" /> Concept_Linkages
+            <Link2 className="h-3 w-3" /> Concept linkages
           </h3>
           <div className="flex flex-wrap gap-1.5">
             {advice.conceptLinks.map((c, i) => (
@@ -166,7 +166,7 @@ export function AdviceMatrix({
       {advice.followUps.length > 0 && (
         <section className="space-y-1.5">
           <h3 className={HEAD}>
-            <HelpCircle className="h-3 w-3" /> Follow_Up_Questions
+            <HelpCircle className="h-3 w-3" /> Follow up questions
           </h3>
           <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
             {advice.followUps.map((q, i) => (

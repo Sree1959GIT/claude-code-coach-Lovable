@@ -14,11 +14,11 @@ import {
   type CrawlOutcome,
 } from "@/lib/spider.functions";
 
-const label = "font-mono text-[10px] uppercase tracking-widest text-muted-foreground";
+const label = "font-mono text-xs uppercase tracking-widest text-muted-foreground";
 const btn =
-  "bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50";
+  "bg-primary px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50";
 const ghost =
-  "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 hover:bg-muted";
+  "border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest disabled:opacity-50 hover:bg-muted";
 const input =
   "w-full border border-border bg-background px-3 py-2 font-mono text-xs outline-none focus:border-primary";
 
@@ -93,21 +93,21 @@ export function SpiderPanel() {
   return (
     <div className="mt-4 border border-border bg-background p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className={label}>Spider_Control_Desk</p>
+        <p className={label}>Spider control desk</p>
         <div className="flex flex-wrap gap-2">
           <button
             className={ghost}
             disabled={busy !== null}
             onClick={() => setOnlyDue((v) => !v)}
           >
-            {onlyDue ? "Show_All" : `Show_Due (${dueCount})`}
+            {onlyDue ? "Show all" : `Show due (${dueCount})`}
           </button>
           <button
             className={btn}
             disabled={busy !== null}
             onClick={() => handleCrawl(null, true)}
           >
-            {busy === "crawl:batch" ? "Crawling…" : "Crawl_Due"}
+            {busy === "crawl:batch" ? "Crawling…" : "Crawl due"}
           </button>
         </div>
       </div>
@@ -150,15 +150,15 @@ export function SpiderPanel() {
 
       {targets.isLoading && <p className={`${label} mt-4`}>Loading…</p>}
       {targets.data?.length === 0 && (
-        <p className="mt-4 font-mono text-[11px] text-muted-foreground">
+        <p className="mt-4 font-mono text-xs text-muted-foreground">
           No URLs catalogued yet.
         </p>
       )}
 
       {rows.length > 0 && (
         <div className="mt-4 overflow-x-auto border border-border">
-          <table className="w-full border-collapse font-mono text-[11px]">
-            <thead className="bg-muted/40 text-[10px] uppercase tracking-widest text-muted-foreground">
+          <table className="w-full border-collapse font-mono text-xs">
+            <thead className="bg-muted/40 text-xs uppercase tracking-widest text-muted-foreground">
               <tr>
                 <th className="px-3 py-2 text-left">URL</th>
                 <th className="px-3 py-2 text-left">Every</th>
@@ -177,7 +177,7 @@ export function SpiderPanel() {
                       href={t.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="block truncate text-[10px] text-muted-foreground hover:text-primary"
+                      className="block truncate text-xs text-muted-foreground hover:text-primary"
                     >
                       {t.url}
                     </a>
@@ -231,7 +231,7 @@ export function SpiderPanel() {
       )}
 
       {results.length > 0 && (
-        <ul className="mt-4 space-y-1 font-mono text-[11px]">
+        <ul className="mt-4 space-y-1 font-mono text-xs">
           {results.map((r) => (
             <li key={r.id} className={r.ok ? "" : "text-destructive"}>
               {r.ok ? "OK" : "FAIL"} · {r.url} · {r.status} · {r.chunks} chunks

@@ -10,7 +10,7 @@ import { IMPORT_CSV_TEMPLATE } from "@/lib/question-import";
 import { ImportLogsPanel } from "@/components/admin/ImportLogsPanel";
 
 const btn =
-  "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
+  "border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
 
 export function BulkImportPanel() {
   const runImport = useServerFn(importQuestions);
@@ -60,7 +60,7 @@ export function BulkImportPanel() {
           </button>
         ))}
         <label className={`${btn} cursor-pointer`}>
-          Upload_File
+          Upload file
           <input
             type="file"
             accept=".csv,.json,text/csv,application/json"
@@ -69,16 +69,16 @@ export function BulkImportPanel() {
           />
         </label>
         <button type="button" className={btn} onClick={() => { setFormat("csv"); setText(IMPORT_CSV_TEMPLATE); setResult(null); }}>
-          Load_Template
+          Load template
         </button>
-        <label className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           <input
             type="checkbox"
             checked={skipDuplicates}
             onChange={(e) => setSkipDuplicates(e.target.checked)}
             className="accent-primary"
           />
-          Skip_Duplicates
+          Skip duplicates
         </label>
       </div>
 
@@ -95,7 +95,7 @@ export function BulkImportPanel() {
             ? "domain,stem,correct,option_a,option_b,…"
             : '[{ "domain": "prompting-fundamentals", "stem": "…", "correct": "A", "options": [{ "label": "A", "text": "…" }] }]'
         }
-        className="mt-4 w-full resize-y border border-border bg-muted/20 p-3 font-mono text-[11px] leading-relaxed outline-none focus:border-primary"
+        className="mt-4 w-full resize-y border border-border bg-muted/20 p-3 font-mono text-xs leading-relaxed outline-none focus:border-primary"
       />
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -105,7 +105,7 @@ export function BulkImportPanel() {
           disabled={!text.trim() || mutation.isPending}
           onClick={() => mutation.mutate(true)}
         >
-          {mutation.isPending ? "Working…" : "Dry_Run"}
+          {mutation.isPending ? "Working…" : "Dry run"}
         </button>
         <button
           type="button"
@@ -113,22 +113,22 @@ export function BulkImportPanel() {
           disabled={!result?.dryRun || !result.valid || mutation.isPending}
           onClick={() => mutation.mutate(false)}
         >
-          Commit_Import
+          Commit import
         </button>
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Dry run first, then commit
         </span>
       </div>
 
       {result && (
         <div className="mt-5 border-t border-border pt-4">
-          <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-            {result.dryRun ? "Dry_Run" : "Imported"} · parsed {result.parsed} · importable {result.valid}
+          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            {result.dryRun ? "Dry run" : "Imported"} · parsed {result.parsed} · importable {result.valid}
             {!result.dryRun && ` · inserted ${result.imported}`} · skipped {result.skipped}
           </p>
 
           {result.issues.length > 0 && (
-            <ul className="mt-3 space-y-1 font-mono text-[11px] text-destructive">
+            <ul className="mt-3 space-y-1 font-mono text-xs text-destructive">
               {result.issues.slice(0, 40).map((i, n) => (
                 <li key={`${i.row}-${n}`}>
                   row {i.row}: {i.message}
@@ -142,8 +142,8 @@ export function BulkImportPanel() {
 
           {result.preview.length > 0 && (
             <div className="mt-4 overflow-x-auto border border-border">
-              <table className="w-full border-collapse font-mono text-[11px]">
-                <thead className="bg-muted/40 text-[10px] uppercase tracking-widest text-muted-foreground">
+              <table className="w-full border-collapse font-mono text-xs">
+                <thead className="bg-muted/40 text-xs uppercase tracking-widest text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2 text-left">Row</th>
                     <th className="px-3 py-2 text-left">Domain</th>
@@ -161,7 +161,7 @@ export function BulkImportPanel() {
                       <td className="max-w-md truncate px-3 py-2">{p.stem}</td>
                       <td className="px-3 py-2 uppercase text-muted-foreground">{p.difficulty}</td>
                       <td className="px-3 py-2 text-right">{p.optionCount}</td>
-                      <td className="px-3 py-2 uppercase tracking-widest text-[10px]">
+                      <td className="px-3 py-2 uppercase tracking-widest text-xs">
                         {p.duplicate ? (
                           <span className="text-destructive">duplicate</span>
                         ) : (

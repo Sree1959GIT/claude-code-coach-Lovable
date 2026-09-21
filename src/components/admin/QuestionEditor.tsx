@@ -18,8 +18,8 @@ import {
 const DIFFICULTIES = ["easy", "medium", "hard"];
 
 const input =
-  "mt-1 w-full border border-border bg-background px-2 py-1.5 font-mono text-[11px] outline-none focus:border-primary";
-const label = "font-mono text-[10px] uppercase tracking-widest text-muted-foreground";
+  "mt-1 w-full border border-border bg-background px-2 py-1.5 font-mono text-xs outline-none focus:border-primary";
+const label = "font-mono text-xs uppercase tracking-widest text-muted-foreground";
 
 function blankOption(i: number): QuestionDraftOption {
   return { label: String.fromCharCode(65 + i), text: "", isCorrect: false, explanation: null };
@@ -102,7 +102,7 @@ export function QuestionEditor({
     <div className="mt-4 border border-primary/50 bg-background p-4">
       <div className="flex items-center justify-between">
         <h3 className="font-mono text-xs font-bold uppercase tracking-widest">
-          {questionId ? "Edit_Question" : "New_Question"}
+          {questionId ? "Edit question" : "New question"}
         </h3>
         <button type="button" onClick={onClose} className={label}>
           Close
@@ -176,15 +176,15 @@ export function QuestionEditor({
               <input
                 value={o.label}
                 onChange={(e) => patchOption(i, { label: e.target.value })}
-                className="w-12 border border-border bg-background px-2 py-1 text-center font-mono text-[11px]"
+                className="w-12 border border-border bg-background px-2 py-1 text-center font-mono text-xs"
               />
               <input
                 value={o.text}
                 onChange={(e) => patchOption(i, { text: e.target.value })}
                 placeholder="Option text"
-                className="flex-1 border border-border bg-background px-2 py-1 font-mono text-[11px]"
+                className="flex-1 border border-border bg-background px-2 py-1 font-mono text-xs"
               />
-              <label className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest">
+              <label className="flex items-center gap-1 font-mono text-xs uppercase tracking-widest">
                 <input
                   type="radio"
                   name="correct-option"
@@ -202,7 +202,7 @@ export function QuestionEditor({
                 <button
                   type="button"
                   onClick={() => setDraft((d) => ({ ...d, options: d.options.filter((_, j) => j !== i) }))}
-                  className="font-mono text-[10px] uppercase tracking-widest text-destructive"
+                  className="font-mono text-xs uppercase tracking-widest text-destructive"
                 >
                   Remove
                 </button>
@@ -212,20 +212,20 @@ export function QuestionEditor({
               value={o.explanation ?? ""}
               onChange={(e) => patchOption(i, { explanation: e.target.value })}
               placeholder="Explanation shown after answering"
-              className="mt-2 w-full border border-border bg-background px-2 py-1 font-mono text-[11px]"
+              className="mt-2 w-full border border-border bg-background px-2 py-1 font-mono text-xs"
             />
           </div>
         ))}
         <button
           type="button"
           onClick={() => setDraft((d) => ({ ...d, options: [...d.options, blankOption(d.options.length)] }))}
-          className="border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted"
+          className="border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted"
         >
-          Add_Option
+          Add option
         </button>
       </div>
 
-      {error && <p className="mt-3 font-mono text-[11px] text-destructive">{error}</p>}
+      {error && <p className="mt-3 font-mono text-xs text-destructive">{error}</p>}
 
       <div className="mt-5 flex flex-wrap gap-3">
         <button
@@ -235,9 +235,9 @@ export function QuestionEditor({
             setError(null);
             saveMut.mutate();
           }}
-          className="bg-primary px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50"
+          className="bg-primary px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground disabled:opacity-50"
         >
-          {saveMut.isPending ? "Saving…" : "Save_Question"}
+          {saveMut.isPending ? "Saving…" : "Save question"}
         </button>
         {questionId && (
           <button
@@ -247,7 +247,7 @@ export function QuestionEditor({
               setError(null);
               if (confirm("Delete this question and all its attempts?")) deleteMut.mutate();
             }}
-            className="border border-destructive px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-destructive disabled:opacity-50"
+            className="border border-destructive px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-destructive disabled:opacity-50"
           >
             Delete
           </button>

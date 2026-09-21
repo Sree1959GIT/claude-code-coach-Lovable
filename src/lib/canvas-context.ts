@@ -42,7 +42,7 @@ export function formatDue(dueAt: Date | null): string {
   if (!dueAt) return "—";
   const diffMs = dueAt.getTime() - Date.now();
   const days = Math.round(Math.abs(diffMs) / 86400000);
-  if (diffMs <= 0) return "Due_Now";
+  if (diffMs <= 0) return "Due now";
   if (days < 1) return "Today";
   return `${days}d`;
 }

@@ -12,12 +12,12 @@ import {
 } from "@/lib/distractors.functions";
 
 const btn =
-  "border border-border px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
+  "border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
 
 const FLAG_LABEL: Record<DistractorFlag, string> = {
-  never_chosen: "Never_chosen",
-  over_chosen: "Over_chosen",
-  missing_explanation: "No_explanation",
+  never_chosen: "Never chosen",
+  over_chosen: "Over chosen",
+  missing_explanation: "No explanation",
 };
 
 export function DistractorPanel() {
@@ -45,7 +45,7 @@ export function DistractorPanel() {
   return (
     <div className="mt-4 border border-border bg-background p-5">
       <div className="flex flex-wrap items-end gap-4">
-        <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Min attempts · {minAttempts}
           <input
             type="range"
@@ -57,7 +57,7 @@ export function DistractorPanel() {
             className="w-48"
           />
         </label>
-        <label className="flex flex-col gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label className="flex flex-col gap-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Over-chosen share · {(overChosenShare * 100).toFixed(0)}%
           <input
             type="range"
@@ -70,13 +70,13 @@ export function DistractorPanel() {
           />
         </label>
         <button type="button" className={btn} disabled={mutation.isPending} onClick={() => mutation.mutate()}>
-          {mutation.isPending ? "Auditing…" : "Run_Audit"}
+          {mutation.isPending ? "Auditing…" : "Run audit"}
         </button>
       </div>
 
       {result && (
         <>
-          <p className="mt-4 font-mono text-[11px] text-muted-foreground">
+          <p className="mt-4 font-mono text-xs text-muted-foreground">
             {result.questions} questions · {result.audited} with ≥ {result.minAttempts} attempts ·{" "}
             {result.totals.never_chosen} never-chosen · {result.totals.over_chosen} over-chosen ·{" "}
             {result.totals.missing_explanation} missing explanations
@@ -96,7 +96,7 @@ export function DistractorPanel() {
           </div>
 
           {items.length === 0 ? (
-            <p className="mt-3 font-mono text-[11px] text-muted-foreground">
+            <p className="mt-3 font-mono text-xs text-muted-foreground">
               Nothing to review for this filter.
             </p>
           ) : (
@@ -104,16 +104,16 @@ export function DistractorPanel() {
               {items.map((q) => (
                 <div key={q.questionId} className="border border-border p-3">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <p className="max-w-[70ch] font-mono text-[11px]">{q.stem}</p>
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    <p className="max-w-[70ch] font-mono text-xs">{q.stem}</p>
+                    <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
                       {q.domainTitle} · {q.attempts} attempts · {(q.correctShare * 100).toFixed(0)}% correct
                     </span>
                   </div>
                   <ul className="mt-2 space-y-1">
                     {q.options.map((o) => (
-                      <li key={o.optionId} className="font-mono text-[11px] text-muted-foreground">
+                      <li key={o.optionId} className="font-mono text-xs text-muted-foreground">
                         <span className="font-bold">{o.label}.</span> {o.text}{" "}
-                        <span className="text-[10px] uppercase tracking-widest">
+                        <span className="text-xs uppercase tracking-widest">
                           [{o.isCorrect ? "correct" : "distractor"} · {o.picks} picks ·{" "}
                           {(o.share * 100).toFixed(0)}%]
                         </span>
