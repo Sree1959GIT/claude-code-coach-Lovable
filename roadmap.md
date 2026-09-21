@@ -4,3 +4,4 @@
 - [x] Phase H5: User onboarding flow — interactive diagnostic setup for new candidates
 - [x] Phase H6: Penetration audit pass
 - [x] Phase H7: Domain bind smoke deployment — backend rebound to the live instance, full authenticated smoke pass, hydration fix
+- [x] Password recovery callback repair — preserve email-link credentials, validate the recovery session, and return to Sign In after update
