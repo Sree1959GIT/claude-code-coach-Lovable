@@ -80,10 +80,10 @@ function MockExamPage() {
     setBusy(true);
     try {
       const result = await start({
-        data: { mode: "exam", targetCount: MOCK_EXAM_COUNT, domainId: null },
+        data: { mode: "exam", targetCount: targetCount, domainId: null },
       });
       logEvent("mock_exam_started", {
-        requested: MOCK_EXAM_COUNT,
+        requested: targetCount,
         delivered: result.targetCount,
       });
       navigate({ to: "/study/session", search: { sessionId: result.sessionId } });
@@ -126,18 +126,18 @@ function MockExamPage() {
             icon={<Target className="h-4 w-4" />}
             label="Questions"
             value={loading ? "—" : String(effectiveCount)}
-            hint={`blueprint target ${MOCK_EXAM_COUNT}`}
+            hint={`blueprint target ${targetCount}`}
           />
           <StatTile
             icon={<Clock className="h-4 w-4" />}
             label="Time limit"
-            value={formatMinutes(MOCK_EXAM_MINUTES)}
-            hint={`${Math.round((MOCK_EXAM_MINUTES * 60) / Math.max(1, effectiveCount))}s per question`}
+            value={formatMinutes(durationMinutes)}
+            hint={`${Math.round((durationMinutes * 60) / Math.max(1, effectiveCount))}s per question`}
           />
           <StatTile
             icon={<Play className="h-4 w-4" />}
             label="Pass mark"
-            value={`${Math.round(PASS_MARK * 100)}%`}
+            value={`${Math.round(passMark * 100)}%`}
             hint={loading ? "—" : `${passNeeded} correct to pass`}
           />
         </section>
@@ -223,7 +223,7 @@ function MockExamPage() {
           ) : (
             <Play className="h-4 w-4" />
           )}
-          {busy ? "Building exam…" : `Start ${effectiveCount || MOCK_EXAM_COUNT}-question mock`}
+          {busy ? "Building exam…" : `Start ${effectiveCount || targetCount}-question mock`}
         </button>
         <p className="mt-3 text-center text-xs text-muted-foreground">
           The timer starts immediately and auto-submits when it hits zero.
