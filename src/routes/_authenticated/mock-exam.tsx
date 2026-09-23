@@ -9,14 +9,12 @@ import { startSession } from "@/lib/study.functions";
 import { useSession } from "@/hooks/useSession";
 import { logEvent } from "@/lib/analytics";
 import {
-  MOCK_EXAM_COUNT,
-  MOCK_EXAM_MINUTES,
-  PASS_MARK,
   blueprintTotals,
   buildBlueprint,
   fetchQuestionCounts,
   formatMinutes,
 } from "@/lib/mock-exam";
+import { FALLBACK_EXAM, fetchActiveExam, passRatio } from "@/lib/exams";
 import {
   InlineError,
   PageSkeleton,
