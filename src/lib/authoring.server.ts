@@ -5,6 +5,7 @@
  */
 
 import { retrieveChunks, type LibraryMatch } from "./retrieval.server";
+import { examLabel, withExam } from "@/lib/exam-context.server";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-3.7-flash";
@@ -304,7 +305,7 @@ export async function setItems(
         `ISSUES: ${revision.issues.join(" | ")}`,
       ].join("\n")
     : setterPrompt(args, ev);
-  return coerce(await chatJson(SETTER_SYSTEM, user));
+  return coerce(await chatJson(withExam(SETTER_SYSTEM, await examLabel()), user));
 }
 
 /* ----------------------------- adversary ----------------------------- */

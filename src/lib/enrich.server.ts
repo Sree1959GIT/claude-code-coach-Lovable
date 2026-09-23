@@ -5,6 +5,7 @@
 
 import { retrieveChunks, type LibraryMatch } from "./retrieval.server";
 import { routedCompletion, type MembershipTier } from "./model-routing.server";
+import { examLabel, withExam } from "@/lib/exam-context.server";
 const MODEL = "google/gemini-2.5-flash";
 
 
@@ -102,7 +103,7 @@ export async function enrichQuestionExplanations(
     label: "Enrichment",
     jsonMode: true,
     messages: [
-      { role: "system", content: SYSTEM },
+      { role: "system", content: withExam(SYSTEM, await examLabel()) },
       { role: "user", content: buildUserPrompt(q, context) },
     ],
   });

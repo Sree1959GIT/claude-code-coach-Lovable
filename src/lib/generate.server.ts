@@ -5,6 +5,7 @@
  */
 
 import { retrieveChunks, type LibraryMatch } from "./retrieval.server";
+import { examLabel, withExam } from "@/lib/exam-context.server";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-2.5-flash";
@@ -135,7 +136,7 @@ export async function generateQuestionDrafts(args: GenerateArgs): Promise<Genera
     body: JSON.stringify({
       model: MODEL,
       messages: [
-        { role: "system", content: SYSTEM },
+        { role: "system", content: withExam(SYSTEM, await examLabel()) },
         { role: "user", content: buildUserPrompt(args, context) },
       ],
       response_format: { type: "json_object" },

@@ -41,6 +41,8 @@ export const askMentor = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => AskInputSchema.parse(input))
   .handler(async ({ data, context }) => {
     const { getMembershipTier, routedCompletion } = await import("./model-routing.server");
+    const { examLabel, withExam } = await import("./exam-context.server");
+    const examName = await examLabel();
     const { enforceQuota, recordRateEvent } = await import("./rate-limit.server");
 
     const contextBlock = data.context
@@ -63,7 +65,7 @@ ${(data.context.options ?? []).map((o) => `  ${o.label}. ${o.text}`).join("\n")}
       label: "Mentor",
       userId: context.userId,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: withExam(SYSTEM_PROMPT, examName) },
         { role: "system", content: contextBlock },
         ...data.messages,
       ],

@@ -11,6 +11,7 @@ import type { RetrievalResult } from "./retrieval.agent.server";
 import { retrievalSystemMessage } from "./retrieval.agent.server";
 import { fetchGatewayStream } from "./gateway.server";
 import { adviceSystemMessage } from "./advice-prompt.server";
+import { examLabel, examLabelSync, withExam } from "@/lib/exam-context.server";
 
 
 
@@ -119,7 +120,7 @@ export function buildExplainerMessages(args: ExplainerArgs): ChatMessage[] {
   // Phase E8 — advice matrices adjust conversational depth.
   const advice = adviceSystemMessage(args.context?.advice);
   return [
-    { role: "system", content: PERSONA },
+    { role: "system", content: withExam(PERSONA, examLabelSync()) },
     { role: "system", content: intentDirective(args.intent) },
     { role: "system", content: questionContextMessage(args.context) },
     ...(advice ? [{ role: "system" as const, content: advice.content }] : []),
@@ -143,6 +144,7 @@ function gatewayError(status: number, body: string): Error {
 export async function streamExplainer(args: ExplainerArgs): Promise<ReadableStream<Uint8Array>> {
   // Phase F5 — the learner's own active key overrides the proxy allowance.
   const target = await resolveExplainerTarget(args);
+  await examLabel();
   if (!target.apiKey) throw new Error("Missing LOVABLE_API_KEY");
 
   return fetchGatewayStream({
@@ -188,6 +190,7 @@ export async function runExplainerAgent(args: ExplainerArgs): Promise<ExplainerR
   try {
     // Phase F5 — BYOK key wins over the proxy allowance when one is active.
     const target = await resolveExplainerTarget(args);
+  await examLabel();
     if (!target.apiKey) throw new Error("Missing LOVABLE_API_KEY");
     usedModel = target.model;
     const res = await fetch(target.url, {
