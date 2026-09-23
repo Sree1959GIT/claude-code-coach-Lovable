@@ -87,7 +87,8 @@
 - [x] **S7:** Dashboard reorder — the day's task and one primary action lead, new learners get a real first task, readiness empty state rewritten, and `alert()` launch failures replaced with inline error banners.
 - [x] **G1 (any-exam):** Exam entity — `exams` table (slug, name, short name, description, pass mark, question count, duration, status, default flag) with admin-only writes and public reads; `domains.exam_id` links the five domains to a seeded CCAF exam; `src/lib/exams.ts` read path (`fetchActiveExam`, `fetchExams`, `passRatio`, `FALLBACK_EXAM`) with the mock exam page now reading count / duration / pass mark from the record.
 - [x] **G2:** Exam switcher in the header — `exams` table created, granted and seeded with CCAF (the G1 migration had never been applied); `domains.exam_id` added; `useActiveExam` remembers the choice per browser; `ExamSwitcher` shows the active exam and readiness figure beside the product name on every screen.
-- **Next:** G3 — de-hardcode CCAF wording: landing hero, page titles, prompts and the domain grid read from the exam record, rendering sanely for an exam with no blueprint yet.
+- [x] **G3:** De-hardcode CCAF wording — landing hero, badge, footer lockup and SEO copy read the exam record; the domain grid loads `domains` for the active exam and shows a real message when no blueprint exists; mentor, critic, item setter, generator, enrichment and codegen research prompts take a `{{EXAM}}` label from `src/lib/exam-context.server.ts` (cached, generic fallback).
+- **Next:** G4 — create-an-exam wizard: name → blueprint with provenance → scope → building exam with live progress.
 
 
 
