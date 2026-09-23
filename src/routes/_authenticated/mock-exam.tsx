@@ -57,16 +57,22 @@ function MockExamPage() {
     queryKey: ["question_counts"],
     queryFn: fetchQuestionCounts,
   });
+  const examQ = useQuery({ queryKey: ["active_exam"], queryFn: fetchActiveExam });
+
+  const exam = examQ.data ?? FALLBACK_EXAM;
+  const targetCount = exam.questionCount;
+  const durationMinutes = exam.durationMinutes;
+  const passMark = passRatio(exam);
 
   const rows = useMemo(() => {
     if (!domainsQ.data || !countsQ.data) return [];
-    return buildBlueprint(domainsQ.data, countsQ.data, MOCK_EXAM_COUNT);
-  }, [domainsQ.data, countsQ.data]);
+    return buildBlueprint(domainsQ.data, countsQ.data, targetCount);
+  }, [domainsQ.data, countsQ.data, targetCount]);
 
   const totals = useMemo(() => blueprintTotals(rows), [rows]);
   const shortfall = totals.planned - totals.deliverable;
-  const effectiveCount = Math.min(MOCK_EXAM_COUNT, totals.available);
-  const passNeeded = Math.ceil(effectiveCount * PASS_MARK);
+  const effectiveCount = Math.min(targetCount, totals.available);
+  const passNeeded = Math.ceil(effectiveCount * passMark);
 
   async function launch() {
     if (!user || effectiveCount === 0) return;
