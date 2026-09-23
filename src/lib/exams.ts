@@ -100,3 +100,23 @@ export function passRatio(exam: Pick<Exam, "passMark">): number {
   if (!Number.isFinite(pct) || pct <= 0) return FALLBACK_EXAM.passMark / 100;
   return pct > 1 ? pct / 100 : pct;
 }
+
+export type ExamDomain = {
+  id: string;
+  slug: string;
+  title: string;
+  weight: number;
+};
+
+/** Blueprint rows for an exam. Empty is a valid state: a new exam has none. */
+export async function fetchExamDomains(examId: string): Promise<ExamDomain[]> {
+  if (!examId) return [];
+  const { data, error } = await supabase
+    .from("domains")
+    .select("id, slug, title, weight")
+    .eq("exam_id", examId)
+    .order("sort_order");
+
+  if (error) throw error;
+  return (data ?? []) as ExamDomain[];
+}
