@@ -815,6 +815,7 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          exam_id: string | null
           id: string
           slug: string
           sort_order: number
@@ -824,6 +825,7 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          exam_id?: string | null
           id?: string
           slug: string
           sort_order?: number
@@ -833,11 +835,68 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          exam_id?: string | null
           id?: string
           slug?: string
           sort_order?: number
           title?: string
           weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "domains_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exams: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          duration_minutes: number
+          id: string
+          is_default: boolean
+          name: string
+          pass_mark: number
+          question_count: number
+          short_name: string | null
+          slug: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_default?: boolean
+          name: string
+          pass_mark?: number
+          question_count?: number
+          short_name?: string | null
+          slug: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_default?: boolean
+          name?: string
+          pass_mark?: number
+          question_count?: number
+          short_name?: string | null
+          slug?: string
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
