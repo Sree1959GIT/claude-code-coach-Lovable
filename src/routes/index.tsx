@@ -1,15 +1,17 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import dashboardPreview from "@/assets/dashboard-preview.jpg";
 import { SiteHeader } from "@/components/SiteHeader";
 import { logEvent } from "@/lib/analytics";
+import { fetchActiveExam, fetchExamDomains, FALLBACK_EXAM } from "@/lib/exams";
 import { createSeo, DEFAULT_SHARE_IMAGE, SITE_NAME, SITE_ORIGIN } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
   component: Landing,
   head: () => createSeo({
-    title: "Claude Certified Architect — Foundations Exam Prep",
-    description: "Rigorous, adaptive prep for the Claude Certified Architect Foundations exam with mock exams, an SME voice mentor, spaced repetition, and readiness analytics.",
+    title: "Certification exam prep with a voice mentor and mock exams",
+    description: "Adaptive preparation for professional certification exams: mock exams, an SME voice mentor, spaced repetition and readiness analytics.",
     path: "/",
     image: DEFAULT_SHARE_IMAGE,
     schema: [
@@ -20,7 +22,7 @@ export const Route = createFileRoute("/")({
         url: SITE_ORIGIN,
         applicationCategory: "EducationalApplication",
         operatingSystem: "Web",
-        description: "Adaptive preparation for the Claude Certified Architect Foundations exam.",
+        description: "Adaptive preparation for professional certification exams.",
         offers: [
           { "@type": "Offer", price: "0", priceCurrency: "USD", name: "Standard Access" },
           { "@type": "Offer", price: "29", priceCurrency: "USD", name: "Architect Plus" },
@@ -29,8 +31,8 @@ export const Route = createFileRoute("/")({
       {
         "@context": "https://schema.org",
         "@type": "Course",
-        name: "Claude Certified Architect Foundations Exam Prep",
-        description: "Adaptive study, practice questions, mock exams, and architect-level feedback for Claude-native systems.",
+        name: "Certification exam preparation",
+        description: "Adaptive study, practice questions, mock exams and expert feedback for professional certification exams.",
         provider: { "@type": "Organization", name: SITE_NAME, url: SITE_ORIGIN },
         educationalLevel: "Professional certification preparation",
       },
@@ -38,24 +40,46 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-const DOMAINS = [
-  { id: "D1", name: "Agentic Architecture", weight: 27 },
-  { id: "D2", name: "Tool Design", weight: 18 },
-  { id: "D3", name: "Claude Code Config", weight: 20 },
-  { id: "D4", name: "Context & Prompting", weight: 15 },
-  { id: "D5", name: "Deployment & Ops", weight: 20 },
-];
+/** G3 — the landing page reads the exam and its blueprint, never a hard-coded one. */
+function useLandingExam() {
+  const examQ = useQuery({
+    queryKey: ["landing-exam"],
+    queryFn: fetchActiveExam,
+    staleTime: 10 * 60 * 1000,
+  });
+  const exam = examQ.data ?? FALLBACK_EXAM;
+  const domainsQ = useQuery({
+    queryKey: ["landing-domains", exam.id],
+    queryFn: () => fetchExamDomains(exam.id),
+    enabled: Boolean(exam.id),
+    staleTime: 10 * 60 * 1000,
+  });
+  return { exam, domains: domainsQ.data ?? [] };
+}
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 3)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
+}
 
 const FEATURES = [
   { n: "01.", t: "SME Voice Mentor", d: "Interactive audio explanations of question intent, tricky decision points, and 'Second-to-None' answer disambiguation." },
-  { n: "02.", t: "Adaptive FSRS", d: "Spaced-repetition tuned to architectural concepts — study only what you're forgetting." },
+  { n: "02.", t: "Adaptive FSRS", d: "Spaced repetition tuned to the exam's concepts — study only what you're forgetting." },
   { n: "03.", t: "RAG Library", d: "Instant retrieval across ingested docs, PDFs, and community best-practice notes — fully client-side." },
   { n: "04.", t: "Multi-Agent Research", d: "Automated harvesting of exam-scope updates from official channels and community threads." },
-  { n: "05.", t: "Mock Environments", d: "Full-length timed simulations mirroring the Foundations difficulty and question distribution." },
+  { n: "05.", t: "Mock Environments", d: "Full-length timed simulations mirroring the real difficulty and question distribution." },
   { n: "06.", t: "Global Analytics", d: "Per-question timing, weakest-domain heatmaps, and readiness scoring against passing thresholds." },
 ];
 
 function Landing() {
+  const { exam, domains } = useLandingExam();
+  const examTitle = exam.shortName || exam.name;
+  const badge = `${(exam.shortName || exam.name).toUpperCase()} · ${exam.questionCount} questions · ${exam.passMark}% to pass`;
+
   useEffect(() => {
     logEvent("page_view", { page: "landing" });
   }, []);
@@ -69,15 +93,15 @@ function Landing() {
         <div className="grid gap-12 lg:grid-cols-[1fr_420px]">
           <div className="animate-entrance">
             <div className="mb-6 inline-block border border-primary/30 bg-primary/5 px-2 py-1 font-mono text-xs text-primary">
-              FOUNDATIONS · V1.0
+              {badge}
             </div>
             <h1 className="mb-6 max-w-2xl font-mono text-5xl font-bold uppercase leading-[1.1] tracking-tighter sm:text-7xl">
-              Architecting <br />
-              <span className="text-primary">Intelligence</span>
+              Pass the <br />
+              <span className="text-primary">{examTitle}</span>
             </h1>
-            <p className="mb-10 max-w-md text-sm leading-relaxed text-muted-foreground">
-              The technical certification path for Claude-native systems. Rigorous simulation,
-              adaptive logic, and architect-level validation.
+            <p className="mb-10 max-w-md leading-relaxed text-muted-foreground">
+              {exam.description ||
+                `Adaptive preparation for ${exam.name}: timed mock exams, a voice mentor that teaches the concept behind every question, and spaced repetition that targets what you keep forgetting.`}
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
@@ -114,12 +138,10 @@ function Landing() {
               <div className="size-2 bg-green-500/50" />
             </div>
             <div className="space-y-6">
-              {DOMAINS.slice(0, 3).map((d) => (
+              {domains.slice(0, 3).map((d) => (
                 <div key={d.id} className="space-y-2">
                   <div className="flex justify-between font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                    <span>
-                      {d.id}_{d.name.replace(/ /g, "_")}
-                    </span>
+                    <span>{d.title}</span>
                     <span>{d.weight}%</span>
                   </div>
                   <div className="h-1 w-full bg-border">
@@ -169,24 +191,29 @@ function Landing() {
           <h2 className="mb-3 font-mono text-xs font-bold uppercase tracking-[0.3em] text-primary">
             Exam domain weighting
           </h2>
-          <p className="max-w-xl text-sm text-muted-foreground">
-            Study paths are structured against the official domain distribution so your time
-            compounds where it matters.
+          <p className="max-w-xl text-muted-foreground">
+            Study paths follow the published weighting for {exam.name}, so your time compounds
+            where it matters.
           </p>
         </div>
-        <div className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-5">
-          {DOMAINS.map((d) => (
-            <div key={d.id} className="bg-background p-6 transition-colors hover:bg-primary/5">
-              <div className="mb-3 font-mono text-3xl font-bold text-primary">{d.weight}%</div>
-              <div className="mb-4 font-mono text-xs font-bold uppercase tracking-widest">
-                {d.id} · {d.name}
+        {domains.length === 0 ? (
+          <div className="border border-dashed border-border p-8 text-muted-foreground">
+            The blueprint for {exam.name} has not been added yet. Once its domains and weights are
+            in, study paths and readiness scoring follow them automatically.
+          </div>
+        ) : (
+          <div className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-5">
+            {domains.map((d) => (
+              <div key={d.id} className="bg-background p-6 transition-colors hover:bg-primary/5">
+                <div className="mb-3 font-mono text-3xl font-bold text-primary">{d.weight}%</div>
+                <div className="mb-4 text-xs font-bold uppercase tracking-widest">{d.title}</div>
+                <div className="h-1 w-full bg-border">
+                  <div className="h-full bg-primary" style={{ width: `${Math.min(100, d.weight * 2)}%` }} />
+                </div>
               </div>
-              <div className="h-1 w-full bg-border">
-                <div className="h-full bg-primary" style={{ width: `${d.weight * 2}%` }} />
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Feature grid */}
@@ -250,7 +277,7 @@ function Landing() {
               $0<span className="text-xs text-muted-foreground">/MO</span>
             </div>
             <ul className="mb-10 space-y-4 font-mono text-xs uppercase text-muted-foreground">
-              <li>- 1 Foundation Mock Exam</li>
+              <li>- 1 full mock exam</li>
               <li>- Core Domain Summaries</li>
               <li>- Basic Analytics</li>
             </ul>
@@ -304,23 +331,23 @@ function Landing() {
           <div className="lg:col-span-2">
             <div className="mb-6 flex items-center gap-4">
               <div className="flex h-6 w-6 items-center justify-center bg-primary text-xs font-bold text-primary-foreground">
-                CCA
+                {initials(exam.shortName || exam.name)}
               </div>
               <span className="font-mono text-xs font-bold uppercase tracking-tight">
-                Claude Architect
+                {exam.shortName || exam.name}
               </span>
             </div>
             <p className="max-w-xs text-xs leading-loose text-muted-foreground">
-              Terminal-grade preparation for the modern AI stack. Independent, not affiliated
-              with Anthropic PBC.
+              Terminal-grade preparation for professional certification exams. Independent, not
+              affiliated with any certification body.
             </p>
           </div>
           <div className="space-y-4">
             <h5 className="font-mono text-xs uppercase tracking-widest">Protocols</h5>
             <ul className="space-y-2 font-mono text-xs uppercase text-muted-foreground">
-              <li>Foundations</li>
-              <li>Deployment</li>
-              <li>Compliance</li>
+              <li>Mock exams</li>
+              <li>Voice mentor</li>
+              <li>Readiness report</li>
             </ul>
           </div>
           <div className="space-y-4">

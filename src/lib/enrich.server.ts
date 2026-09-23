@@ -5,6 +5,7 @@
 
 import { retrieveChunks, type LibraryMatch } from "./retrieval.server";
 import { routedCompletion, type MembershipTier } from "./model-routing.server";
+import { examLabel, withExam } from "@/lib/exam-context.server";
 const MODEL = "google/gemini-2.5-flash";
 
 
@@ -39,7 +40,7 @@ export type EnrichedQuestion = {
   explanations: EnrichedExplanation[];
 };
 
-const SYSTEM = `You write answer explanations for the Claude Code Architect certification.
+const SYSTEM = `You write answer explanations for {{EXAM}}.
 Rules:
 - One or two sentences per option, factual and specific.
 - For the correct option, say why it is the best answer; for a distractor, say precisely why it fails.
@@ -102,7 +103,7 @@ export async function enrichQuestionExplanations(
     label: "Enrichment",
     jsonMode: true,
     messages: [
-      { role: "system", content: SYSTEM },
+      { role: "system", content: withExam(SYSTEM, await examLabel()) },
       { role: "user", content: buildUserPrompt(q, context) },
     ],
   });

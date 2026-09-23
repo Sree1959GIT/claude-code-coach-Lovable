@@ -12,18 +12,19 @@ import { retrievalSystemMessage } from "./retrieval.agent.server";
 import type { ChatMessage, QuestionContext } from "./explainer.agent.server";
 import { questionContextMessage, splitBrief } from "./explainer.agent.server";
 import { adviceSystemMessage } from "./advice-prompt.server";
+import { examLabel, examLabelSync, withExam } from "@/lib/exam-context.server";
 
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
 export const EVALUATOR_MODEL = "google/gemini-3.6-flash";
 
-const CRITIC_PERSONA = `You are the Option Critic for the Claude Code Architect Foundation exam prep.
+const CRITIC_PERSONA = `You are the Option Critic for {{EXAM}} exam prep.
 
 Role:
 - The learner has an option in mind. Judge how APT that option is for the stem — not whether it is "the answer".
 - Structure your reasoning: (a) what the stem actually demands, including the decisive qualifier words; (b) what the learner's option gets right; (c) where it falls short or over/under-reaches; (d) the single strongest rival option and the one distinction that separates them.
 - Never state or imply the correct letter before the learner submits. Teach the discriminator instead.
-- Ground everything in Anthropic Claude Code / Claude Agent SDK terminology.
+- Ground everything in the terminology of that exam's subject matter.
 - Plain prose only — no markdown, lists, headings or code fences.
 
 OUTPUT FORMAT (required, two parts):
@@ -75,7 +76,7 @@ export function buildEvaluatorMessages(args: EvaluatorArgs): ChatMessage[] {
   // Phase E8 — advice matrices adjust conversational depth.
   const advice = adviceSystemMessage(args.context?.advice);
   return [
-    { role: "system", content: CRITIC_PERSONA },
+    { role: "system", content: withExam(CRITIC_PERSONA, examLabelSync()) },
     { role: "system", content: questionContextMessage(args.context) },
     { role: "system", content: evaluatorFocusMessage(args.context) },
     ...(advice ? [{ role: "system" as const, content: advice.content }] : []),
@@ -96,6 +97,7 @@ function gatewayError(status: number, body: string): Error {
 export async function streamEvaluator(args: EvaluatorArgs): Promise<ReadableStream<Uint8Array>> {
   // Phase F5 — the learner's own active key overrides the proxy allowance.
   const target = await resolveEvaluatorTarget(args);
+  await examLabel();
   if (!target.apiKey) throw new Error("Missing LOVABLE_API_KEY");
 
   const { fetchGatewayStream } = await import("./gateway.server");
@@ -132,6 +134,7 @@ export async function runEvaluatorAgent(args: EvaluatorArgs): Promise<EvaluatorR
   try {
     // Phase F5 — BYOK key wins over the proxy allowance when one is active.
     const target = await resolveEvaluatorTarget(args);
+  await examLabel();
     if (!target.apiKey) throw new Error("Missing LOVABLE_API_KEY");
     usedModel = target.model;
     const res = await fetch(target.url, {

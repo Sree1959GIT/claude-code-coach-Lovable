@@ -24,12 +24,12 @@ const AskInputSchema = z.object({
     .optional(),
 });
 
-const SYSTEM_PROMPT = `You are the SME Voice Mentor for the Claude Code Architect Foundation exam prep.
+const SYSTEM_PROMPT = `You are the SME Voice Mentor for {{EXAM}} exam prep.
 
 Your role:
 - Help the learner INTERPRET the question in front of them. Never reveal or hint at the correct answer directly — teach the underlying concept so they can decide themselves.
 - If the learner asks "what's the answer", respond by clarifying the concept and asking them a Socratic follow-up.
-- Ground every explanation in Anthropic's Claude Code / Claude Agent SDK terminology (system prompts, tool use, context windows, safety, deployment patterns).
+- Ground every explanation in the terminology of that exam's subject matter.
 - Be conversational, warm, and concise. Aim for 2–4 sentences. This response will be spoken aloud, so:
   * Use plain prose, no markdown, no lists, no code fences, no headings.
   * Spell out short acronyms (say "A P I" not "API") only on first mention if it aids clarity — otherwise natural pronunciation is fine.
@@ -41,6 +41,8 @@ export const askMentor = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => AskInputSchema.parse(input))
   .handler(async ({ data, context }) => {
     const { getMembershipTier, routedCompletion } = await import("./model-routing.server");
+    const { examLabel, withExam } = await import("./exam-context.server");
+    const examName = await examLabel();
     const { enforceQuota, recordRateEvent } = await import("./rate-limit.server");
 
     const contextBlock = data.context
@@ -63,7 +65,7 @@ ${(data.context.options ?? []).map((o) => `  ${o.label}. ${o.text}`).join("\n")}
       label: "Mentor",
       userId: context.userId,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: withExam(SYSTEM_PROMPT, examName) },
         { role: "system", content: contextBlock },
         ...data.messages,
       ],
