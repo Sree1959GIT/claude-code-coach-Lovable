@@ -40,6 +40,15 @@ export async function examLabel(): Promise<string> {
   return label;
 }
 
+/**
+ * Cached label for synchronous prompt builders. Callers awaiting examLabel()
+ * earlier in the same request warm this; otherwise it degrades to the generic
+ * wording rather than naming the wrong exam.
+ */
+export function examLabelSync(): string {
+  return cached?.label ?? FALLBACK_LABEL;
+}
+
 /** Replace the {{EXAM}} placeholder in a prompt template. */
 export function withExam(template: string, label: string): string {
   return template.replaceAll("{{EXAM}}", label);
