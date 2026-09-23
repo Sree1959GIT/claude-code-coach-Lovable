@@ -19,7 +19,7 @@
 
 ### G — Any-exam support (lands with the shell)
 - [x] G1: Exam entity and blueprint data — exams table, domains.exam_id, seeded CCAF exam, mock exam reads the record
-- [ ] G2: Exam switcher in the header
+- [x] G2: Exam switcher in the header — exams table created and seeded, active exam remembered per browser, shown beside the product name with the readiness figure
 - [ ] G3: De-hardcode CCAF wording
 - [ ] G4: Create-an-exam wizard
 - [ ] G5: Per-exam isolation and sharing
