@@ -205,7 +205,7 @@ export async function research(args: AuthoringArgs): Promise<Evidence> {
 
 /* ------------------------------- setter ------------------------------- */
 
-const SETTER_SYSTEM = `You are the SME item Setter for the Claude Code Architect certification.
+const SETTER_SYSTEM = `You are the SME item Setter for {{EXAM}}.
 Write scenario-based, single-best-answer multiple choice items that mirror the real exam. Rules:
 - Exactly 4 options labelled A, B, C, D; exactly one correct.
 - Distractors must be plausible to a knowledgeable candidate, never absurd.

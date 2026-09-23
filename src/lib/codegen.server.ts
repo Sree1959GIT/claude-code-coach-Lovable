@@ -161,7 +161,7 @@ async function researchAgent(args: CodegenArgs): Promise<{
   const brief = await callJson<ResearchBrief>({
     label: "Research agent",
     system:
-      "You are the Research agent for a Claude Code Architect certification tutor. " +
+      "You are the Research agent for a certification exam tutor. " +
       "You decide what a runnable code example must teach. Return ONLY JSON, no fences.",
     user: [
       `Concept: ${args.conceptLabel} (tag: ${args.conceptTag})`,

@@ -39,7 +39,7 @@ export type EnrichedQuestion = {
   explanations: EnrichedExplanation[];
 };
 
-const SYSTEM = `You write answer explanations for the Claude Code Architect certification.
+const SYSTEM = `You write answer explanations for {{EXAM}}.
 Rules:
 - One or two sentences per option, factual and specific.
 - For the correct option, say why it is the best answer; for a distractor, say precisely why it fails.

@@ -34,7 +34,7 @@ export type GenerateArgs = {
   topicHint?: string | null;
 };
 
-const SYSTEM = `You are an exam-item writer for the Claude Code Architect certification.
+const SYSTEM = `You are an exam-item writer for {{EXAM}}.
 Write scenario-based, single-best-answer multiple choice questions that mirror a
 professional certification exam. Rules:
 - Exactly 4 options labelled A, B, C, D; exactly one is correct.
@@ -52,7 +52,7 @@ function buildUserPrompt(args: GenerateArgs, context: string): string {
     `Write ${args.count} question(s) at difficulty: ${args.difficulty}.`,
     "",
     "SOURCE MATERIAL:",
-    context || "(no library material retrieved — rely on general Claude Code knowledge and keep claims conservative)",
+    context || "(no library material retrieved — rely on general knowledge of the exam subject and keep claims conservative)",
     "",
     `JSON shape:
 {"questions":[{"scenario":string|null,"stem":string,"keyConcept":string,"difficulty":"easy"|"medium"|"hard","options":[{"label":"A","text":string,"isCorrect":boolean,"explanation":string}]}]}`,

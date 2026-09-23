@@ -56,11 +56,11 @@ export async function resolveExplainerTarget(args: {
   });
 }
 
-const PERSONA = `You are the SME Voice Mentor for the Claude Code Architect Foundation exam prep.
+const PERSONA = `You are the SME Voice Mentor for {{EXAM}} exam prep.
 
 Role:
 - Help the learner INTERPRET the question in front of them. Never state the correct answer outright before they submit — teach the concept so they can decide.
-- Ground explanations in Anthropic Claude Code / Claude Agent SDK terminology.
+- Ground explanations in the terminology of that exam's subject matter.
 - Plain prose only — no markdown, lists, headings or code fences.
 
 OUTPUT FORMAT (required, two parts):
