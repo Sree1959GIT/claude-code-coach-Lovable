@@ -14,6 +14,7 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "./ThemeToggle";
 import { MobileTabBar } from "./MobileTabBar";
+import { ExamSwitcher } from "./ExamSwitcher";
 import { logEvent } from "@/lib/analytics";
 import { getActivityTimestamps } from "@/lib/streaks.functions";
 import { computeStreaks } from "@/lib/streaks";
@@ -105,8 +106,12 @@ export function SiteHeader() {
           <div className="flex h-6 w-6 items-center justify-center rounded bg-primary text-xs font-bold text-primary-foreground">
             CCA
           </div>
-          <span className="text-sm font-semibold tracking-tight">Foundation Prep</span>
+          <span className="hidden text-sm font-semibold tracking-tight sm:inline">
+            Foundation Prep
+          </span>
         </Link>
+        {user && <ExamSwitcher />}
+
 
         {user && (
           <div className="flex min-w-0 items-center gap-1 overflow-x-auto">
