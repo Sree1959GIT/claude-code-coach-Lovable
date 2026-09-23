@@ -714,68 +714,6 @@ export type Database = {
           },
         ]
       }
-      crawl_targets: {
-        Row: {
-          crawl_interval_hours: number
-          created_at: string
-          created_by: string | null
-          enabled: boolean
-          id: string
-          label: string | null
-          last_chars: number | null
-          last_chunks: number | null
-          last_crawled_at: string | null
-          last_ok: boolean | null
-          last_status: string | null
-          source_id: string | null
-          tags: string[]
-          updated_at: string
-          url: string
-        }
-        Insert: {
-          crawl_interval_hours?: number
-          created_at?: string
-          created_by?: string | null
-          enabled?: boolean
-          id?: string
-          label?: string | null
-          last_chars?: number | null
-          last_chunks?: number | null
-          last_crawled_at?: string | null
-          last_ok?: boolean | null
-          last_status?: string | null
-          source_id?: string | null
-          tags?: string[]
-          updated_at?: string
-          url: string
-        }
-        Update: {
-          crawl_interval_hours?: number
-          created_at?: string
-          created_by?: string | null
-          enabled?: boolean
-          id?: string
-          label?: string | null
-          last_chars?: number | null
-          last_chunks?: number | null
-          last_crawled_at?: string | null
-          last_ok?: boolean | null
-          last_status?: string | null
-          source_id?: string | null
-          tags?: string[]
-          updated_at?: string
-          url?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "crawl_targets_source_id_fkey"
-            columns: ["source_id"]
-            isOneToOne: false
-            referencedRelation: "authoring_sources"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       domain_confidence: {
         Row: {
           created_at: string
@@ -815,7 +753,6 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
-          exam_id: string | null
           id: string
           slug: string
           sort_order: number
@@ -825,7 +762,6 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
-          exam_id?: string | null
           id?: string
           slug: string
           sort_order?: number
@@ -835,68 +771,11 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
-          exam_id?: string | null
           id?: string
           slug?: string
           sort_order?: number
           title?: string
           weight?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "domains_exam_id_fkey"
-            columns: ["exam_id"]
-            isOneToOne: false
-            referencedRelation: "exams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      exams: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          description: string | null
-          duration_minutes: number
-          id: string
-          is_default: boolean
-          name: string
-          pass_mark: number
-          question_count: number
-          short_name: string | null
-          slug: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          duration_minutes?: number
-          id?: string
-          is_default?: boolean
-          name: string
-          pass_mark?: number
-          question_count?: number
-          short_name?: string | null
-          slug: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          duration_minutes?: number
-          id?: string
-          is_default?: boolean
-          name?: string
-          pass_mark?: number
-          question_count?: number
-          short_name?: string | null
-          slug?: string
-          status?: string
-          updated_at?: string
         }
         Relationships: []
       }
