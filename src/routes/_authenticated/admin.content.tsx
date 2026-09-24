@@ -6,6 +6,7 @@ import { AdminSection } from "@/components/admin/AdminSection";
 import { BulkImportPanel } from "@/components/admin/BulkImportPanel";
 import { AiGeneratePanel } from "@/components/admin/AiGeneratePanel";
 import { CodeGenPanel } from "@/components/admin/CodeGenPanel";
+import { CreateExamWizard } from "@/components/admin/CreateExamWizard";
 
 export const Route = createFileRoute("/_authenticated/admin/content")({
   component: ContentGroup,
@@ -14,6 +15,13 @@ export const Route = createFileRoute("/_authenticated/admin/content")({
 function ContentGroup() {
   return (
     <div>
+      <AdminSection
+        title="Create an exam"
+        blurb="Name a new exam, then lay out its study areas with weights and where each came from. It is saved as a draft that learners can't see."
+      >
+        <CreateExamWizard />
+      </AdminSection>
+
       <AdminSection
         title="Authoring"
         blurb="Domains and their questions, with option health and live difficulty from real attempts. Manual authoring is the default; switch to Agentic to run the drafting loop."
