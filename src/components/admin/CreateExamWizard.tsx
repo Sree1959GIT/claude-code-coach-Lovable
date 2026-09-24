@@ -12,8 +12,13 @@ import {
   createDraftExam,
   suggestBlueprint,
   type BlueprintArea,
+  listExamAreas,
+  publishExam,
   type Provenance,
 } from "@/lib/exam-builder.functions";
+import { generateQuestions } from "@/lib/generate.functions";
+
+type BuildLine = { label: string; status: "waiting" | "running" | "done" | "failed"; note?: string };
 
 const input =
   "w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
@@ -33,7 +38,17 @@ export function CreateExamWizard() {
   const suggest = useServerFn(suggestBlueprint);
   const create = useServerFn(createDraftExam);
 
-  const [step, setStep] = useState<1 | 2 | "done">(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const listAreas = useServerFn(listExamAreas);
+  const generate = useServerFn(generateQuestions);
+  const publish = useServerFn(publishExam);
+  const [examId, setExamId] = useState<string | null>(null);
+  const [savedAreas, setSavedAreas] = useState<{ id: string; title: string; weight: number }[]>([]);
+  const [perArea, setPerArea] = useState<Record<string, number>>({});
+  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard" | "mixed">("mixed");
+  const [lines, setLines] = useState<BuildLine[]>([]);
+  const [building, setBuilding] = useState(false);
+  const [published, setPublished] = useState(false);
   const [name, setName] = useState("");
   const [shortName, setShortName] = useState("");
   const [description, setDescription] = useState("");
@@ -86,7 +101,11 @@ export function CreateExamWizard() {
         },
       });
       setCreated(res.slug);
-      setStep("done");
+      setExamId(res.examId);
+      const rows = await listAreas({ data: { examId: res.examId } });
+      setSavedAreas(rows);
+      setPerArea(Object.fromEntries(rows.map((r) => [r.id, Math.min(20, Math.max(2, Math.round(r.weight / 5)))])));
+      setStep(3);
       qc.invalidateQueries({ queryKey: ["exams"] });
       toast.success("Draft exam saved");
     } catch (e) {
@@ -96,8 +115,61 @@ export function CreateExamWizard() {
     }
   }
 
+  function setLine(i: number, patch: Partial<BuildLine>) {
+    setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
+  }
+
+  async function build() {
+    const targets = savedAreas.filter((a) => (perArea[a.id] ?? 0) > 0);
+    setLines([
+      { label: "Exam saved as draft", status: "done" },
+      { label: `${savedAreas.length} study areas saved`, status: "done" },
+      ...targets.map((a) => ({ label: `Questions for ${a.title} (${perArea[a.id]})`, status: "waiting" as const })),
+    ]);
+    setStep(4);
+    setBuilding(true);
+    for (let t = 0; t < targets.length; t++) {
+      const area = targets[t]!;
+      const idx = t + 2;
+      setLine(idx, { status: "running" });
+      let remaining = perArea[area.id] ?? 0;
+      let queued = 0;
+      let failed = false;
+      while (remaining > 0) {
+        const count = Math.min(8, remaining);
+        try {
+          const res = await generate({ data: { domainId: area.id, count, difficulty, topicHint: "", commit: true } });
+          queued += res.queued;
+          setLine(idx, { note: `${queued} queued for review` });
+        } catch (e) {
+          failed = true;
+          setLine(idx, { note: e instanceof Error ? e.message : "Generation failed" });
+          break;
+        }
+        remaining -= count;
+      }
+      setLine(idx, { status: failed ? "failed" : "done", note: failed ? undefined : `${queued} queued for review` });
+    }
+    setBuilding(false);
+  }
+
+  async function doPublish() {
+    if (!examId) return;
+    try {
+      await publish({ data: { examId } });
+      setPublished(true);
+      qc.invalidateQueries({ queryKey: ["exams"] });
+      toast.success("Exam published");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't publish");
+    }
+  }
+
   function reset() {
     setStep(1);
+    setExamId(null);
+    setLines([]);
+    setPublished(false);
     setName("");
     setShortName("");
     setDescription("");
@@ -112,7 +184,7 @@ export function CreateExamWizard() {
         {["Name", "Blueprint", "Scope", "Build"].map((label, i) => {
           const n = i + 1;
           const current = step === n;
-          const doneStep = step === "done" ? n <= 2 : typeof step === "number" && n < step;
+          const doneStep = n < step || (n === 4 && lines.length > 0 && !building);
           return (
             <li
               key={label}
@@ -121,11 +193,9 @@ export function CreateExamWizard() {
                 "rounded-md border px-2 py-1",
                 current ? "border-primary text-foreground" : "border-border text-muted-foreground",
                 doneStep ? "bg-success-soft text-success" : "",
-                n > 2 ? "opacity-50" : "",
               ].join(" ")}
             >
               {n}. {label}
-              {n > 2 ? " (coming next)" : ""}
             </li>
           );
         })}
@@ -230,12 +300,82 @@ export function CreateExamWizard() {
         </div>
       )}
 
-      {step === "done" && (
-        <div className="space-y-3">
-          <p className="text-sm">
-            <strong>{name}</strong> is saved as a draft ({created}) with {areas.length} study areas. Learners won't see it yet.
+      {step === 3 && (
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            <strong className="text-foreground">{name}</strong> is saved as a draft ({created}). Choose how many starter questions to draft per area. They go to the review queue, not straight to learners. Set 0 to skip.
           </p>
-          <button className={btn} onClick={reset}>Create another</button>
+          <ul className="space-y-2">
+            {savedAreas.map((a) => (
+              <li key={a.id} className="flex items-center gap-3 rounded-md border border-border p-2">
+                <span className="min-w-0 flex-1 truncate text-sm">{a.title}</span>
+                <span className="font-mono text-xs text-muted-foreground">{a.weight}%</span>
+                <input
+                  type="number"
+                  aria-label={`Questions for ${a.title}`}
+                  className={`${input} w-20`}
+                  min={0}
+                  max={20}
+                  value={perArea[a.id] ?? 0}
+                  onChange={(e) => setPerArea((p) => ({ ...p, [a.id]: Math.min(20, Math.max(0, Number(e.target.value) || 0)) }))}
+                />
+              </li>
+            ))}
+          </ul>
+          <label className="flex items-center gap-2 text-sm">
+            Difficulty
+            <select className={`${input} w-40`} value={difficulty} onChange={(e) => setDifficulty(e.target.value as typeof difficulty)}>
+              <option value="mixed">Mixed</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Total {Object.values(perArea).reduce((s, n) => s + n, 0)} questions.
+          </p>
+          <div className="flex gap-2">
+            <button className={primary} onClick={build}>Build exam</button>
+            <button className={btn} onClick={() => { setLines([{ label: "Exam saved as draft", status: "done" }]); setStep(4); }}>
+              Skip — leave it empty
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 4 && (
+        <div className="space-y-4">
+          <ul className="space-y-2" aria-live="polite">
+            {lines.map((l, i) => (
+              <li key={i} className="flex items-start gap-3 rounded-md border border-border p-2 text-sm">
+                <span
+                  className={[
+                    "mt-0.5 rounded px-1.5 py-0.5 font-mono text-xs",
+                    l.status === "done" ? "bg-success-soft text-success" : "",
+                    l.status === "failed" ? "bg-danger-soft text-danger" : "",
+                    l.status === "running" ? "bg-warning-soft text-warning" : "",
+                    l.status === "waiting" ? "bg-secondary text-muted-foreground" : "",
+                  ].join(" ")}
+                >
+                  {l.status === "running" ? "working" : l.status}
+                </span>
+                <span className="flex-1">
+                  {l.label}
+                  {l.note && <span className="block text-xs text-muted-foreground">{l.note}</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {!building && (
+            <div className="flex flex-wrap items-center gap-2">
+              {published ? (
+                <p className="text-sm text-success">Published. Learners can now pick it in the exam switcher.</p>
+              ) : (
+                <button className={primary} onClick={doPublish}>Publish exam</button>
+              )}
+              <button className={btn} onClick={reset}>Create another</button>
+            </div>
+          )}
         </div>
       )}
     </div>
