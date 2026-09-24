@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Brain, Clock, Dumbbell, LayoutGrid, Play } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { fetchDomains } from "@/lib/study";
+import { useActiveExam } from "@/hooks/useActiveExam";
 import { startSession } from "@/lib/study.functions";
 import { useSession } from "@/hooks/useSession";
 import { logEvent } from "@/lib/analytics";
@@ -34,7 +35,11 @@ function StudyHub() {
   const { user } = useSession();
   const navigate = useNavigate();
   const start = useServerFn(startSession);
-  const domainsQ = useQuery({ queryKey: ["domains"], queryFn: fetchDomains });
+  const { active: activeExam } = useActiveExam();
+  const domainsQ = useQuery({
+    queryKey: ["domains", activeExam.id],
+    queryFn: () => fetchDomains(activeExam.id || null),
+  });
   const [busy, setBusy] = useState(false);
   const [launchError, setLaunchError] = useState<string | null>(null);
   const [activeMode, setActiveMode] = useState<string | null>(null);

@@ -41,11 +41,11 @@ export type Attempt = {
   created_at: string;
 };
 
-export async function fetchDomains(): Promise<Domain[]> {
-  const { data, error } = await supabase
-    .from("domains")
-    .select("*")
-    .order("sort_order");
+/** G5 — pass an exam id to keep study areas isolated to that exam. */
+export async function fetchDomains(examId?: string | null): Promise<Domain[]> {
+  let q = supabase.from("domains").select("*").order("sort_order");
+  if (examId) q = q.eq("exam_id", examId);
+  const { data, error } = await q;
   if (error) throw error;
   return data as Domain[];
 }
