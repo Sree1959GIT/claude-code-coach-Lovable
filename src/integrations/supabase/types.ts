@@ -817,8 +817,10 @@ export type Database = {
           description: string | null
           exam_id: string | null
           id: string
+          provenance: string
           slug: string
           sort_order: number
+          source_url: string | null
           title: string
           weight: number
         }
@@ -827,8 +829,10 @@ export type Database = {
           description?: string | null
           exam_id?: string | null
           id?: string
+          provenance?: string
           slug: string
           sort_order?: number
+          source_url?: string | null
           title: string
           weight?: number
         }
@@ -837,8 +841,10 @@ export type Database = {
           description?: string | null
           exam_id?: string | null
           id?: string
+          provenance?: string
           slug?: string
           sort_order?: number
+          source_url?: string | null
           title?: string
           weight?: number
         }
