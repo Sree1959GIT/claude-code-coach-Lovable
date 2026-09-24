@@ -135,3 +135,29 @@ export const createDraftExam = createServerFn({ method: "POST" })
     }
     return { examId: exam.id, slug };
   });
+
+/** G4b — make a draft exam visible to learners. */
+export const publishExam = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ examId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { error } = await context.supabase.from("exams").update({ status: "ready" }).eq("id", data.examId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+/** G4b — study areas saved for a draft exam, used by the scope step. */
+export const listExamAreas = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ examId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: rows, error } = await context.supabase
+      .from("domains")
+      .select("id, title, weight")
+      .eq("exam_id", data.examId)
+      .order("sort_order");
+    if (error) throw error;
+    return (rows ?? []) as { id: string; title: string; weight: number }[];
+  });
