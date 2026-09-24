@@ -22,6 +22,8 @@
 - [x] G2: Exam switcher in the header — exams table created and seeded, active exam remembered per browser, shown beside the product name with the readiness figure
 - [x] G3: De-hardcode CCAF wording — landing hero, blueprint grid and every agent prompt read the active exam; empty blueprint renders a real message
 - [ ] G4: Create-an-exam wizard
+  - [ ] G4a: Steps 1–2 (name, blueprint with provenance) — save as draft
+  - [ ] G4b: Steps 3–4 (scope, live build progress)
 - [ ] G5: Per-exam isolation and sharing
 
 ### A — Mentor speed and voice
