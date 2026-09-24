@@ -91,7 +91,8 @@
 - [x] **G4a:** Create-an-exam wizard steps 1–2 (Admin › Content) — name, blueprint with provenance (official / manual / AI suggested + source link), weights must total 100%, saved as a hidden draft.
 - [x] **G4b:** Wizard steps 3–4 — scope (0–20 starter questions per area + difficulty, or skip) and live build progress (per-area generation into the review queue, status per line), then Publish sets the exam to ready.
 - [x] **G5:** Per-exam isolation and sharing — study hub areas and readiness scoped to the active exam; "Share link" in the exam switcher (`/?exam=slug` selects and remembers that exam).
-- **Next:** A — mentor speed and streaming voice (see roadmap.md).
+- [x] **A1:** Mentor stage timings + parallel pre-steps — quota check and run start run together, router trace no longer blocks, per-stage Server-Timing header plus a timings trace step.
+- **Next:** A2 — spoken summary first (see roadmap.md).
 
 
 

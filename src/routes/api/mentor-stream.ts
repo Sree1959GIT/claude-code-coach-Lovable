@@ -144,12 +144,41 @@ export const Route = createFileRoute("/api/mentor-stream")({
         const messages = (body.messages ?? []).slice(-20);
         if (!messages.length) return new Response("No messages", { status: 400 });
 
-        // --- 0. Phase F6: daily quota + burst throttle -------------------------
+        // A1 — per-stage timings, returned in a Server-Timing header.
+        const t0 = Date.now();
+        const timings: Record<string, number> = {};
+        const mark = (name: string, since: number) => {
+          timings[name] = Date.now() - since;
+        };
+
+        const context = body.context ?? null;
+        const lastUser = [...messages].reverse().find((m) => m.role === "user");
+        const turn = lastUser?.content ?? "";
+
+        // --- 1. Route the turn (sync, no I/O) ---------------------------------
+        const plan = planRoute(turn, {
+          selectedOption: context?.selectedOption ?? null,
+          hasQuestion: Boolean(context?.stem),
+        });
+
+        // --- 0. Quota check and run start in parallel (A1) ---------------------
         const { getMembershipTier } = await import("@/lib/model-routing.server");
         const { checkQuota, recordRateEvent } = await import("@/lib/rate-limit.server");
-        const tier = await getMembershipTier(supabase as never, userId);
-        const quota = await checkQuota({ userId, action: "mentor", tier });
+        const tPre = Date.now();
+        const [quota, runId] = await Promise.all([
+          getMembershipTier(supabase as never, userId).then((tier) =>
+            checkQuota({ userId, action: "mentor", tier }),
+          ),
+          startRun(supabase, {
+            userId,
+            mode: "mentor",
+            question: turn.slice(0, 2000),
+            metadata: { intent: plan.intent, agents: plan.agents, reason: plan.reason },
+          }).catch(() => null),
+        ]);
+        mark("pre", tPre);
         if (!quota.allowed) {
+          void finishRun({ runId, status: "error", error: "rate_limited", durationMs: Date.now() - t0 }).catch(() => {});
           return new Response(quota.message ?? "Rate limit reached.", {
             status: 429,
             headers: {
@@ -171,26 +200,10 @@ export const Route = createFileRoute("/api/mentor-stream")({
         }
         void recordRateEvent({ userId, action: "mentor", byok: quota.byok });
 
-        const context = body.context ?? null;
-        const lastUser = [...messages].reverse().find((m) => m.role === "user");
-        const turn = lastUser?.content ?? "";
-
-        // --- 1. Route the turn -------------------------------------------------
-        const plan = planRoute(turn, {
-          selectedOption: context?.selectedOption ?? null,
-          hasQuestion: Boolean(context?.stem),
-        });
-
-        const runId = await startRun(supabase, {
-          userId,
-          mode: "mentor",
-          question: turn.slice(0, 2000),
-          metadata: { intent: plan.intent, agents: plan.agents, reason: plan.reason },
-        }).catch(() => null);
-
         const trace = (stepIndex: number) => ({ db: supabase, runId, userId, stepIndex });
 
-        await logStep(supabase, {
+        // Router trace is fire-and-forget — it must not delay the first token.
+        void logStep(supabase, {
           runId,
           userId,
           stepIndex: 0,
@@ -199,6 +212,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
           input: { turn: turn.slice(0, 500), selectedOption: context?.selectedOption ?? null },
           output: plan,
         }).catch(() => {});
+        const tCtx = Date.now();
 
         // --- 2. Memory + retrieval (parallel) ---------------------------------
         const [profile, retrieval] = await Promise.all([
@@ -220,9 +234,10 @@ export const Route = createFileRoute("/api/mentor-stream")({
               })
             : Promise.resolve(null),
         ]);
-
+        mark("context", tCtx);
 
         // --- 3. Resource agent (cheap, deterministic) --------------------------
+        const tRes = Date.now();
         const resourcePick = await runResourceAgent({
           message: turn,
           context,
@@ -230,6 +245,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
           retrievalTitles: (retrieval?.matches ?? []).map((m) => m.title),
           trace: trace(3),
         });
+        mark("resources", tRes);
 
         // --- 4. Answering agent ------------------------------------------------
         const agentArgs = {
@@ -286,6 +302,24 @@ export const Route = createFileRoute("/api/mentor-stream")({
             }),
           );
         }
+        mark("model_open", startedAt);
+        mark("total_to_stream", t0);
+        const serverTiming = Object.entries(timings)
+          .map(([k, v]) => `${k};dur=${v}`)
+          .join(", ");
+        if (runId) {
+          void logStep(supabase, {
+            runId,
+            userId,
+            stepIndex: 6,
+            agent: "orchestrator",
+            role: "timings",
+            input: { intent: plan.intent },
+            output: timings,
+          }).catch(() => {});
+        }
+
+
 
 
         // --- 5. Tap the stream: closes the run and runs the critic audit -----
@@ -325,8 +359,9 @@ export const Route = createFileRoute("/api/mentor-stream")({
                 byok: quota.byok,
               }),
             ),
+            "Server-Timing": serverTiming,
             "Access-Control-Expose-Headers":
-              "X-Mentor-Citations, X-Mentor-Route, X-Mentor-Resources, X-Mentor-Quota",
+              "X-Mentor-Citations, X-Mentor-Route, X-Mentor-Resources, X-Mentor-Quota, Server-Timing",
           },
         });
       },
