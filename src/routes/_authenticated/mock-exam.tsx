@@ -52,7 +52,7 @@ function MockExamPage() {
   const [busy, setBusy] = useState(false);
   const [launchError, setLaunchError] = useState<string | null>(null);
 
-  const domainsQ = useQuery({ queryKey: ["domains"], queryFn: fetchDomains });
+  const domainsQ = useQuery({ queryKey: ["domains"], queryFn: () => fetchDomains() });
   const countsQ = useQuery({
     queryKey: ["question_counts"],
     queryFn: fetchQuestionCounts,

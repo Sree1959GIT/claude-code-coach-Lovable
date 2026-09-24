@@ -11,11 +11,18 @@ import { computeReadinessTrend, type ReadinessTrendPoint } from "./readiness-tre
 
 export const getReadiness = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<ReadinessReport> => {
+  .inputValidator((d: { examId?: string | null } | undefined) => ({
+    examId: typeof d?.examId === "string" && d.examId ? d.examId : null,
+  }))
+  .handler(async ({ context, data }): Promise<ReadinessReport> => {
     const { supabase, userId } = context;
 
+    // G5 — readiness is isolated per exam when an exam id is given.
+    let domainsQ = supabase.from("domains").select("id, slug, title, weight").order("sort_order");
+    if (data.examId) domainsQ = domainsQ.eq("exam_id", data.examId);
+
     const [domainsRes, questionsRes, masteryRes, attemptsRes] = await Promise.all([
-      supabase.from("domains").select("id, slug, title, weight").order("sort_order"),
+      domainsQ,
       supabase.from("questions").select("id, domain_id"),
       supabase
         .from("user_mastery")
@@ -35,11 +42,16 @@ export const getReadiness = createServerFn({ method: "GET" })
       domainsRes.error || questionsRes.error || masteryRes.error || attemptsRes.error;
     if (err) throw err;
 
+    const domains = domainsRes.data ?? [];
+    const domainIds = new Set(domains.map((d) => d.id));
+    const questions = (questionsRes.data ?? []).filter((q) => domainIds.has(q.domain_id));
+    const qIds = new Set(questions.map((q) => q.id));
+
     return computeReadiness({
-      domains: domainsRes.data ?? [],
-      questions: questionsRes.data ?? [],
-      mastery: masteryRes.data ?? [],
-      attempts: attemptsRes.data ?? [],
+      domains,
+      questions,
+      mastery: (masteryRes.data ?? []).filter((m) => qIds.has(m.question_id)),
+      attempts: (attemptsRes.data ?? []).filter((a) => qIds.has(a.question_id)),
     });
   });
 

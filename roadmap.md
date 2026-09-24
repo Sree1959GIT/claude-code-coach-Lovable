@@ -24,7 +24,7 @@
 - [x] G4: Create-an-exam wizard
   - [x] G4a: Steps 1–2 (name, blueprint with provenance) — save as draft
   - [x] G4b: Steps 3–4 (scope, live build progress)
-- [ ] G5: Per-exam isolation and sharing
+- [x] G5: Per-exam isolation and sharing (study areas + readiness scoped to the active exam, ?exam= share links)
 
 ### A — Mentor speed and voice
 - [ ] A1: Stage timings + parallel pre-steps
