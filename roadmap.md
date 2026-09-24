@@ -27,7 +27,7 @@
 - [x] G5: Per-exam isolation and sharing (study areas + readiness scoped to the active exam, ?exam= share links)
 
 ### A — Mentor speed and voice
-- [ ] A1: Stage timings + parallel pre-steps
+- [x] A1: Stage timings + parallel pre-steps
 - [ ] A2: Spoken summary first
 - [ ] A3: Offline voice engine with download progress
 - [ ] A4: Voice picker (Instant / Studio) with announced fallback
