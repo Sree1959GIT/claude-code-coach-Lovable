@@ -3,9 +3,10 @@
  * readiness figure, on every screen, so nobody misreads whose score it is.
  */
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Link2 } from "lucide-react";
 import { useActiveExam } from "@/hooks/useActiveExam";
 import { getReadiness } from "@/lib/readiness.functions";
 import {
@@ -21,10 +22,21 @@ export function ExamSwitcher() {
   const { exams, active, selectExam } = useActiveExam();
   const fetchReadiness = useServerFn(getReadiness);
   const readinessQ = useQuery({
-    queryKey: ["readiness"],
-    queryFn: () => fetchReadiness(),
+    queryKey: ["readiness", active.id],
+    queryFn: () => fetchReadiness({ data: { examId: active.id || null } }),
     staleTime: 60_000,
   });
+  const [copied, setCopied] = useState(false);
+  async function copyShareLink() {
+    const url = `${window.location.origin}/?exam=${encodeURIComponent(active.slug)}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt("Copy this link", url);
+    }
+  }
 
   const score = readinessQ.data?.score ?? null;
   const label = active.shortName || active.name;
@@ -81,6 +93,17 @@ export function ExamSwitcher() {
             </DropdownMenuItem>
           ))
         )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onSelect={(e) => {
+            e.preventDefault();
+            void copyShareLink();
+          }}
+          className="flex items-center gap-2 text-sm"
+        >
+          <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
+          {copied ? "Link copied" : `Share ${label} link`}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

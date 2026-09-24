@@ -34,7 +34,23 @@ export function useActiveExam() {
   const [slug, setSlug] = useState<string | null>(null);
 
   useEffect(() => {
-    setSlug(readStoredSlug());
+    // G5 — a shared link (?exam=slug) selects that exam and is remembered.
+    let shared: string | null = null;
+    try {
+      shared = new URLSearchParams(window.location.search).get("exam");
+    } catch {
+      /* ignore */
+    }
+    if (shared) {
+      try {
+        localStorage.setItem(ACTIVE_EXAM_KEY, shared);
+      } catch {
+        /* storage unavailable */
+      }
+      setSlug(shared);
+    } else {
+      setSlug(readStoredSlug());
+    }
   }, []);
 
   const exams = examsQ.data ?? [];

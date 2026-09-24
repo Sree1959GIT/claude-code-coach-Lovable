@@ -90,7 +90,8 @@
 - [x] **G3:** De-hardcode CCAF wording — landing hero, badge, footer lockup and SEO copy read the exam record; the domain grid loads `domains` for the active exam and shows a real message when no blueprint exists; mentor, critic, item setter, generator, enrichment and codegen research prompts take a `{{EXAM}}` label from `src/lib/exam-context.server.ts` (cached, generic fallback).
 - [x] **G4a:** Create-an-exam wizard steps 1–2 (Admin › Content) — name, blueprint with provenance (official / manual / AI suggested + source link), weights must total 100%, saved as a hidden draft.
 - [x] **G4b:** Wizard steps 3–4 — scope (0–20 starter questions per area + difficulty, or skip) and live build progress (per-area generation into the review queue, status per line), then Publish sets the exam to ready.
-- **Next:** G5 — per-exam isolation and sharing.
+- [x] **G5:** Per-exam isolation and sharing — study hub areas and readiness scoped to the active exam; "Share link" in the exam switcher (`/?exam=slug` selects and remembers that exam).
+- **Next:** A — mentor speed and streaming voice (see roadmap.md).
 
 
 

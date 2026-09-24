@@ -61,7 +61,7 @@ export function AgenticAuthoringPanel() {
   const ingestGated = useServerFn(ingestSourceUrl);
   const queryClient = useQueryClient();
 
-  const { data: domains = [] } = useQuery({ queryKey: ["domains-list"], queryFn: fetchDomains, staleTime: 300_000 });
+  const { data: domains = [] } = useQuery({ queryKey: ["domains-list"], queryFn: () => fetchDomains(), staleTime: 300_000 });
   const { data: sources = [] } = useQuery({ queryKey: ["authoring-sources"], queryFn: () => loadSources({}) });
 
   const [domainId, setDomainId] = useState("");

@@ -21,7 +21,7 @@ async function fetchDomains() {
 export function AiGeneratePanel() {
   const run = useServerFn(generateQuestions);
   const queryClient = useQueryClient();
-  const { data: domains = [] } = useQuery({ queryKey: ["domains-list"], queryFn: fetchDomains, staleTime: 300_000 });
+  const { data: domains = [] } = useQuery({ queryKey: ["domains-list"], queryFn: () => fetchDomains(), staleTime: 300_000 });
 
   const [domainId, setDomainId] = useState("");
   const [count, setCount] = useState(3);

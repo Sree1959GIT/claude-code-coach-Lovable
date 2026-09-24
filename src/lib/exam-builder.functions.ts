@@ -112,7 +112,6 @@ export const createDraftExam = createServerFn({ method: "POST" })
         duration_minutes: data.durationMinutes,
         status: "draft",
         is_default: false,
-        created_by: context.userId,
       })
       .select("id")
       .single();
