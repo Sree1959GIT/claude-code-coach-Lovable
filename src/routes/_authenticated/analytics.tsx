@@ -43,7 +43,7 @@ function AnalyticsPage() {
   useEffect(() => { logEvent("page_view", { page: "analytics" }); }, []);
 
   const getMasteryFn = useServerFn(getMasteryOverview);
-  const domainsQ = useQuery({ queryKey: ["domains"], queryFn: fetchDomains });
+  const domainsQ = useQuery({ queryKey: ["domains"], queryFn: () => fetchDomains() });
   const attemptsQ = useQuery({ queryKey: ["my_attempts"], queryFn: fetchMyAttempts });
   const progressQ = useQuery({ queryKey: ["my_progress"], queryFn: fetchMyDomainProgress });
   const masteryQ = useQuery({ queryKey: ["mastery"], queryFn: () => getMasteryFn() });
