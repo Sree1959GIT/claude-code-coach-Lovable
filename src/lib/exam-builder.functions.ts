@@ -123,7 +123,7 @@ export const createDraftExam = createServerFn({ method: "POST" })
       exam_id: exam.id,
       slug: `${slug}-${slugify(a.title)}`.slice(0, 100),
       title: a.title,
-      weight: a.weight / 100,
+      weight: a.weight,
       sort_order: i + 1,
       provenance: a.provenance,
       source_url: a.sourceUrl,
