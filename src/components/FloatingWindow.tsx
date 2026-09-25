@@ -159,14 +159,14 @@ export function FloatingWindow({
       }
       className={
         isMobile
-          ? "fixed inset-x-0 bottom-0 z-40 flex max-h-[85dvh] h-[75dvh] flex-col border-t border-border bg-card shadow-lg"
-          : "fixed z-40 flex flex-col border border-border bg-card shadow-lg"
+          ? "surface-raised fixed inset-x-0 bottom-0 z-40 flex h-[75dvh] max-h-[85dvh] flex-col overflow-hidden border-x border-t border-foreground/20"
+          : "surface-raised fixed z-40 flex flex-col overflow-hidden border border-foreground/20 ring-1 ring-background/80"
       }
     >
       <header
         onPointerDown={beginMove}
         style={isMobile ? undefined : { touchAction: "none" }}
-        className={`relative flex shrink-0 items-center justify-between gap-3 border-b border-border bg-muted/40 px-3 py-2 ${
+        className={`relative flex shrink-0 items-center justify-between gap-3 border-b border-foreground/15 bg-surface px-3 py-2 ${
           isMobile ? "" : "cursor-grab active:cursor-grabbing"
         }`}
       >
@@ -198,8 +198,8 @@ export function FloatingWindow({
         </button>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-auto overscroll-contain">{children}</div>
-      {footer ? <div className="shrink-0 border-t border-border">{footer}</div> : null}
+      <div className="min-h-0 flex-1 overflow-auto overscroll-contain bg-surface-raised">{children}</div>
+      {footer ? <div className="shrink-0 border-t border-foreground/15 bg-surface">{footer}</div> : null}
 
       {/* Resize handles — pointer-driven, so they stay hidden on touch layouts */}
       {!isMobile && (

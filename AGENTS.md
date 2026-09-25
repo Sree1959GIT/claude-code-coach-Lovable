@@ -95,7 +95,8 @@
 - [x] **A2:** Spoken summary first — explainer, evaluator and fallback emit `[[brief]]` spoken summary before `[[written]]` answer so voice starts on the first sentences; parser and `splitBrief` accept both orders. No data paths changed, so per-exam isolation is untouched.
 - [x] **A3:** Offline voice engine — in-browser Piper neural voice (`en_US-hfc_female-medium`, ~60 MB) downloaded once into browser storage (`src/lib/offline-voice.ts`), byte-accurate progress bar plus test/remove in Settings › Mentor & voice; mentor playback uses it when Instant is selected and installed, otherwise the cloud voice. Client-only, no data paths changed, per-exam isolation untouched.
 - [x] **A4–A6:** Voice picker (Instant / Studio) and mic picker (on-device / browser dictation) inside the mentor, synced with Settings, with a one-time notice whenever it falls back; barge-in — a prominent Stop speaking bar while audio plays, and pressing the mic interrupts the mentor and listens.
-- **Next:** B1 — Study Canvas raised-surface contrast (see roadmap.md).
+- [x] **B1:** Study Canvas raised-surface contrast — the desktop window and mobile sheet use the raised surface with a stronger edge/elevation; title bar, section/file tabs, workspace, and console now form a distinct surface hierarchy in both themes. Presentation only; per-exam data paths are unchanged.
+- **Next:** B2 — Add Explain code / Guide me / Example videos actions inside Study Canvas (see roadmap.md).
 
 
 
