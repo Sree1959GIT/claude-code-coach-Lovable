@@ -94,7 +94,8 @@
 - [x] **A1:** Mentor stage timings + parallel pre-steps — quota check and run start run together, router trace no longer blocks, per-stage Server-Timing header plus a timings trace step.
 - [x] **A2:** Spoken summary first — explainer, evaluator and fallback emit `[[brief]]` spoken summary before `[[written]]` answer so voice starts on the first sentences; parser and `splitBrief` accept both orders. No data paths changed, so per-exam isolation is untouched.
 - [x] **A3:** Offline voice engine — in-browser Piper neural voice (`en_US-hfc_female-medium`, ~60 MB) downloaded once into browser storage (`src/lib/offline-voice.ts`), byte-accurate progress bar plus test/remove in Settings › Mentor & voice; mentor playback uses it when Instant is selected and installed, otherwise the cloud voice. Client-only, no data paths changed, per-exam isolation untouched.
-- **Next:** A4 — voice picker (Instant / Studio) with announced fallback (see roadmap.md).
+- [x] **A4–A6:** Voice picker (Instant / Studio) and mic picker (on-device / browser dictation) inside the mentor, synced with Settings, with a one-time notice whenever it falls back; barge-in — a prominent Stop speaking bar while audio plays, and pressing the mic interrupts the mentor and listens.
+- **Next:** B1 — Study Canvas raised-surface contrast (see roadmap.md).
 
 
 

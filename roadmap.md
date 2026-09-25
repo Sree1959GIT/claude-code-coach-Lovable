@@ -30,9 +30,9 @@
 - [x] A1: Stage timings + parallel pre-steps
 - [x] A2: Spoken summary first — mentor speaks a short summary first ([[brief]]), then streams the written answer ([[written]]); legacy order still parsed
 - [x] A3: Offline voice engine with download progress — ~60 MB Piper voice cached in browser storage, real byte progress bar in Settings › Mentor & voice, used by the mentor when Instant is chosen
-- [ ] A4: Voice picker (Instant / Studio) with announced fallback
-- [ ] A5: Microphone choice (on-device / browser)
-- [ ] A6: Barge-in with a visible Stop
+- [x] A4: Voice picker (Instant / Studio) with announced fallback
+- [x] A5: Microphone choice (on-device / browser)
+- [x] A6: Barge-in with a visible Stop
 
 ### B — Study Canvas
 - [ ] B1: Raised-surface contrast
