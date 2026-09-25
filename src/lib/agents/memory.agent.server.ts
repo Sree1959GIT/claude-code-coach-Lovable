@@ -191,7 +191,7 @@ export async function runMemoryAgent(args: MemoryAgentArgs): Promise<LearnerProf
     );
     const recentTurns: ThreadTurn[] = runRows.map((r) => ({
       question: r.question ?? "",
-      answer: (r.final_answer ?? "").split("[[brief]]")[0]!.trim(),
+      answer: splitBrief(r.final_answer ?? "").written,
       intent: r.metadata?.intent ?? null,
     }));
 

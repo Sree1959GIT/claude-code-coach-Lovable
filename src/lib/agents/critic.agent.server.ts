@@ -50,7 +50,12 @@ export function critique(args: Omit<CriticArgs, "trace">): CriticVerdict {
   }
 
   const briefIdx = answer.indexOf("[[brief]]");
-  const spoken = briefIdx === -1 ? "" : answer.slice(briefIdx + 9);
+  const writtenIdx = answer.indexOf("[[written]]", briefIdx + 1);
+  // A2 — spoken part runs to [[written]] when present (brief-first order).
+  const spoken =
+    briefIdx === -1
+      ? ""
+      : answer.slice(briefIdx + 9, writtenIdx === -1 ? undefined : writtenIdx);
 
   if (args.intent !== "smalltalk") {
     if (briefIdx === -1) {
