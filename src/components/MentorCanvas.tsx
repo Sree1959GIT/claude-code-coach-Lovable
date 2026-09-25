@@ -701,6 +701,16 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
       setListening(false);
       return;
     }
+    // A6 — barge-in: pressing the mic while the mentor talks cuts it off and listens.
+    if (drainingRef.current) {
+      stopAll();
+      setTimeout(() => {
+        stoppedRef.current = false;
+        drainingRef.current = false;
+        startRecognition(false);
+      }, 150);
+      return;
+    }
     stoppedRef.current = false;
     startRecognition(false);
   }
@@ -1017,6 +1027,53 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
       </div>
 
       <footer className="border-t border-border p-3">
+        {notice && (
+          <div
+            role="status"
+            className="mb-2 flex items-start justify-between gap-2 rounded-md border border-warning/40 bg-warning-soft px-2 py-1.5 text-xs text-foreground"
+          >
+            <span>{notice}</span>
+            <button onClick={() => setNotice(null)} aria-label="Dismiss notice" className="text-muted-foreground hover:text-foreground">
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        )}
+        {speaking && (
+          <button
+            onClick={stopAll}
+            className="touch-target mb-2 flex w-full items-center justify-center gap-2 rounded-md bg-danger px-3 text-sm font-medium text-danger-foreground"
+            aria-label="Stop the mentor speaking"
+          >
+            <Square className="h-4 w-4" /> Stop speaking
+            <span className="text-xs opacity-80">— or press the mic to interrupt</span>
+          </button>
+        )}
+        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <label className="flex items-center gap-1">
+            Voice
+            <select
+              value={voicePref}
+              onChange={(e) => chooseVoice(e.target.value as VoicePref)}
+              className="rounded-md border border-border bg-background px-1.5 py-0.5 text-xs text-foreground"
+              aria-label="Mentor voice"
+            >
+              <option value="instant">Instant (on device)</option>
+              <option value="studio">Studio (cloud)</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-1">
+            Mic
+            <select
+              value={micPref}
+              onChange={(e) => chooseMic(e.target.value as MicPref)}
+              className="rounded-md border border-border bg-background px-1.5 py-0.5 text-xs text-foreground"
+              aria-label="Microphone engine"
+            >
+              <option value="device">On-device</option>
+              <option value="browser">Browser dictation</option>
+            </select>
+          </label>
+        </div>
         <div className="mb-2 flex items-center justify-between gap-2">
           <label className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
             <input
@@ -1030,7 +1087,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
           <div className="flex items-center gap-1.5">
             <button
               onClick={stopAll}
-              className="flex items-center gap-1 border border-border px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+              className="flex items-center gap-1 border border-border px-2 py-1 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
             >
               <Square className="h-3 w-3" /> Stop
             </button>
