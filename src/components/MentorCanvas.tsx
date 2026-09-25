@@ -82,7 +82,7 @@ function CitedText({ content, citations }: { content: string; citations: Citatio
   );
 }
 
-const MARKER_RE = /\[\[(scenario|stem|none|brief|opt:[A-Za-z0-9]+)\]\]/;
+const MARKER_RE = /\[\[(scenario|stem|none|brief|written|opt:[A-Za-z0-9]+)\]\]/;
 
 function parseMarker(token: string): HighlightTarget {
   if (token === "scenario") return { type: "scenario" };
@@ -124,6 +124,10 @@ class SegmentParser {
       this.flush();
       if (m[1] === "brief") {
         this.speaking = true;
+        this.target = null;
+      } else if (m[1] === "written") {
+        // A2 — spoken summary comes first; the written answer follows.
+        this.speaking = false;
         this.target = null;
       } else {
         this.target = parseMarker(m[1]!);
