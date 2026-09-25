@@ -342,13 +342,13 @@ export function StudyCanvasTabs({
   ];
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex h-full min-h-0 flex-col bg-surface-raised">
       {/* Phase E9 — code / video / docs sections for the active question */}
       <div
         role="tablist"
         aria-label="Canvas sections"
         onKeyDown={onSectionKeyDown}
-        className="flex shrink-0 flex-wrap items-center gap-1 border-b border-border bg-muted/50 px-2 py-1"
+        className="flex shrink-0 flex-wrap items-center gap-1 border-b border-foreground/15 bg-surface px-2 py-1"
       >
         {SECTIONS.map(({ id, label, Icon }) => (
           <button
@@ -392,7 +392,7 @@ export function StudyCanvasTabs({
         role="tablist"
         aria-label="Canvas files"
         onKeyDown={onKeyDown}
-        className="flex shrink-0 overflow-x-auto overscroll-x-contain border-b border-border bg-muted/30"
+        className="flex shrink-0 overflow-x-auto overscroll-x-contain border-b border-foreground/15 bg-surface"
       >
         {files.map((f, i) => {
           const isActive = i === active;
@@ -411,7 +411,7 @@ export function StudyCanvasTabs({
               onClick={() => setActive(i)}
               className={`flex shrink-0 items-center gap-2 border-r border-border px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors ${
                 isActive
-                  ? "border-b-2 border-b-primary bg-card text-foreground"
+                  ? "border-b-2 border-b-primary bg-surface-raised text-foreground"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -424,7 +424,7 @@ export function StudyCanvasTabs({
         })}
       </div>
 
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-border bg-muted/30 px-3 py-1.5">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-foreground/15 bg-surface-raised px-3 py-1.5">
         <div className="min-w-0 truncate font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
           {current?.name}
         </div>
@@ -504,7 +504,7 @@ export function StudyCanvasTabs({
         id={filePanelId(active)}
         aria-labelledby={fileTabId(active)}
         tabIndex={0}
-        className="min-h-0 flex-1 overflow-auto bg-card"
+        className="min-h-0 flex-1 overflow-auto bg-background"
       >
         {files.length === 0 ? (
           <div className="p-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
@@ -541,7 +541,7 @@ export function StudyCanvasTabs({
                     className={`sticky left-0 w-10 shrink-0 select-none border-r border-border px-2 text-right ${
                       errorMessage
                         ? "bg-code-error-bg font-semibold text-destructive"
-                        : "bg-muted/30 text-muted-foreground"
+                        : "bg-surface text-muted-foreground"
                     }`}
                   >
                     {i + 1}
@@ -568,7 +568,7 @@ export function StudyCanvasTabs({
       {/* Phase D5 — console results pane */}
       <section
         aria-label="Run console"
-        className="flex h-28 shrink-0 flex-col border-t border-border bg-muted/30 sm:h-36"
+        className="flex h-28 shrink-0 flex-col border-t border-foreground/15 bg-surface sm:h-36"
       >
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
@@ -670,7 +670,7 @@ export function StudyCanvasTabs({
           id={sectionPanelId("video")}
           aria-labelledby={sectionTabId("video")}
           tabIndex={0}
-          className="min-h-0 flex-1 overflow-auto bg-card p-3"
+          className="min-h-0 flex-1 overflow-auto bg-background p-3"
         >
           {videos.length === 0 ? (
             <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
@@ -715,7 +715,7 @@ export function StudyCanvasTabs({
           id={sectionPanelId("docs")}
           aria-labelledby={sectionTabId("docs")}
           tabIndex={0}
-          className="min-h-0 flex-1 overflow-auto bg-card"
+          className="min-h-0 flex-1 overflow-auto bg-background"
         >
           <CanvasContextPanel
             context={context}
