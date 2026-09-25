@@ -174,7 +174,7 @@ function VoiceTab() {
           <option value="studio">Studio (cloud)</option>
         </select>
       </Field>
-      <Field label="Microphone" hint="On-device transcription is consistent across browsers and works offline.">
+      <Field label="Microphone" hint="On-device transcription keeps your speech on this device where the browser supports it (recent Chrome). Otherwise the mentor tells you and uses browser dictation.">
         <select
           value={mic}
           onChange={(e) => setMic(e.target.value)}

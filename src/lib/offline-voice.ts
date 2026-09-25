@@ -61,9 +61,29 @@ export async function speakOffline(text: string): Promise<string> {
 
 /** True when the learner chose the on-device voice in Settings. */
 export function prefersOfflineVoice(): boolean {
+  return getVoicePref() === "instant";
+}
+
+export type VoicePref = "instant" | "studio";
+export type MicPref = "browser" | "device";
+export const MIC_PREF_KEY = "ccaf.mic_engine";
+
+function read(key: string): string | null {
   try {
-    return localStorage.getItem(VOICE_PREF_KEY) === "instant";
+    return localStorage.getItem(key);
   } catch {
-    return false;
+    return null;
   }
 }
+function write(key: string, v: string) {
+  try {
+    localStorage.setItem(key, v);
+  } catch {
+    /* storage blocked */
+  }
+}
+
+export const getVoicePref = (): VoicePref => (read(VOICE_PREF_KEY) === "instant" ? "instant" : "studio");
+export const setVoicePref = (v: VoicePref) => write(VOICE_PREF_KEY, v);
+export const getMicPref = (): MicPref => (read(MIC_PREF_KEY) === "device" ? "device" : "browser");
+export const setMicPref = (v: MicPref) => write(MIC_PREF_KEY, v);
