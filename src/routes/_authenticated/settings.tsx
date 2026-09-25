@@ -12,6 +12,13 @@ import { useSession } from "@/hooks/useSession";
 import { supabase } from "@/integrations/supabase/client";
 import { getQuotaStatus } from "@/lib/quotas.functions";
 import { createSeo } from "@/lib/seo";
+import { Progress } from "@/components/ui/progress";
+import {
+  downloadOfflineVoice,
+  isOfflineVoiceInstalled,
+  removeOfflineVoice,
+  speakOffline,
+} from "@/lib/offline-voice";
 import { routeErrorComponent, PageSkeleton } from "@/components/Resilience";
 
 const EXAM_DATE_KEY = "ccaf.exam_date";
@@ -177,11 +184,88 @@ function VoiceTab() {
           <option value="device">On-device transcription</option>
         </select>
       </Field>
-      <p className="rounded-md border border-border bg-card p-4 text-xs text-muted-foreground">
-        The on-device voice and transcription download once and then run offline. Until that download
-        ships, sessions fall back to the cloud voice and your browser's dictation.
-      </p>
+      <OfflineVoiceCard />
     </section>
+  );
+}
+
+const mb = (n: number) => (n / 1_048_576).toFixed(1);
+
+/** A3 — one-time download of the on-device voice, with a real progress bar. */
+function OfflineVoiceCard() {
+  const [state, setState] = useState<"checking" | "missing" | "downloading" | "ready" | "error">("checking");
+  const [prog, setProg] = useState({ loaded: 0, total: 0 });
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    void isOfflineVoiceInstalled().then((ok) => setState(ok ? "ready" : "missing"));
+  }, []);
+
+  async function start() {
+    setErr(null);
+    setProg({ loaded: 0, total: 0 });
+    setState("downloading");
+    try {
+      await downloadOfflineVoice(setProg);
+      setState("ready");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Download failed");
+      setState("error");
+    }
+  }
+
+  async function test() {
+    try {
+      const url = await speakOffline("Hi, I'm your on-device mentor voice.");
+      void new Audio(url).play();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Playback failed");
+    }
+  }
+
+  const pct = prog.total ? Math.round((prog.loaded / prog.total) * 100) : 0;
+
+  return (
+    <div className="rounded-md border border-border bg-card p-4 text-sm">
+      <p className="font-medium">On-device voice</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        About 60 MB, downloaded once and kept in this browser. After that the Instant voice works offline and costs no credits.
+      </p>
+      {state === "downloading" && (
+        <div className="mt-3" aria-live="polite">
+          <Progress value={pct} aria-label="Voice download progress" />
+          <p className="mt-1 font-mono text-xs text-muted-foreground">
+            {pct}% · {mb(prog.loaded)} of {prog.total ? mb(prog.total) : "…"} MB
+          </p>
+        </div>
+      )}
+      {err && <p className="mt-2 text-xs text-destructive">{err}</p>}
+      <div className="mt-3 flex flex-wrap gap-2">
+        {(state === "missing" || state === "error") && (
+          <button onClick={start} className="touch-target rounded-md bg-primary px-3 text-sm text-primary-foreground">
+            Download voice
+          </button>
+        )}
+        {state === "ready" && (
+          <>
+            <span className="self-center text-xs text-muted-foreground">Installed</span>
+            <button onClick={test} className="touch-target rounded-md border border-border px-3 text-sm">
+              Test voice
+            </button>
+            <button
+              onClick={async () => {
+                await removeOfflineVoice();
+                setState("missing");
+              }}
+              className="touch-target rounded-md border border-border px-3 text-sm"
+            >
+              Remove
+            </button>
+          </>
+        )}
+        {state === "checking" && <span className="text-xs text-muted-foreground">Checking…</span>}
+      </div>
+    </div>
   );
 }
 
