@@ -4,6 +4,7 @@ import { useFocusSurface } from "@/hooks/use-focus-surface";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, Mic, MicOff, PlayCircle, Radio, Square, User, Volume2, X } from "lucide-react";
 import { synthesizeSpeech } from "@/lib/mentor.functions";
+import { isOfflineVoiceInstalled, prefersOfflineVoice, speakOffline } from "@/lib/offline-voice";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/analytics";
 import { matchResources, thumbnailFor, type LearnResource } from "@/lib/resources";
@@ -344,6 +345,14 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   }
 
   async function synth(text: string): Promise<string | null> {
+    // A3 — on-device voice when chosen and installed; cloud voice otherwise.
+    if (prefersOfflineVoice() && (await isOfflineVoiceInstalled())) {
+      try {
+        return await speakOffline(text);
+      } catch (e) {
+        console.warn("[mentor] offline voice failed, using cloud", e);
+      }
+    }
     try {
       const { audio, mimeType } = await speak({ data: { text, voice: "alloy" } });
       const bytes = Uint8Array.from(atob(audio), (c) => c.charCodeAt(0));

@@ -8,7 +8,7 @@
  */
 
 export const OFFLINE_VOICE_ID = "en_US-hfc_female-medium";
-export const VOICE_PREF_KEY = "ccaf.voice";
+export const VOICE_PREF_KEY = "ccaf.voice_engine";
 
 export type DownloadProgress = { loaded: number; total: number };
 
