@@ -425,6 +425,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
       el.muted = false;
       el.onended = () => resolve();
       el.onerror = () => resolve();
+      el.onpause = () => resolve();
       el.src = url;
       void el.play().catch(() => resolve());
     });
