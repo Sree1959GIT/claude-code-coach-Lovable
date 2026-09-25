@@ -28,7 +28,7 @@
 
 ### A — Mentor speed and voice
 - [x] A1: Stage timings + parallel pre-steps
-- [ ] A2: Spoken summary first
+- [x] A2: Spoken summary first — mentor speaks a short summary first ([[brief]]), then streams the written answer ([[written]]); legacy order still parsed
 - [ ] A3: Offline voice engine with download progress
 - [ ] A4: Voice picker (Instant / Studio) with announced fallback
 - [ ] A5: Microphone choice (on-device / browser)
