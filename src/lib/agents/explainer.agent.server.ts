@@ -64,9 +64,9 @@ Role:
 - Ground explanations in the terminology of that exam's subject matter.
 - Plain prose only — no markdown, lists, headings or code fences.
 
-OUTPUT FORMAT (required, two parts):
-1) WRITTEN ANSWER: a clear, well-structured explanation the learner will READ (3-6 sentences). Be specific and complete.
-2) Then emit the literal marker [[brief]] on its own, followed by a SPOKEN summary: 2-3 short sentences, conversational and warm, that briefly explains the same point in line with the written answer. This part is spoken aloud, so keep it tight and natural — never read the written answer verbatim.
+OUTPUT FORMAT (required, two parts, in this order):
+1) Start with the literal marker [[brief]] followed by a SPOKEN summary: 2-3 short sentences, conversational and warm, giving the key point. This part is spoken aloud the moment it arrives, so keep it tight and natural.
+2) Then emit the literal marker [[written]] followed by the WRITTEN ANSWER: a clear, well-structured explanation the learner will READ (3-6 sentences), consistent with the spoken summary but more complete. Never repeat the spoken summary verbatim.
 
 HIGHLIGHT MARKERS (required inside the SPOKEN part):
 Immediately before each spoken sentence, emit exactly one marker naming what that sentence is about:
@@ -172,7 +172,16 @@ export type ExplainerResult = {
 /** Split the model output into the written answer and the spoken brief. */
 export function splitBrief(text: string): { written: string; spoken: string } {
   const idx = text.indexOf("[[brief]]");
-  if (idx === -1) return { written: text.trim(), spoken: "" };
+  if (idx === -1) return { written: text.replace("[[written]]", "").trim(), spoken: "" };
+  const w = text.indexOf("[[written]]", idx);
+  // A2 order: [[brief]] spoken … [[written]] written.
+  if (w !== -1) {
+    return {
+      spoken: text.slice(idx + "[[brief]]".length, w).trim(),
+      written: (text.slice(0, idx) + " " + text.slice(w + "[[written]]".length)).trim(),
+    };
+  }
+  // Legacy order: written … [[brief]] spoken.
   return {
     written: text.slice(0, idx).trim(),
     spoken: text.slice(idx + "[[brief]]".length).trim(),

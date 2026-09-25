@@ -9,6 +9,7 @@
 
 import type { AgentIntent, Db } from "../orchestrator.server";
 import { logStep } from "../orchestrator.server";
+import { splitBrief } from "./explainer.agent.server";
 
 export type ThreadTurn = { question: string; answer: string; intent: string | null };
 
@@ -191,7 +192,7 @@ export async function runMemoryAgent(args: MemoryAgentArgs): Promise<LearnerProf
     );
     const recentTurns: ThreadTurn[] = runRows.map((r) => ({
       question: r.question ?? "",
-      answer: (r.final_answer ?? "").split("[[brief]]")[0]!.trim(),
+      answer: splitBrief(r.final_answer ?? "").written,
       intent: r.metadata?.intent ?? null,
     }));
 

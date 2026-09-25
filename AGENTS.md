@@ -92,7 +92,9 @@
 - [x] **G4b:** Wizard steps 3–4 — scope (0–20 starter questions per area + difficulty, or skip) and live build progress (per-area generation into the review queue, status per line), then Publish sets the exam to ready.
 - [x] **G5:** Per-exam isolation and sharing — study hub areas and readiness scoped to the active exam; "Share link" in the exam switcher (`/?exam=slug` selects and remembers that exam).
 - [x] **A1:** Mentor stage timings + parallel pre-steps — quota check and run start run together, router trace no longer blocks, per-stage Server-Timing header plus a timings trace step.
-- **Next:** A2 — spoken summary first (see roadmap.md).
+- [x] **A2:** Spoken summary first — explainer, evaluator and fallback emit `[[brief]]` spoken summary before `[[written]]` answer so voice starts on the first sentences; parser and `splitBrief` accept both orders. No data paths changed, so per-exam isolation is untouched.
+- [x] **A3:** Offline voice engine — in-browser Piper neural voice (`en_US-hfc_female-medium`, ~60 MB) downloaded once into browser storage (`src/lib/offline-voice.ts`), byte-accurate progress bar plus test/remove in Settings › Mentor & voice; mentor playback uses it when Instant is selected and installed, otherwise the cloud voice. Client-only, no data paths changed, per-exam isolation untouched.
+- **Next:** A4 — voice picker (Instant / Studio) with announced fallback (see roadmap.md).
 
 
 
