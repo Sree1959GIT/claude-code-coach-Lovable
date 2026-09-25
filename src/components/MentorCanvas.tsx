@@ -4,7 +4,16 @@ import { useFocusSurface } from "@/hooks/use-focus-surface";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, Mic, MicOff, PlayCircle, Radio, Square, User, Volume2, X } from "lucide-react";
 import { synthesizeSpeech } from "@/lib/mentor.functions";
-import { isOfflineVoiceInstalled, prefersOfflineVoice, speakOffline } from "@/lib/offline-voice";
+import {
+  getMicPref,
+  getVoicePref,
+  isOfflineVoiceInstalled,
+  setMicPref,
+  setVoicePref,
+  speakOffline,
+  type MicPref,
+  type VoicePref,
+} from "@/lib/offline-voice";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/analytics";
 import { matchResources, thumbnailFor, type LearnResource } from "@/lib/resources";
@@ -238,6 +247,43 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   >({});
   // Turn-specific resources chosen server-side (from X-Mentor-Resources).
   const [turnResources, setTurnResources] = useState<LearnResource[] | null>(null);
+  // A4/A5 — voice and microphone engines, plus a visible note when we fall back.
+  const [voicePref, setVoicePrefState] = useState<VoicePref>("studio");
+  const [micPref, setMicPrefState] = useState<MicPref>("browser");
+  const [notice, setNotice] = useState<string | null>(null);
+  // A6 — true while a clip is playing, so Stop is prominent and the mic can barge in.
+  const [speaking, setSpeaking] = useState(false);
+  const voicePrefRef = useRef<VoicePref>("studio");
+  const micPrefRef = useRef<MicPref>("browser");
+  const announcedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const v = getVoicePref();
+    const m = getMicPref();
+    setVoicePrefState(v);
+    setMicPrefState(m);
+    voicePrefRef.current = v;
+    micPrefRef.current = m;
+  }, []);
+  const announce = useCallback((key: string, text: string) => {
+    if (announcedRef.current.has(key)) return;
+    announcedRef.current.add(key);
+    setNotice(text);
+  }, []);
+  function chooseVoice(v: VoicePref) {
+    setVoicePref(v);
+    setVoicePrefState(v);
+    voicePrefRef.current = v;
+    announcedRef.current.delete("voice");
+    setNotice(null);
+  }
+  function chooseMic(m: MicPref) {
+    setMicPref(m);
+    setMicPrefState(m);
+    micPrefRef.current = m;
+    announcedRef.current.delete("mic");
+    setNotice(null);
+  }
+
 
 
 
@@ -345,12 +391,21 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   }
 
   async function synth(text: string): Promise<string | null> {
-    // A3 — on-device voice when chosen and installed; cloud voice otherwise.
-    if (prefersOfflineVoice() && (await isOfflineVoiceInstalled())) {
-      try {
-        return await speakOffline(text);
-      } catch (e) {
-        console.warn("[mentor] offline voice failed, using cloud", e);
+    // A3/A4 — on-device voice when chosen and installed; cloud voice otherwise,
+    // and the learner is told once why the voice changed.
+    if (voicePrefRef.current === "instant") {
+      if (await isOfflineVoiceInstalled()) {
+        try {
+          return await speakOffline(text);
+        } catch (e) {
+          console.warn("[mentor] offline voice failed, using cloud", e);
+          announce("voice", "The Instant voice hit a problem, so the Studio voice is speaking instead.");
+        }
+      } else {
+        announce(
+          "voice",
+          "Instant voice isn't downloaded yet — using the Studio voice. Download it in Settings › Mentor & voice.",
+        );
       }
     }
     try {
@@ -370,6 +425,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
       el.muted = false;
       el.onended = () => resolve();
       el.onerror = () => resolve();
+      el.onpause = () => resolve();
       el.src = url;
       void el.play().catch(() => resolve());
     });
@@ -400,12 +456,14 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
         next = queueRef.current[0] ? synth(queueRef.current[0].text) : null;
         if (stoppedRef.current) break;
         if (url) {
+          setSpeaking(true);
           await playUrl(url);
           URL.revokeObjectURL(url);
         }
       }
     } finally {
       drainingRef.current = false;
+      setSpeaking(false);
       highlight(null);
       setStatus(null);
       if (!stoppedRef.current && liveRef.current) startRecognition(true);
@@ -582,6 +640,15 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
     recog.lang = "en-US";
     recog.interimResults = false;
     recog.continuous = continuous;
+    // A5 — on-device transcription where the browser offers it.
+    const wantLocal = micPrefRef.current === "device";
+    if (wantLocal) {
+      if ("processLocally" in recog) {
+        (recog as unknown as { processLocally: boolean }).processLocally = true;
+      } else {
+        announce("mic", "This browser can't transcribe on your device, so browser dictation is listening instead.");
+      }
+    }
     recog.onstart = () => setListening(true);
     recog.onresult = (e) => {
       const from = typeof e.resultIndex === "number" ? e.resultIndex : 0;
@@ -598,7 +665,17 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
       }
       void send(transcript);
     };
-    recog.onerror = () => setListening(false);
+    recog.onerror = (ev?: unknown) => {
+      setListening(false);
+      const code = (ev as { error?: string } | undefined)?.error;
+      if (wantLocal && (code === "language-not-supported" || code === "service-not-allowed")) {
+        announce(
+          "mic",
+          "On-device transcription isn't ready in this browser, so browser dictation will be used. Press the mic again.",
+        );
+        micPrefRef.current = "browser";
+      }
+    };
     recog.onend = () => {
       setListening(false);
       if (liveRef.current && !busyRef.current && !drainingRef.current && !stoppedRef.current) {
@@ -623,6 +700,16 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
         /* noop */
       }
       setListening(false);
+      return;
+    }
+    // A6 — barge-in: pressing the mic while the mentor talks cuts it off and listens.
+    if (drainingRef.current) {
+      stopAll();
+      setTimeout(() => {
+        stoppedRef.current = false;
+        drainingRef.current = false;
+        startRecognition(false);
+      }, 150);
       return;
     }
     stoppedRef.current = false;
@@ -941,6 +1028,53 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
       </div>
 
       <footer className="border-t border-border p-3">
+        {notice && (
+          <div
+            role="status"
+            className="mb-2 flex items-start justify-between gap-2 rounded-md border border-warning/40 bg-warning-soft px-2 py-1.5 text-xs text-foreground"
+          >
+            <span>{notice}</span>
+            <button onClick={() => setNotice(null)} aria-label="Dismiss notice" className="text-muted-foreground hover:text-foreground">
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        )}
+        {speaking && (
+          <button
+            onClick={stopAll}
+            className="touch-target mb-2 flex w-full items-center justify-center gap-2 rounded-md bg-danger px-3 text-sm font-medium text-danger-foreground"
+            aria-label="Stop the mentor speaking"
+          >
+            <Square className="h-4 w-4" /> Stop speaking
+            <span className="text-xs opacity-80">— or press the mic to interrupt</span>
+          </button>
+        )}
+        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <label className="flex items-center gap-1">
+            Voice
+            <select
+              value={voicePref}
+              onChange={(e) => chooseVoice(e.target.value as VoicePref)}
+              className="rounded-md border border-border bg-background px-1.5 py-0.5 text-xs text-foreground"
+              aria-label="Mentor voice"
+            >
+              <option value="instant">Instant (on device)</option>
+              <option value="studio">Studio (cloud)</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-1">
+            Mic
+            <select
+              value={micPref}
+              onChange={(e) => chooseMic(e.target.value as MicPref)}
+              className="rounded-md border border-border bg-background px-1.5 py-0.5 text-xs text-foreground"
+              aria-label="Microphone engine"
+            >
+              <option value="device">On-device</option>
+              <option value="browser">Browser dictation</option>
+            </select>
+          </label>
+        </div>
         <div className="mb-2 flex items-center justify-between gap-2">
           <label className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
             <input
@@ -954,7 +1088,7 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
           <div className="flex items-center gap-1.5">
             <button
               onClick={stopAll}
-              className="flex items-center gap-1 border border-border px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+              className="flex items-center gap-1 border border-border px-2 py-1 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
             >
               <Square className="h-3 w-3" /> Stop
             </button>
