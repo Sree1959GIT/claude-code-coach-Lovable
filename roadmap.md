@@ -38,7 +38,7 @@
 - [x] B1: Raised-surface contrast — raised shell, stronger edge/elevation, and distinct chrome/workspace/console surfaces in both themes
 - [x] B2: Explain code / Guide me / Example videos buttons
 - [x] B3: Send file, selection, language and run output to the mentor, and show what was captured
-- [ ] B4: Guide me walkthrough + example videos
+- [x] B4: Guide me walkthrough + example videos
 
 ### D — Multi-answer questions
 - [ ] D1: Answer mode + baseline lock
