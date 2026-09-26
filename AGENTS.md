@@ -98,7 +98,8 @@
 - [x] **B1:** Study Canvas raised-surface contrast — the desktop window and mobile sheet use the raised surface with a stronger edge/elevation; title bar, section/file tabs, workspace, and console now form a distinct surface hierarchy in both themes. Presentation only; per-exam data paths are unchanged.
 - [x] **B2:** Study Canvas actions — Explain code (sends the open file to the mentor), Guide me (step-by-step walkthrough prompt with the concept tag) and Example videos (jumps to the Video section). Prompts go through the existing question-scoped mentor context, so per-exam isolation is unchanged.
 - [x] **B3:** Explain code sees the code — sends the file name, language, numbered selected lines (or whole file) and last run output/error as a `[[code-context: …]]` turn; the explainer adds a code-explaining mode directive; the chat shows a "Captured: lines 14–28 of retry.ts" chip. Client + prompt only; per-exam isolation unchanged.
-- **Next:** B4 — Guide me walkthrough + example videos (see roadmap.md).
+- [x] **B4:** Guide me / Example videos — in-canvas step-by-step walkthrough (advice line walks for the open file, else 8-line chunks) with highlighted line ranges, a checkpoint question per step, Back / Got it / Ask the mentor (sends that step's lines as code context) and a checked counter; Video section matches clips by concept tag plus the code itself, titled "Clips for <concept>". Client only; per-exam isolation unchanged.
+- **Next:** D1 — Multi-answer questions: answer mode + baseline lock (see roadmap.md).
 
 
 
