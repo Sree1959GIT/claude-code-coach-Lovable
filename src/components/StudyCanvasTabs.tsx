@@ -89,6 +89,49 @@ type RunState =
 /** Phase E3 — state of the background "More Codebases" queue. */
 export type MoreCodebasesState = "unavailable" | "idle" | "loading" | "loaded" | "empty";
 
+/** B3 — package the open file, selected lines, language and last run output for the mentor. */
+function buildCodeContext(
+  f: CanvasFile,
+  selection: string,
+  consoleLines: ConsoleLine[],
+  error: string | null,
+): string {
+  const lines = f.content.split("\n");
+  const sel = selection.trim();
+  let start = 1;
+  let end = lines.length;
+  let caption = `all ${lines.length} lines of ${f.name}`;
+  if (sel) {
+    const at = f.content.indexOf(sel);
+    if (at >= 0) {
+      start = f.content.slice(0, at).split("\n").length;
+      end = start + sel.split("\n").length - 1;
+      caption = start === end ? `line ${start} of ${f.name}` : `lines ${start}–${end} of ${f.name}`;
+    }
+  }
+  const numbered = lines
+    .slice(start - 1, end)
+    .map((l, i) => `${String(start + i).padStart(3)} | ${l}`)
+    .join("\n")
+    .slice(0, 6000);
+  const output = consoleLines
+    .map((l) => (l.stream === "stderr" ? `[stderr] ${l.text}` : l.text))
+    .join("\n")
+    .slice(-1500);
+  const hasRun = output.trim() || error;
+  if (hasRun) caption += " + last run output";
+  return [
+    `[[code-context: ${caption}]]`,
+    `File: ${f.name} (language: ${f.language})`,
+    sel ? `Selected lines ${start}-${end}:` : "Whole file:",
+    "```" + f.language,
+    numbered,
+    "```",
+    hasRun ? `Last run output:\n${output || "(none)"}${error ? `\nError: ${error}` : ""}` : "Not run yet.",
+    "Explain this code.",
+  ].join("\n");
+}
+
 /** Phase E9 — top-level canvas sections. */
 type CanvasSection = "code" | "video" | "docs";
 
@@ -382,11 +425,10 @@ export function StudyCanvasTabs({
           {onAskMentor && files[active] && (
             <button
               type="button"
+              // Keep the code selection alive when the button is pressed.
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => {
-                const f = files[active];
-                onAskMentor(
-                  `Explain this ${f.language} code from the Study Canvas file "${f.name}" and how it relates to the current question:\n\n\`\`\`${f.language}\n${f.content.slice(0, 4000)}\n\`\`\``,
-                );
+                onAskMentor(buildCodeContext(files[active], selection, consoleLines, diagnostic?.message ?? null));
               }}
               className="inline-flex items-center gap-1.5 border border-foreground/15 px-2 py-1 text-xs hover:border-primary hover:text-foreground"
             >

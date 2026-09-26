@@ -97,7 +97,8 @@
 - [x] **A4–A6:** Voice picker (Instant / Studio) and mic picker (on-device / browser dictation) inside the mentor, synced with Settings, with a one-time notice whenever it falls back; barge-in — a prominent Stop speaking bar while audio plays, and pressing the mic interrupts the mentor and listens.
 - [x] **B1:** Study Canvas raised-surface contrast — the desktop window and mobile sheet use the raised surface with a stronger edge/elevation; title bar, section/file tabs, workspace, and console now form a distinct surface hierarchy in both themes. Presentation only; per-exam data paths are unchanged.
 - [x] **B2:** Study Canvas actions — Explain code (sends the open file to the mentor), Guide me (step-by-step walkthrough prompt with the concept tag) and Example videos (jumps to the Video section). Prompts go through the existing question-scoped mentor context, so per-exam isolation is unchanged.
-- **Next:** B3 — Send file, selection, language and run output to the mentor, and show what was captured (see roadmap.md).
+- [x] **B3:** Explain code sees the code — sends the file name, language, numbered selected lines (or whole file) and last run output/error as a `[[code-context: …]]` turn; the explainer adds a code-explaining mode directive; the chat shows a "Captured: lines 14–28 of retry.ts" chip. Client + prompt only; per-exam isolation unchanged.
+- **Next:** B4 — Guide me walkthrough + example videos (see roadmap.md).
 
 
 

@@ -874,7 +874,19 @@ export function MentorCanvas({
 
               <div className="whitespace-pre-wrap">
                 {isUser ? (
-                  m.content
+                  (() => {
+                    // B3 — show what the Study Canvas captured instead of the raw payload.
+                    const cap = /^\[\[code-context: ([^\]]+)\]\]/.exec(m.content);
+                    if (!cap) return m.content;
+                    return (
+                      <>
+                        <span className="mb-1 inline-block border border-primary/40 px-1.5 py-0.5 font-mono text-xs text-primary">
+                          Captured: {cap[1]}
+                        </span>
+                        {"\n"}Explain this code.
+                      </>
+                    );
+                  })()
                 ) : (
                   <CitedText content={m.content} citations={msgCitations} />
                 )}

@@ -114,14 +114,26 @@ export function questionContextMessage(ctx?: QuestionContext | null): string {
     .join("\n");
 }
 
+/** B3 — code-explaining mode directive. */
+const CODE_MODE = `CODE-EXPLAINING MODE. The learner sent code from the Study Canvas (file name, language, the exact lines they selected, and the last run output if any).
+- Explain ONLY the captured code; refer to it by its real line numbers ("line 14").
+- If lines were selected, focus on those lines and mention the surrounding file only for context.
+- If run output or an error is included, explain what produced it and, for errors, the likely fix.
+- Tie the code back to the current question's concept in one sentence.
+- Never invent code that was not captured. Keep the [[brief]] then [[written]] format.`;
+
 /** Assemble the full message stack sent to the model. */
 export function buildExplainerMessages(args: ExplainerArgs): ChatMessage[] {
   const sources = args.retrieval ? retrievalSystemMessage(args.retrieval) : null;
   // Phase E8 — advice matrices adjust conversational depth.
   const advice = adviceSystemMessage(args.context?.advice);
+  // B3 — code-explaining mode when the latest turn carries Study Canvas code.
+  const last = args.messages[args.messages.length - 1];
+  const codeMode = last?.role === "user" && last.content.startsWith("[[code-context:");
   return [
     { role: "system", content: withExam(PERSONA, examLabelSync()) },
     { role: "system", content: intentDirective(args.intent) },
+    ...(codeMode ? [{ role: "system" as const, content: CODE_MODE }] : []),
     { role: "system", content: questionContextMessage(args.context) },
     ...(advice ? [{ role: "system" as const, content: advice.content }] : []),
     ...(args.profileNote ? [{ role: "system" as const, content: args.profileNote }] : []),
