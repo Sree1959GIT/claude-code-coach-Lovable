@@ -33,7 +33,7 @@ export const getMistakeBank = createServerFn({ method: "GET" })
 
     const { data: attempts, error } = await supabase
       .from("question_attempts")
-      .select("question_id, selected_option_id, is_correct, created_at")
+      .select("question_id, selected_option_id, selected_option_ids, is_correct, result, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: true });
     if (error) throw error;
@@ -73,8 +73,13 @@ export const getMistakeBank = createServerFn({ method: "GET" })
       const lastMiss = misses[misses.length - 1]!;
       const last = qAttempts[qAttempts.length - 1]!;
       const opts = (q.options ?? []) as any[];
-      const correctOpt = opts.find((o) => o.is_correct);
-      const selected = opts.find((o) => o.id === lastMiss.selected_option_id);
+      const correctOpts = opts.filter((o) => o.is_correct);
+      const correctOpt = correctOpts[0];
+      // D5 — multi-answer attempts carry every picked option; partial misses are flagged.
+      const pickedIds: string[] = lastMiss.selected_option_ids?.length
+        ? lastMiss.selected_option_ids
+        : [lastMiss.selected_option_id].filter(Boolean) as string[];
+      const pickedLabels = opts.filter((o) => pickedIds.includes(o.id)).map((o) => o.label).join(", ");
       const domain = domainById.get(q.domain_id);
       totalMisses += misses.length;
       items.push({
@@ -88,8 +93,10 @@ export const getMistakeBank = createServerFn({ method: "GET" })
         attempts: qAttempts.length,
         lastMissedAt: lastMiss.created_at,
         lastAttemptCorrect: !!last.is_correct,
-        selectedLabel: selected?.label ?? null,
-        correctLabel: correctOpt?.label ?? null,
+        selectedLabel: pickedLabels
+          ? lastMiss.result === "partial" ? `${pickedLabels} (partly right)` : pickedLabels
+          : null,
+        correctLabel: correctOpts.map((o) => o.label).join(", ") || null,
         explanation: correctOpt?.explanation ?? null,
       });
     }

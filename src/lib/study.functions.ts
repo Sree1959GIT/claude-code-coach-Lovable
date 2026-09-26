@@ -20,6 +20,7 @@ export type SessionQuestion = {
   stem: string;
   key_concept: string | null;
   difficulty: string;
+  answer_mode: "single" | "multiple";
   options: QuestionOption[];
 };
 
@@ -143,6 +144,7 @@ export const startSession = createServerFn({ method: "POST" })
         stem: q.stem,
         key_concept: q.key_concept,
         difficulty: q.difficulty,
+        answer_mode: (q as { answer_mode?: string }).answer_mode === "multiple" ? "multiple" : "single",
         options: q.options.map((o) => ({
           id: o.id,
           question_id: o.question_id,
@@ -165,7 +167,10 @@ export const recordSessionAnswer = createServerFn({ method: "POST" })
         sessionId: z.string().uuid(),
         questionId: z.string().uuid(),
         selectedOptionId: z.string().uuid(),
+        selectedOptionIds: z.array(z.string().uuid()).max(20).optional(),
         isCorrect: z.boolean(),
+        result: z.enum(["correct", "partial", "incorrect"]).optional(),
+        score: z.number().min(0).max(1).optional(),
         timeMs: z.number().int().min(0),
       })
       .parse(input),
@@ -187,7 +192,10 @@ export const recordSessionAnswer = createServerFn({ method: "POST" })
       user_id: userId,
       question_id: data.questionId,
       selected_option_id: data.selectedOptionId,
+      selected_option_ids: data.selectedOptionIds ?? [data.selectedOptionId],
       is_correct: data.isCorrect,
+      result: data.result ?? (data.isCorrect ? "correct" : "incorrect"),
+      score: data.score ?? (data.isCorrect ? 1 : 0),
       time_ms: data.timeMs,
     });
     if (aErr) throw aErr;
@@ -221,7 +229,7 @@ export const recordSessionAnswer = createServerFn({ method: "POST" })
         }
       : initialState();
 
-    const next = scheduleNext(previous, data.isCorrect);
+    const next = scheduleNext(previous, data.isCorrect, data.result === "partial" ? data.score : undefined);
     const upsert = {
       user_id: userId,
       question_id: data.questionId,
@@ -336,6 +344,7 @@ export const getSession = createServerFn({ method: "GET" })
         stem: q.stem,
         key_concept: q.key_concept,
         difficulty: q.difficulty,
+        answer_mode: (q as { answer_mode?: string }).answer_mode === "multiple" ? "multiple" : "single",
         options: q.options.map((o) => ({
           id: o.id,
           question_id: o.question_id,
@@ -423,7 +432,7 @@ export const getSessionReport = createServerFn({ method: "GET" })
         .in("id", ids),
       supabase
         .from("question_attempts")
-        .select("question_id, selected_option_id, is_correct, time_ms, created_at")
+        .select("question_id, selected_option_id, selected_option_ids, is_correct, result, score, time_ms, created_at")
         .eq("user_id", userId)
         .in("question_id", ids)
         .gte("created_at", session.started_at)
@@ -459,8 +468,12 @@ export const getSessionReport = createServerFn({ method: "GET" })
         correct += 1;
       } else if (q) {
         const opts = (q.options ?? []) as any[];
-        const correctOpt = opts.find((o) => o.is_correct);
-        const selected = opts.find((o) => o.id === attempt.selected_option_id);
+        const correctOpts = opts.filter((o) => o.is_correct);
+        const correctOpt = correctOpts[0];
+        const pickedIds: string[] = attempt.selected_option_ids?.length
+          ? attempt.selected_option_ids
+          : [attempt.selected_option_id].filter(Boolean);
+        const pickedLabels = opts.filter((o) => pickedIds.includes(o.id)).map((o) => o.label).join(", ");
         missed.push({
           id,
           stem: q.stem,
@@ -469,8 +482,10 @@ export const getSessionReport = createServerFn({ method: "GET" })
           difficulty: q.difficulty,
           isCorrect: false,
           timeMs: attempt.time_ms ?? 0,
-          selectedLabel: selected?.label ?? null,
-          correctLabel: correctOpt?.label ?? null,
+          selectedLabel: pickedLabels
+            ? attempt.result === "partial" ? `${pickedLabels} (partly right)` : pickedLabels
+            : null,
+          correctLabel: correctOpts.map((o) => o.label).join(", ") || null,
           explanation: correctOpt?.explanation ?? null,
         });
       }

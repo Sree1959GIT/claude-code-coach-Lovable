@@ -27,6 +27,7 @@ export type Question = {
   key_concept: string | null;
   difficulty: string;
   sort_order: number;
+  answer_mode?: "single" | "multiple";
 };
 
 export type QuestionWithOptions = Question & { options: QuestionOption[] };
@@ -83,12 +84,18 @@ export async function recordAttempt(input: {
   selectedOptionId: string;
   isCorrect: boolean;
   timeMs: number;
+  selectedOptionIds?: string[];
+  result?: "correct" | "partial" | "incorrect";
+  score?: number;
 }) {
   const { error } = await supabase.from("question_attempts").insert({
     user_id: input.userId,
     question_id: input.questionId,
     selected_option_id: input.selectedOptionId,
     is_correct: input.isCorrect,
+    selected_option_ids: input.selectedOptionIds ?? [input.selectedOptionId],
+    result: input.result ?? (input.isCorrect ? "correct" : "incorrect"),
+    score: input.score ?? (input.isCorrect ? 1 : 0),
     time_ms: input.timeMs,
   });
   if (error) throw error;
@@ -112,7 +119,7 @@ export async function fetchMyDomainProgress(): Promise<
       supabase.from("questions").select("id, domain_id"),
       supabase
         .from("question_attempts")
-        .select("question_id, is_correct")
+        .select("question_id, is_correct, score")
         .order("created_at", { ascending: false }),
     ]);
   if (qErr) throw qErr;
@@ -126,10 +133,12 @@ export async function fetchMyDomainProgress(): Promise<
   });
 
   // Latest attempt per question wins (attempts are sorted DESC).
-  const latestByQ = new Map<string, boolean>();
+  const latestByQ = new Map<string, number>();
   (attempts ?? []).forEach((a) => {
     const qid = a.question_id as string;
-    if (!latestByQ.has(qid)) latestByQ.set(qid, a.is_correct as boolean);
+    // D5 — domain analytics use partial credit when recorded.
+    if (!latestByQ.has(qid))
+      latestByQ.set(qid, a.score != null ? Number(a.score) : a.is_correct ? 1 : 0);
   });
 
   const out: Record<
@@ -143,7 +152,7 @@ export async function fetchMyDomainProgress(): Promise<
     const d = qToDomain.get(qid);
     if (!d) return;
     out[d].attempted += 1;
-    if (correct) out[d].correct += 1;
+    out[d].correct += correct;
   });
   return out;
 }

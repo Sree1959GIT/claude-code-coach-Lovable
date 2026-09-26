@@ -209,6 +209,9 @@ export type QuestionDraft = {
   stem: string;
   keyConcept: string | null;
   difficulty: string;
+  /** D1 — single | multiple. Locked once the question is baselined. */
+  answerMode?: "single" | "multiple";
+  baselinedAt?: string | null;
   options: QuestionDraftOption[];
 };
 
@@ -217,8 +220,12 @@ function validateDraft(input: QuestionDraft): QuestionDraft {
   if (!input.stem?.trim()) throw new Error("The question stem is required.");
   const options = (input.options ?? []).filter((o) => o.text?.trim());
   if (options.length < 2) throw new Error("Add at least two answer options.");
-  if (options.filter((o) => o.isCorrect).length !== 1) throw new Error("Mark exactly one correct option.");
-  return { ...input, options };
+  const mode = input.answerMode === "multiple" ? "multiple" : "single";
+  const nCorrect = options.filter((o) => o.isCorrect).length;
+  if (mode === "single" && nCorrect !== 1) throw new Error("Mark exactly one correct option.");
+  if (mode === "multiple" && (nCorrect < 1 || nCorrect >= options.length))
+    throw new Error("Mark at least one correct option, and leave at least one incorrect.");
+  return { ...input, answerMode: mode, options };
 }
 
 export const saveQuestion = createServerFn({ method: "POST" })
@@ -238,14 +245,37 @@ export const saveQuestion = createServerFn({ method: "POST" })
 
     let questionId = data.id;
     if (questionId) {
-      const { error } = await supabaseAdmin.from("questions").update(row).eq("id", questionId);
+      const { data: cur, error: curErr } = await supabaseAdmin
+        .from("questions")
+        .select("baselined_at")
+        .eq("id", questionId)
+        .single();
+      if (curErr) throw curErr;
+      if (cur.baselined_at) {
+        // D1 — baselined: wording may change, answer mode and correct set may not.
+        const { error } = await supabaseAdmin.from("questions").update(row).eq("id", questionId);
+        if (error) throw error;
+        for (const o of data.options) {
+          if (!o.id) throw new Error("Answer choices are locked: you can't add options to a baselined question.");
+          const { error: oe } = await supabaseAdmin
+            .from("question_options")
+            .update({ label: o.label, text: o.text.trim(), explanation: o.explanation?.trim() || null, is_correct: o.isCorrect })
+            .eq("id", o.id);
+          if (oe) throw oe;
+        }
+        return { id: questionId };
+      }
+    }
+    const fullRow = { ...row, answer_mode: data.answerMode ?? "single" };
+    if (questionId) {
+      const { error } = await supabaseAdmin.from("questions").update(fullRow).eq("id", questionId);
       if (error) throw error;
       const { error: delErr } = await supabaseAdmin.from("question_options").delete().eq("question_id", questionId);
       if (delErr) throw delErr;
     } else {
       const { data: inserted, error } = await supabaseAdmin
         .from("questions")
-        .insert(row)
+        .insert(fullRow)
         .select("id")
         .single();
       if (error) throw error;
@@ -284,6 +314,23 @@ export const deleteQuestion = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** D1 — lock the answer mode and correct choices. Irreversible. */
+export const baselineQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data, context }): Promise<{ baselinedAt: string }> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const at = new Date().toISOString();
+    const { error } = await supabaseAdmin
+      .from("questions")
+      .update({ baselined_at: at })
+      .eq("id", data.id)
+      .is("baselined_at", null);
+    if (error) throw error;
+    return { baselinedAt: at };
+  });
+
 export const getQuestion = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
@@ -293,7 +340,7 @@ export const getQuestion = createServerFn({ method: "GET" })
     const [{ data: q, error: qErr }, { data: opts, error: oErr }] = await Promise.all([
       supabaseAdmin
         .from("questions")
-        .select("id, domain_id, scenario, stem, key_concept, difficulty")
+        .select("id, domain_id, scenario, stem, key_concept, difficulty, answer_mode, baselined_at")
         .eq("id", data.id)
         .single(),
       supabaseAdmin
@@ -311,6 +358,8 @@ export const getQuestion = createServerFn({ method: "GET" })
       stem: q.stem,
       keyConcept: q.key_concept,
       difficulty: q.difficulty,
+      answerMode: q.answer_mode === "multiple" ? "multiple" : "single",
+      baselinedAt: q.baselined_at,
       options: (opts ?? []).map((o) => ({
         id: o.id,
         label: o.label,
