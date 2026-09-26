@@ -27,6 +27,7 @@ export type Question = {
   key_concept: string | null;
   difficulty: string;
   sort_order: number;
+  answer_mode?: "single" | "multiple";
 };
 
 export type QuestionWithOptions = Question & { options: QuestionOption[] };
@@ -83,12 +84,18 @@ export async function recordAttempt(input: {
   selectedOptionId: string;
   isCorrect: boolean;
   timeMs: number;
+  selectedOptionIds?: string[];
+  result?: "correct" | "partial" | "incorrect";
+  score?: number;
 }) {
   const { error } = await supabase.from("question_attempts").insert({
     user_id: input.userId,
     question_id: input.questionId,
     selected_option_id: input.selectedOptionId,
     is_correct: input.isCorrect,
+    selected_option_ids: input.selectedOptionIds ?? [input.selectedOptionId],
+    result: input.result ?? (input.isCorrect ? "correct" : "incorrect"),
+    score: input.score ?? (input.isCorrect ? 1 : 0),
     time_ms: input.timeMs,
   });
   if (error) throw error;
