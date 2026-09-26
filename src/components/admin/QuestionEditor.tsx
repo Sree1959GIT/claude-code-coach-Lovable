@@ -10,6 +10,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   saveQuestion,
   deleteQuestion,
+  baselineQuestion,
   getQuestion,
   type QuestionDraft,
   type QuestionDraftOption,
@@ -32,6 +33,8 @@ function blankDraft(domainId: string): QuestionDraft {
     stem: "",
     keyConcept: null,
     difficulty: "medium",
+    answerMode: "single",
+    baselinedAt: null,
     options: [0, 1, 2, 3].map(blankOption),
   };
 }
@@ -51,6 +54,7 @@ export function QuestionEditor({
   const save = useServerFn(saveQuestion);
   const remove = useServerFn(deleteQuestion);
   const load = useServerFn(getQuestion);
+  const lock = useServerFn(baselineQuestion);
 
   const [draft, setDraft] = useState<QuestionDraft>(() => blankDraft(defaultDomainId));
   const [loading, setLoading] = useState(Boolean(questionId));
@@ -92,6 +96,17 @@ export function QuestionEditor({
     },
     onError: (e: Error) => setError(e.message),
   });
+
+  const lockMut = useMutation({
+    mutationFn: () => lock({ data: { id: questionId! } }),
+    onSuccess: (r) => {
+      setDraft((d) => ({ ...d, baselinedAt: r.baselinedAt }));
+      invalidate();
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+  const locked = Boolean(draft.baselinedAt);
+  const multi = draft.answerMode === "multiple";
 
   const patchOption = (i: number, patch: Partial<QuestionDraftOption>) =>
     setDraft((d) => ({ ...d, options: d.options.map((o, j) => (j === i ? { ...o, ...patch } : o)) }));
@@ -148,6 +163,60 @@ export function QuestionEditor({
         </div>
       </div>
 
+      <div className="mt-3 border border-border/60 p-3">
+        <span className={label}>Answer mode</span>
+        <div className="mt-2 flex flex-wrap items-center gap-4 text-sm">
+          {(["single", "multiple"] as const).map((m) => (
+            <label key={m} className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="answer-mode"
+                disabled={locked}
+                checked={draft.answerMode === m}
+                onChange={() =>
+                  setDraft((d) => ({
+                    ...d,
+                    answerMode: m,
+                    // Switching to single keeps only the first correct option.
+                    options:
+                      m === "single"
+                        ? (() => {
+                            let seen = false;
+                            return d.options.map((o) => {
+                              const keep = o.isCorrect && !seen;
+                              if (o.isCorrect) seen = true;
+                              return { ...o, isCorrect: keep };
+                            });
+                          })()
+                        : d.options,
+                  }))
+                }
+              />
+              {m === "single" ? "One correct answer" : "Several correct answers"}
+            </label>
+          ))}
+          {locked ? (
+            <span className="text-xs text-warning">
+              Locked {new Date(draft.baselinedAt!).toLocaleDateString()} — mode and correct answers can't change
+            </span>
+          ) : questionId ? (
+            <button
+              type="button"
+              disabled={lockMut.isPending}
+              onClick={() => {
+                setError(null);
+                if (confirm("Lock the answer mode and correct answers? This can't be undone.")) lockMut.mutate();
+              }}
+              className="border border-border px-3 py-1 text-xs hover:bg-muted disabled:opacity-50"
+            >
+              {lockMut.isPending ? "Locking…" : "Lock answers (baseline)"}
+            </button>
+          ) : (
+            <span className="text-xs text-muted-foreground">Save first, then lock once answers are final.</span>
+          )}
+        </div>
+      </div>
+
       <div className="mt-3">
         <span className={label}>Scenario (optional)</span>
         <textarea
@@ -169,7 +238,7 @@ export function QuestionEditor({
       </div>
 
       <div className="mt-4 space-y-2">
-        <span className={label}>Options — mark exactly one correct</span>
+        <span className={label}>{multi ? "Options — mark every correct one" : "Options — mark exactly one correct"}</span>
         {draft.options.map((o, i) => (
           <div key={i} className="border border-border/60 p-3">
             <div className="flex items-center gap-3">
@@ -186,19 +255,22 @@ export function QuestionEditor({
               />
               <label className="flex items-center gap-1 font-mono text-xs uppercase tracking-widest">
                 <input
-                  type="radio"
+                  type={multi ? "checkbox" : "radio"}
                   name="correct-option"
+                  disabled={locked}
                   checked={o.isCorrect}
                   onChange={() =>
                     setDraft((d) => ({
                       ...d,
-                      options: d.options.map((x, j) => ({ ...x, isCorrect: j === i })),
+                      options: d.options.map((x, j) =>
+                        multi ? (j === i ? { ...x, isCorrect: !x.isCorrect } : x) : { ...x, isCorrect: j === i },
+                      ),
                     }))
                   }
                 />
                 Correct
               </label>
-              {draft.options.length > 2 && (
+              {draft.options.length > 2 && !locked && (
                 <button
                   type="button"
                   onClick={() => setDraft((d) => ({ ...d, options: d.options.filter((_, j) => j !== i) }))}
@@ -218,6 +290,7 @@ export function QuestionEditor({
         ))}
         <button
           type="button"
+          disabled={locked}
           onClick={() => setDraft((d) => ({ ...d, options: [...d.options, blankOption(d.options.length)] }))}
           className="border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted"
         >
