@@ -39,7 +39,7 @@ export const getSessionHistory = createServerFn({ method: "GET" })
     const oldest = sessions[sessions.length - 1]!.started_at;
     const { data: attempts, error: attemptsErr } = await supabase
       .from("question_attempts")
-      .select("question_id, is_correct, time_ms, created_at")
+      .select("question_id, is_correct, score, time_ms, created_at")
       .eq("user_id", userId)
       .gte("created_at", oldest)
       .order("created_at");
@@ -51,18 +51,20 @@ export const getSessionHistory = createServerFn({ method: "GET" })
       );
       const start = new Date(s.started_at).getTime();
       const end = s.ended_at ? new Date(s.ended_at).getTime() : Date.now();
-      const seen = new Map<string, boolean>();
+      const seen = new Map<string, number>();
       let timeMs = 0;
       for (const a of attempts ?? []) {
         const t = new Date(a.created_at).getTime();
         if (t < start || t > end) continue;
         if (ids.size && !ids.has(a.question_id)) continue;
         if (!seen.has(a.question_id)) timeMs += a.time_ms ?? 0;
-        seen.set(a.question_id, a.is_correct);
+        // D5 — partial credit counts as its share of a correct answer.
+        seen.set(a.question_id, a.score != null ? Number(a.score) : a.is_correct ? 1 : 0);
       }
       const answered = seen.size;
       let correct = 0;
-      for (const ok of seen.values()) if (ok) correct += 1;
+      for (const credit of seen.values()) correct += credit;
+      correct = Math.round(correct * 100) / 100;
       return {
         id: s.id,
         mode: s.mode,

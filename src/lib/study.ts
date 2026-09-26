@@ -119,7 +119,7 @@ export async function fetchMyDomainProgress(): Promise<
       supabase.from("questions").select("id, domain_id"),
       supabase
         .from("question_attempts")
-        .select("question_id, is_correct")
+        .select("question_id, is_correct, score")
         .order("created_at", { ascending: false }),
     ]);
   if (qErr) throw qErr;
@@ -133,10 +133,12 @@ export async function fetchMyDomainProgress(): Promise<
   });
 
   // Latest attempt per question wins (attempts are sorted DESC).
-  const latestByQ = new Map<string, boolean>();
+  const latestByQ = new Map<string, number>();
   (attempts ?? []).forEach((a) => {
     const qid = a.question_id as string;
-    if (!latestByQ.has(qid)) latestByQ.set(qid, a.is_correct as boolean);
+    // D5 — domain analytics use partial credit when recorded.
+    if (!latestByQ.has(qid))
+      latestByQ.set(qid, a.score != null ? Number(a.score) : a.is_correct ? 1 : 0);
   });
 
   const out: Record<
@@ -150,7 +152,7 @@ export async function fetchMyDomainProgress(): Promise<
     const d = qToDomain.get(qid);
     if (!d) return;
     out[d].attempted += 1;
-    if (correct) out[d].correct += 1;
+    out[d].correct += correct;
   });
   return out;
 }
