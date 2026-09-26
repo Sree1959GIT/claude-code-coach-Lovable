@@ -41,11 +41,11 @@
 - [x] B4: Guide me walkthrough + example videos
 
 ### D — Multi-answer questions
-- [ ] D1: Answer mode + baseline lock
-- [ ] D2: Authoring honours the mode
-- [ ] D3: Checkbox answering with explicit submit
-- [ ] D4: Partial credit as a third result state
-- [ ] D5: Downstream — mistakes, history, analytics, scheduling
+- [x] D1: Answer mode + baseline lock
+- [x] D2: Authoring honours the mode
+- [x] D3: Checkbox answering with explicit submit
+- [x] D4: Partial credit as a third result state
+- [x] D5: Downstream — mistakes, history, analytics, scheduling
 
 ### C — Video clip windows
 - [ ] C1: End times
