@@ -126,7 +126,7 @@ function DomainRunner() {
   });
 
   const [idx, setIdx] = useState(0);
-  const [selected, setSelected] = useState<QuestionOption | null>(null);
+  const [picked, setPicked] = useState<string[]>([]);
   const [revealed, setRevealed] = useState(false);
   const [startedAt, setStartedAt] = useState(() => Date.now());
   const [score, setScore] = useState({ correct: 0, total: 0 });
@@ -247,7 +247,7 @@ function DomainRunner() {
 
 
   useEffect(() => {
-    setSelected(null);
+    setPicked([]);
     setRevealed(false);
     setStartedAt(Date.now());
     setFocus(null);
@@ -278,9 +278,11 @@ function DomainRunner() {
   async function handleSubmit() {
     if (!q || !selected || !user) return;
     const timeMs = Date.now() - startedAt;
+    const grade = gradeAnswer(optionsSorted, picked);
+    const isCorrect = grade.result === "correct";
     setRevealed(true);
     setScore((s) => ({
-      correct: s.correct + (selected.is_correct ? 1 : 0),
+      correct: s.correct + grade.score,
       total: s.total + 1,
     }));
     try {
@@ -288,13 +290,17 @@ function DomainRunner() {
         userId: user.id,
         questionId: q.id,
         selectedOptionId: selected.id,
-        isCorrect: selected.is_correct,
+        selectedOptionIds: picked,
+        isCorrect,
+        result: grade.result,
+        score: grade.score,
         timeMs,
       });
       logEvent("question_answered", {
         slug,
         question_id: q.id,
-        correct: selected.is_correct,
+        correct: isCorrect,
+        result: grade.result,
         time_ms: timeMs,
       });
       qc.invalidateQueries({ queryKey: ["my_progress"] });
@@ -309,6 +315,11 @@ function DomainRunner() {
     () => (q ? [...q.options].sort((a, b) => a.sort_order - b.sort_order) : []),
     [q],
   );
+  const answerMode = asAnswerMode((q as { answer_mode?: string } | undefined)?.answer_mode);
+  const pickedOpts = optionsSorted.filter((o) => picked.includes(o.id));
+  const selected = pickedOpts.length
+    ? { ...pickedOpts[0], label: pickedOpts.map((o) => o.label).join(", ") }
+    : null;
 
   // Phase E9 — the canvas mirrors the active question's context profile.
   const canvasContext = useMemo<CanvasQuestionContext | null>(
@@ -404,7 +415,7 @@ function DomainRunner() {
           </nav>
           {navOpen && (
             <div className="border-t border-border px-3 py-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              Score: {score.correct}/{score.total}
+              Score: {Math.round(score.correct * 100) / 100}/{score.total}
             </div>
           )}
         </aside>
@@ -525,55 +536,18 @@ function DomainRunner() {
                 <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
                   Options
                 </div>
-                <ul className="space-y-1.5">
-                  {optionsSorted.map((opt) => {
-                    const isSelected = selected?.id === opt.id;
-                    const showCorrect = revealed && opt.is_correct;
-                    const showWrong = revealed && isSelected && !opt.is_correct;
-                    const isFocused = focus?.type === "option" && focus.label === opt.label;
-                    return (
-                      <li key={opt.id}>
-                        <button
-                          disabled={revealed}
-                          onClick={() => setSelected(opt)}
-                          className={`flex w-full items-start gap-3 border px-3 py-2.5 text-left transition-colors ${
-                            showCorrect
-                              ? "border-success bg-success/10"
-                              : showWrong
-                                ? "border-destructive bg-destructive/10"
-                                : isSelected
-                                  ? "border-primary bg-secondary"
-                                  : "border-border hover:bg-secondary"
-                          } ${isFocused ? "mentor-focus" : ""}`}
-                        >
-                          <span
-                            className={`font-mono text-xs font-bold ${
-                              showCorrect ? "text-success" : "text-primary"
-                            }`}
-                          >
-                            {opt.label}
-                          </span>
-                          <span
-                            className={`flex-1 text-sm leading-relaxed ${
-                              showCorrect ? "font-semibold text-success" : ""
-                            }`}
-                          >
-                            {opt.text}
-                          </span>
-                        </button>
-                        {revealed && (opt.is_correct || isSelected) && opt.explanation && (
-                          <div className="mt-1 border-l-2 border-primary/40 bg-secondary/30 px-3 py-1.5 font-mono text-xs leading-relaxed text-muted-foreground">
-                            {opt.explanation}
-                          </div>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
+                <AnswerOptions
+                  options={optionsSorted}
+                  mode={answerMode}
+                  picked={picked}
+                  onChange={setPicked}
+                  revealed={revealed}
+                  focusLabel={focus?.type === "option" ? focus.label : null}
+                />
 
                 <div className="mt-4 flex items-center justify-between">
                   <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                    Score: {score.correct}/{score.total}
+                    Score: {Math.round(score.correct * 100) / 100}/{score.total}
                   </div>
                   {!revealed ? (
                     <button
