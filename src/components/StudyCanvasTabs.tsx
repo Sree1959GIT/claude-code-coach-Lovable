@@ -425,6 +425,8 @@ export function StudyCanvasTabs({
           {onAskMentor && files[active] && (
             <button
               type="button"
+              // Keep the code selection alive when the button is pressed.
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => {
                 onAskMentor(buildCodeContext(files[active], selection, consoleLines, diagnostic?.message ?? null));
               }}

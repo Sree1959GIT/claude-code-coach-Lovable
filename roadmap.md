@@ -37,7 +37,7 @@
 ### B — Study Canvas
 - [x] B1: Raised-surface contrast — raised shell, stronger edge/elevation, and distinct chrome/workspace/console surfaces in both themes
 - [x] B2: Explain code / Guide me / Example videos buttons
-- [ ] B3: Send file, selection, language and run output to the mentor, and show what was captured
+- [x] B3: Send file, selection, language and run output to the mentor, and show what was captured
 - [ ] B4: Guide me walkthrough + example videos
 
 ### D — Multi-answer questions
