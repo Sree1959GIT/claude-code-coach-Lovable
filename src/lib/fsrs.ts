@@ -57,6 +57,8 @@ export function initialState(): MasteryState {
 export function scheduleNext(
   previous: MasteryState,
   correct: boolean,
+  /** D5 — partial credit (0..1) on a multi-answer item: treated as a hard recall. */
+  partial?: number,
 ): MasteryState {
   const now = new Date();
   const elapsedDays = previous.lastAttemptAt
@@ -73,7 +75,15 @@ export function scheduleNext(
   let nextReps = previous.reps + 1;
   let nextStatus: MasteryStatus;
 
-  if (correct) {
+  if (!correct && partial !== undefined && partial > 0) {
+    // Partial recall: modest stability growth, no lapse, difficulty nudged up.
+    nextStability =
+      previous.stability > 0
+        ? previous.stability * (1 + 0.5 * partial * W.difficultyFactor) * W.hardPenalty
+        : W.initialStability * (0.5 + partial);
+    nextDifficulty = Math.min(10, previous.difficulty + 0.3 * (1 - partial));
+    nextStatus = "learning";
+  } else if (correct) {
     // FSRS stability update after successful recall
     const hardFactor = retrievability < 0.8 ? W.hardPenalty : 1;
     const quality = retrievability < 0.8 ? 3 : 5; // 3=hard, 5=easy

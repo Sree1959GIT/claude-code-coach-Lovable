@@ -99,7 +99,8 @@
 - [x] **B2:** Study Canvas actions — Explain code (sends the open file to the mentor), Guide me (step-by-step walkthrough prompt with the concept tag) and Example videos (jumps to the Video section). Prompts go through the existing question-scoped mentor context, so per-exam isolation is unchanged.
 - [x] **B3:** Explain code sees the code — sends the file name, language, numbered selected lines (or whole file) and last run output/error as a `[[code-context: …]]` turn; the explainer adds a code-explaining mode directive; the chat shows a "Captured: lines 14–28 of retry.ts" chip. Client + prompt only; per-exam isolation unchanged.
 - [x] **B4:** Guide me / Example videos — in-canvas step-by-step walkthrough (advice line walks for the open file, else 8-line chunks) with highlighted line ranges, a checkpoint question per step, Back / Got it / Ask the mentor (sends that step's lines as code context) and a checked counter; Video section matches clips by concept tag plus the code itself, titled "Clips for <concept>". Client only; per-exam isolation unchanged.
-- **Next:** D1 — Multi-answer questions: answer mode + baseline lock (see roadmap.md).
+- [x] **D1–D5:** Multi-answer questions — `questions.answer_mode` (single|multiple) + irreversible `baselined_at` lock enforced by DB triggers; admin editor mode toggle, checkbox correct-marking and "Lock answers"; runners share `AnswerOptions` ("Select all that apply", explicit Submit); `gradeAnswer` gives correct / partial / incorrect with 0–1 score stored on `question_attempts` (`selected_option_ids`, `result`, `score`); mistakes, history, domain progress and FSRS (partial = hard recall, no lapse) use it. Per-exam isolation unchanged.
+- **Next:** C1 — Video start/stop windows (see roadmap.md).
 
 
 
