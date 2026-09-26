@@ -132,6 +132,38 @@ function buildCodeContext(
   ].join("\n");
 }
 
+/** B4 — walkthrough steps: advice line walks for this file, else ~8-line chunks. */
+type GuideStep = { line: number; endLine: number; label: string; explanation: string; check: string };
+function buildGuideSteps(f: CanvasFile | undefined, advice?: CodeAdvice | null): GuideStep[] {
+  if (!f) return [];
+  const total = f.content.split("\n").length;
+  const walk = (advice?.walkthrough ?? []).filter((w) => w.file === f.name && w.line >= 1 && w.line <= total);
+  if (walk.length) {
+    return walk.map((w) => ({
+      line: w.line,
+      endLine: Math.min(Math.max(w.endLine, w.line), total),
+      label: w.label,
+      explanation: w.explanation,
+      check: `In your own words, what would break if lines ${w.line}–${w.endLine} were removed?`,
+    }));
+  }
+  const lines = f.content.split("\n");
+  const steps: GuideStep[] = [];
+  for (let i = 0; i < total; i += 8) {
+    const end = Math.min(i + 8, total);
+    const first = lines.slice(i, end).find((l) => l.trim())?.trim() ?? "";
+    if (!lines.slice(i, end).some((l) => l.trim())) continue;
+    steps.push({
+      line: i + 1,
+      endLine: end,
+      label: first.length > 60 ? first.slice(0, 60) + "…" : first,
+      explanation: "Read these lines and predict what they do before moving on.",
+      check: "What value or effect does this block produce?",
+    });
+  }
+  return steps;
+}
+
 /** Phase E9 — top-level canvas sections. */
 type CanvasSection = "code" | "video" | "docs";
 
@@ -188,8 +220,18 @@ export function StudyCanvasTabs({
 
   const matched = useMemo(
     () =>
-      matchResources([context?.keyConcept, context?.domain, advice?.summary], 8),
-    [context?.keyConcept, context?.domain, advice?.summary],
+      // B4 — match clips to the code's concept: concept tag first, then the file itself.
+      matchResources(
+        [
+          context?.conceptTag?.replace(/[-_]/g, " "),
+          context?.keyConcept,
+          context?.domain,
+          advice?.summary,
+          files.map((f) => `${f.name} ${f.content.slice(0, 2000)}`).join(" "),
+        ],
+        8,
+      ),
+    [context?.conceptTag, context?.keyConcept, context?.domain, advice?.summary, files],
   );
   const videos = useMemo(() => matched.filter((r) => r.videoId), [matched]);
   const docs = useMemo(() => matched.filter((r) => !r.videoId && r.url), [matched]);
@@ -209,6 +251,24 @@ export function StudyCanvasTabs({
 
 
   const current = files[Math.min(active, Math.max(0, files.length - 1))];
+
+  // B4 — Guide me: step-by-step walkthrough with checkpoints.
+  const guideSteps = useMemo(() => buildGuideSteps(current, advice), [current, advice]);
+  const [guideStep, setGuideStep] = useState<number | null>(null);
+  const [checked, setChecked] = useState<Set<number>>(new Set());
+  const guide = guideStep !== null ? guideSteps[guideStep] : null;
+  function goToStep(i: number) {
+    setGuideStep(i);
+    const st = guideSteps[i];
+    if (st) jumpToLine(st.line);
+  }
+  function startGuide() {
+    setChecked(new Set());
+    if (guideSteps.length) goToStep(0);
+  }
+  useEffect(() => {
+    setGuideStep(null);
+  }, [current?.name]);
   const lines = useMemo(
     () => (current ? current.content.replace(/\n$/, "").split("\n") : []),
     [current],
@@ -435,14 +495,14 @@ export function StudyCanvasTabs({
               <MessageSquare className="h-3 w-3" /> Explain code
             </button>
           )}
-          {onAskMentor && (
+          {files.length > 0 && (
             <button
               type="button"
-              onClick={() =>
-                onAskMentor(
-                  `Guide me step by step through the example code for this question${context?.conceptTag ? ` (concept: ${context.conceptTag})` : ""}. Ask me one check question per step.`,
-                )
-              }
+              aria-pressed={guideStep !== null}
+              onClick={() => {
+                setSection("code");
+                startGuide();
+              }}
               className="inline-flex items-center gap-1.5 border border-foreground/15 px-2 py-1 text-xs hover:border-primary hover:text-foreground"
             >
               <Compass className="h-3 w-3" /> Guide me
@@ -582,6 +642,74 @@ export function StudyCanvasTabs({
         </div>
       </div>
 
+      {guide && guideStep !== null && (
+        <section
+          aria-label="Guided walkthrough"
+          aria-live="polite"
+          className="shrink-0 border-b border-primary/30 bg-primary/5 px-3 py-2 text-sm"
+        >
+          <div className="flex flex-wrap items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary">
+            <span>
+              Step {guideStep + 1} of {guideSteps.length}
+            </span>
+            <span className="text-muted-foreground">
+              {guide.line === guide.endLine ? `line ${guide.line}` : `lines ${guide.line}–${guide.endLine}`}
+            </span>
+            <span className="text-muted-foreground">· {checked.size} checked</span>
+            <button
+              type="button"
+              onClick={() => setGuideStep(null)}
+              className="ml-auto normal-case tracking-normal text-muted-foreground hover:text-foreground"
+            >
+              End walkthrough
+            </button>
+          </div>
+          <p className="mt-1 font-medium">{guide.label}</p>
+          {guide.explanation && <p className="mt-0.5 text-muted-foreground">{guide.explanation}</p>}
+          <p className="mt-1 text-xs">
+            <span className="font-mono uppercase tracking-widest text-primary">Checkpoint · </span>
+            {guide.check}
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              disabled={guideStep === 0}
+              onClick={() => goToStep(guideStep - 1)}
+              className="border border-foreground/15 px-2 py-1 text-xs hover:border-primary disabled:opacity-40"
+            >
+              Back
+            </button>
+            {onAskMentor && current && (
+              <button
+                type="button"
+                onClick={() => {
+                  const text = current.content.split("\n").slice(guide.line - 1, guide.endLine).join("\n");
+                  onAskMentor(
+                    buildCodeContext(current, text, [], null).replace(
+                      "Explain this code.",
+                      `Walkthrough step ${guideStep + 1} ("${guide.label}"). Checkpoint question: ${guide.check} Help me answer it without giving the answer away first.`,
+                    ),
+                  );
+                }}
+                className="border border-foreground/15 px-2 py-1 text-xs hover:border-primary"
+              >
+                Ask the mentor
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setChecked((c) => new Set(c).add(guideStep));
+                if (guideStep < guideSteps.length - 1) goToStep(guideStep + 1);
+                else setGuideStep(null);
+              }}
+              className="border border-primary bg-primary px-2 py-1 text-xs text-primary-foreground"
+            >
+              {guideStep < guideSteps.length - 1 ? "Got it — next step" : "Finish"}
+            </button>
+          </div>
+        </section>
+      )}
       <div
         ref={panelRef}
         role="tabpanel"
@@ -614,7 +742,9 @@ export function StudyCanvasTabs({
                   className={`flex ${
                     errorMessage
                       ? "bg-code-error-bg"
-                      : focusLine === i + 1
+                      : guide && i + 1 >= guide.line && i + 1 <= guide.endLine
+                        ? "bg-primary/15"
+                        : focusLine === i + 1
                         ? "bg-primary/10"
                         : ""
                   }`}
@@ -756,9 +886,14 @@ export function StudyCanvasTabs({
           tabIndex={0}
           className="min-h-0 flex-1 overflow-auto bg-background p-3"
         >
+          {context?.conceptTag && (
+            <p className="mb-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              Clips for {context.conceptTag.replace(/[-_]/g, " ")}
+            </p>
+          )}
           {videos.length === 0 ? (
-            <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              No videos matched
+            <p className="text-xs text-muted-foreground">
+              No clips match this code's concept yet. Check the Docs tab.
             </p>
           ) : (
             <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
