@@ -29,6 +29,13 @@
       "when": 1790171087925,
       "tag": "0003_create_exams_entity",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790407427764,
+      "tag": "0004_multi_answer_mode_and_baseline",
+      "breakpoints": true
     }
   ]
 }

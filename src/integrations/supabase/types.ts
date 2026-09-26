@@ -1117,7 +1117,10 @@ export type Database = {
           id: string
           is_correct: boolean
           question_id: string
+          result: string | null
+          score: number | null
           selected_option_id: string | null
+          selected_option_ids: string[]
           time_ms: number
           user_id: string
         }
@@ -1126,7 +1129,10 @@ export type Database = {
           id?: string
           is_correct: boolean
           question_id: string
+          result?: string | null
+          score?: number | null
           selected_option_id?: string | null
+          selected_option_ids?: string[]
           time_ms?: number
           user_id: string
         }
@@ -1135,7 +1141,10 @@ export type Database = {
           id?: string
           is_correct?: boolean
           question_id?: string
+          result?: string | null
+          score?: number | null
           selected_option_id?: string | null
+          selected_option_ids?: string[]
           time_ms?: number
           user_id?: string
         }
@@ -1362,7 +1371,9 @@ export type Database = {
       }
       questions: {
         Row: {
+          answer_mode: string
           author_id: string | null
+          baselined_at: string | null
           calibrated_at: string | null
           calibrated_difficulty: string | null
           calibration_accuracy: number | null
@@ -1380,7 +1391,9 @@ export type Database = {
           stem: string
         }
         Insert: {
+          answer_mode?: string
           author_id?: string | null
+          baselined_at?: string | null
           calibrated_at?: string | null
           calibrated_difficulty?: string | null
           calibration_accuracy?: number | null
@@ -1398,7 +1411,9 @@ export type Database = {
           stem: string
         }
         Update: {
+          answer_mode?: string
           author_id?: string | null
+          baselined_at?: string | null
           calibrated_at?: string | null
           calibrated_difficulty?: string | null
           calibration_accuracy?: number | null
