@@ -46,6 +46,9 @@ type Props = {
   onClose: () => void;
   context: QuestionContext;
   onHighlight?: (t: HighlightTarget) => void;
+  /** B2 — a prompt handed over from the Study Canvas; sent once, then consumed. */
+  pendingPrompt?: { id: number; text: string } | null;
+  onPromptConsumed?: () => void;
 };
 
 type Segment = { text: string; target: HighlightTarget };
@@ -214,7 +217,14 @@ function getSpeechRecognition(): (new () => SpeechRecognitionLike) | null {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
+export function MentorCanvas({
+  open,
+  onClose,
+  context,
+  onHighlight,
+  pendingPrompt,
+  onPromptConsumed,
+}: Props) {
   const speak = useServerFn(synthesizeSpeech);
   // H2 — focus moves into the mentor on open and is trapped only in the
   // mobile full-screen overlay; the desktop side frame stays non-modal.
@@ -486,6 +496,18 @@ export function MentorCanvas({ open, onClose, context, onHighlight }: Props) {
   }
 
   // ---- chat -------------------------------------------------------------
+
+  // B2 — send a prompt handed over from the Study Canvas (once per id).
+  const handledPromptRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!pendingPrompt || handledPromptRef.current === pendingPrompt.id) return;
+    if (busyRef.current) return;
+    handledPromptRef.current = pendingPrompt.id;
+    unlockAudio();
+    void send(pendingPrompt.text);
+    onPromptConsumed?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingPrompt]);
 
   async function send(text: string) {
     const trimmed = text.trim();
