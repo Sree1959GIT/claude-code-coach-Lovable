@@ -13,6 +13,8 @@ import {
   Copy,
   FileText,
   Layers,
+  MessageSquare,
+  Compass,
   Play,
   Square,
   Terminal,
@@ -99,6 +101,7 @@ export function StudyCanvasTabs({
   context,
   fsrs,
   fsrsLoading,
+  onAskMentor,
 }: {
   files: CanvasFile[];
   /** Phase E7 — structured advice breakdown matrices for this example. */
@@ -111,6 +114,8 @@ export function StudyCanvasTabs({
   /** Phase E9 — FSRS state for the active question. */
   fsrs?: CanvasFsrs | null;
   fsrsLoading?: boolean;
+  /** B2 — hand a prompt to the mentor (opens it). Scoped to the active question. */
+  onAskMentor?: (prompt: string) => void;
 }) {
   const [active, setActive] = useState(0);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -372,6 +377,43 @@ export function StudyCanvasTabs({
             <Icon className="h-3 w-3" /> {label}
           </button>
         ))}
+        {/* B2 — quick actions: explain the open file, guided walkthrough, example videos */}
+        <div role="group" aria-label="Canvas actions" className="flex flex-wrap items-center gap-1 pl-1">
+          {onAskMentor && files[active] && (
+            <button
+              type="button"
+              onClick={() => {
+                const f = files[active];
+                onAskMentor(
+                  `Explain this ${f.language} code from the Study Canvas file "${f.name}" and how it relates to the current question:\n\n\`\`\`${f.language}\n${f.content.slice(0, 4000)}\n\`\`\``,
+                );
+              }}
+              className="inline-flex items-center gap-1.5 border border-foreground/15 px-2 py-1 text-xs hover:border-primary hover:text-foreground"
+            >
+              <MessageSquare className="h-3 w-3" /> Explain code
+            </button>
+          )}
+          {onAskMentor && (
+            <button
+              type="button"
+              onClick={() =>
+                onAskMentor(
+                  `Guide me step by step through the example code for this question${context?.conceptTag ? ` (concept: ${context.conceptTag})` : ""}. Ask me one check question per step.`,
+                )
+              }
+              className="inline-flex items-center gap-1.5 border border-foreground/15 px-2 py-1 text-xs hover:border-primary hover:text-foreground"
+            >
+              <Compass className="h-3 w-3" /> Guide me
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setSection("video")}
+            className="inline-flex items-center gap-1.5 border border-foreground/15 px-2 py-1 text-xs hover:border-primary hover:text-foreground"
+          >
+            <Video className="h-3 w-3" /> Example videos
+          </button>
+        </div>
         {context && (
           <span className="ml-auto min-w-0 truncate font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
             Q{context.index}/{context.total}

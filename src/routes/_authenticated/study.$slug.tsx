@@ -131,6 +131,8 @@ function DomainRunner() {
   const [startedAt, setStartedAt] = useState(() => Date.now());
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [mentorOpen, setMentorOpen] = useState(false);
+  // B2 — prompt handed from the Study Canvas to the mentor.
+  const [mentorPrompt, setMentorPrompt] = useState<{ id: number; text: string } | null>(null);
   const [mentorWidth, setMentorWidth] = useState(400);
   const [navOpen, setNavOpen] = useState(true);
   const [canvasOpen, setCanvasOpen] = useState(false);
@@ -622,6 +624,8 @@ function DomainRunner() {
                 onClose={() => setMentorOpen(false)}
                 context={mentorContext}
                 onHighlight={onHighlight}
+                pendingPrompt={mentorPrompt}
+                onPromptConsumed={() => setMentorPrompt(null)}
               />
             </div>
           </>
@@ -655,6 +659,10 @@ function DomainRunner() {
           context={canvasContext}
           fsrs={masteryQ.data ?? null}
           fsrsLoading={masteryQ.isLoading}
+          onAskMentor={(text) => {
+            setMentorPrompt({ id: Date.now(), text });
+            setMentorOpen(true);
+          }}
         />
       </FloatingWindow>
     </div>
