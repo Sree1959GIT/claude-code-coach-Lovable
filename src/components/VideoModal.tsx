@@ -2,6 +2,7 @@ import { useId } from "react";
 import { X } from "lucide-react";
 import type { LearnResource } from "@/lib/resources";
 import { useFocusSurface } from "@/hooks/use-focus-surface";
+import { clipLabel, embedUrl, useClipWindow } from "@/lib/clip-windows";
 
 export function VideoModal({
   resource,
@@ -13,11 +14,11 @@ export function VideoModal({
   const titleId = useId();
   const open = Boolean(resource?.videoId);
   const ref = useFocusSurface<HTMLDivElement>({ open, modal: true, onClose });
+  const clip = useClipWindow(resource);
 
   if (!resource?.videoId) return null;
-  const src = `https://www.youtube-nocookie.com/embed/${resource.videoId}?start=${
-    resource.start ?? 0
-  }&autoplay=1&rel=0`;
+  const src = embedUrl(resource.videoId, clip);
+  const badge = clipLabel(clip);
 
   return (
     <div
@@ -42,6 +43,11 @@ export function VideoModal({
               {resource.title}
             </div>
           </div>
+          {badge && (
+            <span className="ml-3 shrink-0 border border-primary/40 bg-primary/10 px-2 py-0.5 font-mono text-xs text-primary">
+              {badge}
+            </span>
+          )}
           <button
             onClick={onClose}
             aria-label="Close video"

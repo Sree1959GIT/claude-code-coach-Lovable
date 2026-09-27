@@ -100,7 +100,8 @@
 - [x] **B3:** Explain code sees the code — sends the file name, language, numbered selected lines (or whole file) and last run output/error as a `[[code-context: …]]` turn; the explainer adds a code-explaining mode directive; the chat shows a "Captured: lines 14–28 of retry.ts" chip. Client + prompt only; per-exam isolation unchanged.
 - [x] **B4:** Guide me / Example videos — in-canvas step-by-step walkthrough (advice line walks for the open file, else 8-line chunks) with highlighted line ranges, a checkpoint question per step, Back / Got it / Ask the mentor (sends that step's lines as code context) and a checked counter; Video section matches clips by concept tag plus the code itself, titled "Clips for <concept>". Client only; per-exam isolation unchanged.
 - [x] **D1–D5:** Multi-answer questions — `questions.answer_mode` (single|multiple) + irreversible `baselined_at` lock enforced by DB triggers; admin editor mode toggle, checkbox correct-marking and "Lock answers"; runners share `AnswerOptions` ("Select all that apply", explicit Submit); `gradeAnswer` gives correct / partial / incorrect with 0–1 score stored on `question_attempts` (`selected_option_ids`, `result`, `score`); mistakes, history, domain progress and FSRS (partial = hard recall, no lapse) use it. Per-exam isolation unchanged.
-- **Next:** C1 — Video start/stop windows (see roadmap.md).
+- [x] **C1–C3:** Video clip windows — `LearnResource.end` curated end times; `video_clip_windows` table (admin writes via `has_role`, signed-in reads) overrides defaults; `src/lib/clip-windows.ts` (`useClipWindow`, `embedUrl` with `start`/`end`, `clipLabel`); VideoModal stops at the end and shows a "Clip 2:00–7:00 · 5m" badge; Admin › Content › Video clip windows range scrubber with preview/save/reset. Clip windows are global per video, not per exam — no exam data paths changed.
+- **Next:** E1 — Question-bank finder: deep research job with staged progress (see roadmap.md).
 
 
 
