@@ -7,6 +7,7 @@ import { BulkImportPanel } from "@/components/admin/BulkImportPanel";
 import { AiGeneratePanel } from "@/components/admin/AiGeneratePanel";
 import { CodeGenPanel } from "@/components/admin/CodeGenPanel";
 import { ClipWindowPanel } from "@/components/admin/ClipWindowPanel";
+import { BankFinderPanel } from "@/components/admin/BankFinderPanel";
 import { CreateExamWizard } from "@/components/admin/CreateExamWizard";
 
 export const Route = createFileRoute("/_authenticated/admin/content")({
@@ -35,6 +36,13 @@ function ContentGroup() {
         blurb="Paste or upload CSV/JSON questions, validate them against the blueprint domains with a dry run, then commit. Duplicate stems are flagged and skipped by default."
       >
         <BulkImportPanel />
+      </AdminSection>
+
+      <AdminSection
+        title="Find question banks"
+        blurb="A research agent searches public pages for practice questions on the active exam. Click a source to preview it, then import it into the library as raw material."
+      >
+        <BankFinderPanel />
       </AdminSection>
 
       <AdminSection

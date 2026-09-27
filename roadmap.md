@@ -53,10 +53,10 @@
 - [x] C3: Admin range scrubber
 
 ### E — Question-bank finder
-- [ ] E1: Deep research job with staged progress
-- [ ] E2: Source results desk
-- [ ] E3: Import to library with per-row log
-- [ ] E4: Safety and dedupe
+- [x] E1: Deep research job with staged progress
+- [x] E2: Source results desk
+- [x] E3: Import to library with per-row log
+- [x] E4: Safety and dedupe
 
 ### F — Model configuration
 - [ ] F1: Provider registry
