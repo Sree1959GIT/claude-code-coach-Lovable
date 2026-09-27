@@ -526,6 +526,116 @@ export type Database = {
           },
         ]
       }
+      bank_research_jobs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          error: string | null
+          exam_id: string | null
+          focus: string | null
+          id: string
+          stages: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          exam_id?: string | null
+          focus?: string | null
+          id?: string
+          stages?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          exam_id?: string | null
+          focus?: string | null
+          id?: string
+          stages?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_research_jobs_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_sources: {
+        Row: {
+          answer_coverage: string
+          created_at: string
+          exam_id: string | null
+          extracted: Json
+          host: string
+          id: string
+          imported_at: string | null
+          job_id: string | null
+          note: string | null
+          question_count: number
+          relevance: number
+          status: string
+          title: string | null
+          url: string
+        }
+        Insert: {
+          answer_coverage?: string
+          created_at?: string
+          exam_id?: string | null
+          extracted?: Json
+          host: string
+          id?: string
+          imported_at?: string | null
+          job_id?: string | null
+          note?: string | null
+          question_count?: number
+          relevance?: number
+          status?: string
+          title?: string | null
+          url: string
+        }
+        Update: {
+          answer_coverage?: string
+          created_at?: string
+          exam_id?: string | null
+          extracted?: Json
+          host?: string
+          id?: string
+          imported_at?: string | null
+          job_id?: string | null
+          note?: string | null
+          question_count?: number
+          relevance?: number
+          status?: string
+          title?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_sources_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_sources_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "bank_research_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       code_executions: {
         Row: {
           cancelled: boolean
@@ -1580,6 +1690,30 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      video_clip_windows: {
+        Row: {
+          end_seconds: number | null
+          start_seconds: number
+          updated_at: string
+          updated_by: string | null
+          video_id: string
+        }
+        Insert: {
+          end_seconds?: number | null
+          start_seconds?: number
+          updated_at?: string
+          updated_by?: string | null
+          video_id: string
+        }
+        Update: {
+          end_seconds?: number | null
+          start_seconds?: number
+          updated_at?: string
+          updated_by?: string | null
+          video_id?: string
         }
         Relationships: []
       }
