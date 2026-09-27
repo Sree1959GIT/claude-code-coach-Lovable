@@ -35,7 +35,7 @@ export const runBankJob = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ jobId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const sb = context.supabase;
+    const sb: any = context.supabase;
     const { data: job } = await sb.from("bank_research_jobs").select("id, exam_id, focus").eq("id", data.jobId).single();
     if (!job) throw new Error("Job not found.");
     const [{ data: exam }, { data: doms }] = await Promise.all([
@@ -77,7 +77,7 @@ export const getLatestBankJob = createServerFn({ method: "POST" })
     const { data: r } = await context.supabase.from("bank_research_jobs")
       .select("id, status, stages, error, focus, created_at").eq("exam_id", data.examId)
       .order("created_at", { ascending: false }).limit(1).maybeSingle();
-    return r ? { id: r.id, status: r.status, stages: r.stages ?? [], error: r.error, focus: r.focus, createdAt: r.created_at } : null;
+    return r ? { id: r.id, status: r.status, stages: (r.stages as BankStage[]) ?? [], error: r.error, focus: r.focus, createdAt: r.created_at } : null;
   });
 
 export const listBankSources = createServerFn({ method: "POST" })
@@ -100,7 +100,7 @@ export const importBankSources = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ examId: z.string().uuid(), sourceIds: z.array(z.string().uuid()).min(1).max(20) }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const sb = context.supabase;
+    const sb: any = context.supabase;
     const { ingestOne } = await import("./ingest.server");
     const { toLibraryText } = await import("./bank-research.server");
     const { stemSimilarity } = await import("./authoring.server");
