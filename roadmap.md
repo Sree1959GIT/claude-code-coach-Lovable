@@ -48,9 +48,9 @@
 - [x] D5: Downstream — mistakes, history, analytics, scheduling
 
 ### C — Video clip windows
-- [ ] C1: End times
-- [ ] C2: Player honours the window + clip badge
-- [ ] C3: Admin range scrubber
+- [x] C1: End times
+- [x] C2: Player honours the window + clip badge
+- [x] C3: Admin range scrubber
 
 ### E — Question-bank finder
 - [ ] E1: Deep research job with staged progress

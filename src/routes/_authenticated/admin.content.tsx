@@ -6,6 +6,7 @@ import { AdminSection } from "@/components/admin/AdminSection";
 import { BulkImportPanel } from "@/components/admin/BulkImportPanel";
 import { AiGeneratePanel } from "@/components/admin/AiGeneratePanel";
 import { CodeGenPanel } from "@/components/admin/CodeGenPanel";
+import { ClipWindowPanel } from "@/components/admin/ClipWindowPanel";
 import { CreateExamWizard } from "@/components/admin/CreateExamWizard";
 
 export const Route = createFileRoute("/_authenticated/admin/content")({
@@ -48,6 +49,13 @@ function ContentGroup() {
         blurb="Runs the four-agent code example loop and streams each agent's live status. Verified examples are saved to the shared codebase library."
       >
         <CodeGenPanel />
+      </AdminSection>
+
+      <AdminSection
+        title="Video clip windows"
+        blurb="Drag the two handles to set where each video starts and stops for learners. Preview the clip, then save. Reset returns it to the curated default."
+      >
+        <ClipWindowPanel />
       </AdminSection>
     </div>
   );

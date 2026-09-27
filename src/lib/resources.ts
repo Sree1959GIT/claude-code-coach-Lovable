@@ -5,6 +5,8 @@ export type LearnResource = {
   videoId?: string;
   /** Deep-link start time in seconds. */
   start?: number;
+  /** C1 — clip end time in seconds; playback stops here. */
+  end?: number;
   /** External doc link — opens in a new tab. */
   url?: string;
   tags: string[];
@@ -21,6 +23,7 @@ export const RESOURCES: LearnResource[] = [
     source: "Anthropic · YouTube",
     videoId: "G2B0YWuJUgI",
     start: 120,
+    end: 420,
     tags: ["prompting", "prompt", "system prompt", "few-shot", "xml", "clarity"],
   },
   {
@@ -28,6 +31,7 @@ export const RESOURCES: LearnResource[] = [
     source: "Anthropic · YouTube",
     videoId: "XSZP9GhhuAc",
     start: 300,
+    end: 780,
     tags: ["prompting", "agents", "tool use", "system prompt", "agent"],
   },
   {
@@ -41,6 +45,7 @@ export const RESOURCES: LearnResource[] = [
     source: "Anthropic · YouTube",
     videoId: "OZ-aLrJ0oVg",
     start: 90,
+    end: 510,
     tags: ["agents", "agent sdk", "tool use", "orchestration", "subagents"],
   },
   {
@@ -48,6 +53,7 @@ export const RESOURCES: LearnResource[] = [
     source: "Anthropic · YouTube",
     videoId: "TqC1qOfiVcQ",
     start: 600,
+    end: 1320,
     tags: ["agent sdk", "deployment", "hooks", "mcp", "agents"],
   },
   {
@@ -55,6 +61,7 @@ export const RESOURCES: LearnResource[] = [
     source: "Anthropic · YouTube",
     videoId: "LP5OCa20Zpg",
     start: 60,
+    end: 360,
     tags: ["agents", "safety", "evaluation", "guardrails", "reliability"],
   },
   {
@@ -62,6 +69,7 @@ export const RESOURCES: LearnResource[] = [
     source: "Anthropic · YouTube",
     videoId: "DAQJvGjlgVM",
     start: 45,
+    end: 405,
     tags: ["claude code", "deployment", "workflow", "cli", "prototyping"],
   },
   {
