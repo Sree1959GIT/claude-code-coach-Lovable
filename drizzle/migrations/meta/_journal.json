@@ -43,6 +43,13 @@
       "when": 1790500274173,
       "tag": "0005_bank_research",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790500429961,
+      "tag": "0006_video_clip_windows_restore",
+      "breakpoints": true
     }
   ]
 }
