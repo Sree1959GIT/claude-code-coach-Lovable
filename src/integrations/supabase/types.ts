@@ -1642,6 +1642,30 @@ export type Database = {
         }
         Relationships: []
       }
+      video_clip_windows: {
+        Row: {
+          end_seconds: number | null
+          start_seconds: number
+          updated_at: string
+          updated_by: string | null
+          video_id: string
+        }
+        Insert: {
+          end_seconds?: number | null
+          start_seconds?: number
+          updated_at?: string
+          updated_by?: string | null
+          video_id: string
+        }
+        Update: {
+          end_seconds?: number | null
+          start_seconds?: number
+          updated_at?: string
+          updated_by?: string | null
+          video_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
