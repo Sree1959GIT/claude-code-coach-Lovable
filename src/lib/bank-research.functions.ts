@@ -104,6 +104,7 @@ export const importBankSources = createServerFn({ method: "POST" })
     const { ingestOne } = await import("./ingest.server");
     const { toLibraryText } = await import("./bank-research.server");
     const { stemSimilarity } = await import("./authoring.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [{ data: sources }, { data: exam }, { data: bankQs }] = await Promise.all([
       sb.from("bank_sources").select("*").eq("exam_id", data.examId).in("id", data.sourceIds),
@@ -112,7 +113,7 @@ export const importBankSources = createServerFn({ method: "POST" })
     ]);
     const known: string[] = (bankQs ?? []).map((q: any) => q.stem);
 
-    const { data: run, error: runErr } = await sb.from("import_runs")
+    const { data: run, error: runErr } = await supabaseAdmin.from("import_runs")
       .insert({ created_by: context.userId, format: "bank-finder", dry_run: false, parsed: 0, valid: 0, imported: 0, skipped: 0 })
       .select("id").single();
     if (runErr) throw runErr;
@@ -152,7 +153,7 @@ export const importBankSources = createServerFn({ method: "POST" })
         await sb.from("bank_sources").update({ status: "failed", note: msg }).eq("id", s.id);
       }
     }
-    if (items.length) await sb.from("import_run_items").insert(items);
-    await sb.from("import_runs").update({ parsed, valid: parsed - skipped, imported, skipped }).eq("id", run.id);
+    if (items.length) await supabaseAdmin.from("import_run_items").insert(items);
+    await supabaseAdmin.from("import_runs").update({ parsed, valid: parsed - skipped, imported, skipped }).eq("id", run.id);
     return { imported, skipped, runId: run.id as string };
   });
