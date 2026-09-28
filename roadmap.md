@@ -59,7 +59,7 @@
 - [x] E4: Safety and dedupe
 
 ### F — Model configuration
-- [ ] F1: Provider registry
-- [ ] F2: Learner picker in Settings
+- [x] F1: Provider registry
+- [x] F2: Learner picker in Settings
 - [ ] F3: Hardware scan and recommendation
 - [ ] F4: Health badges and fallback
