@@ -117,7 +117,7 @@ export async function resolveInferenceTarget(args: {
       model: PROVIDERS[active.provider].models[args.rung ?? "standard"],
       byok: true,
       provider: active.provider,
-      label: active.provider === "anthropic" ? "Anthropic (your key)" : "Google AI (your key)",
+      label: PROVIDERS[active.provider].label,
     };
   } catch {
     return proxy;

@@ -11,6 +11,9 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { useSession } from "@/hooks/useSession";
 import { supabase } from "@/integrations/supabase/client";
 import { getQuotaStatus } from "@/lib/quotas.functions";
+import { getProviderPref, setProviderPref } from "@/lib/provider-pref.functions";
+import { listMyProviderKeys } from "@/lib/byok.functions";
+import { PROVIDERS, type ProviderId, type ProviderPref } from "@/lib/model-providers";
 import { createSeo } from "@/lib/seo";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -331,5 +334,84 @@ function AccountTab() {
         Sign out
       </button>
     </section>
+  );
+}
+
+/** F2 — learner provider picker, fed by the F1 provider registry. */
+function ProviderPicker() {
+  const fetchPref = useServerFn(getProviderPref);
+  const savePref = useServerFn(setProviderPref);
+  const fetchKeys = useServerFn(listMyProviderKeys);
+  const prefQ = useQuery({ queryKey: ["provider-pref"], queryFn: () => fetchPref() });
+  const keysQ = useQuery({ queryKey: ["byok-keys"], queryFn: () => fetchKeys() });
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const pref = prefQ.data?.pref ?? "auto";
+  const activeKeys = new Set((keysQ.data ?? []).filter((k) => k.isActive).map((k) => k.provider as string));
+  const available = (id: ProviderId) => PROVIDERS[id].kind === "built-in" || activeKeys.has(id);
+
+  async function choose(next: ProviderPref) {
+    setSaving(true);
+    setMsg(null);
+    try {
+      await savePref({ data: { pref: next } });
+      await prefQ.refetch();
+      setMsg("Saved.");
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Couldn't save your choice.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const options: Array<{ id: ProviderPref; label: string; description: string; ok: boolean }> = [
+    {
+      id: "auto",
+      label: "Automatic (recommended)",
+      description: "Uses your own key when one is saved, otherwise the built-in option.",
+      ok: true,
+    },
+    ...(Object.keys(PROVIDERS) as ProviderId[]).map((id) => ({
+      id,
+      label: PROVIDERS[id].label,
+      description: available(id)
+        ? PROVIDERS[id].description
+        : "Save a key for this provider first to use it.",
+      ok: available(id),
+    })),
+  ];
+
+  return (
+    <Field
+      label="Who answers your questions"
+      hint="Pick where the mentor's answers come from. If your pick stops working, the built-in option takes over so sessions never stop."
+    >
+      <div role="radiogroup" aria-label="Answer provider" className="space-y-2">
+        {options.map((o) => (
+          <label
+            key={o.id}
+            className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 ${pref === o.id ? "border-primary bg-card" : "border-border"} ${o.ok ? "" : "opacity-60"}`}
+          >
+            <input
+              type="radio"
+              name="provider"
+              className="mt-1"
+              checked={pref === o.id}
+              disabled={!o.ok || saving || prefQ.isLoading}
+              onChange={() => choose(o.id)}
+            />
+            <span>
+              <span className="block text-sm font-medium">{o.label}</span>
+              <span className="block text-xs text-muted-foreground">{o.description}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+      {msg && (
+        <p className="mt-2 text-xs text-muted-foreground" role="status">
+          {msg}
+        </p>
+      )}
+    </Field>
   );
 }
