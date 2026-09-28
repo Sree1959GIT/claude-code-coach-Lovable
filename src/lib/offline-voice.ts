@@ -52,10 +52,24 @@ export async function removeOfflineVoice(): Promise<void> {
   await p.remove(OFFLINE_VOICE_ID);
 }
 
+/**
+ * The library defaults to onnxruntime 1.18 files on cdnjs, which don't match
+ * the runtime it actually bundles (1.30) — the threaded .mjs 404s. Point the
+ * runtime at the matching version's files instead. Keep in step with
+ * node_modules/onnxruntime-web/package.json.
+ */
+const ORT_VERSION = "1.30.0";
+const WASM_PATHS = {
+  onnxWasm: `https://cdn.jsdelivr.net/npm/onnxruntime-web@${ORT_VERSION}/dist/`,
+  piperData: "https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize.data",
+  piperWasm: "https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize.wasm",
+};
+
 /** Synthesises speech on the device; returns an object URL for a WAV clip. */
 export async function speakOffline(text: string): Promise<string> {
   const p = await load();
-  const wav = await p.predict({ text, voiceId: OFFLINE_VOICE_ID });
+  const session = await p.TtsSession.create({ voiceId: OFFLINE_VOICE_ID, wasmPaths: WASM_PATHS });
+  const wav = await session.predict(text);
   return URL.createObjectURL(wav);
 }
 

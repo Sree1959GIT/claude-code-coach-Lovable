@@ -287,10 +287,7 @@ function ModelsTab() {
           <option value="deep">Deeper reasoning</option>
         </select>
       </Field>
-      <p className="rounded-md border border-border bg-card p-4 text-xs text-muted-foreground">
-        Connecting your own provider — including a model running on your machine — arrives with the
-        provider registry. Nothing here ever asks you to pick one to start a session.
-      </p>
+      <ProviderPicker />
     </section>
   );
 }
