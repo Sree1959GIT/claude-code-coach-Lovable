@@ -112,9 +112,9 @@ export async function resolveInferenceTarget(args: {
     const active = await activeVaultKey(args.userId);
     if (!active) return proxy;
     return {
-      url: BYOK_URL[active.provider],
+      url: PROVIDERS[active.provider].url,
       apiKey: active.key,
-      model: BYOK_MODELS[active.provider][args.rung ?? "standard"],
+      model: PROVIDERS[active.provider].models[args.rung ?? "standard"],
       byok: true,
       provider: active.provider,
       label: active.provider === "anthropic" ? "Anthropic (your key)" : "Google AI (your key)",
