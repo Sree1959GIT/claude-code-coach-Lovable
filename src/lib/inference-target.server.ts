@@ -10,6 +10,7 @@
  */
 
 import { getActiveKey, validateKeyShape, KEY_PROVIDERS, type KeyProvider } from "./byok.server";
+import { PROVIDERS, isProviderPref, type ProviderPref } from "./model-providers";
 
 export type InferenceRung = "cheap" | "standard" | "premium";
 
@@ -25,34 +26,30 @@ export type InferenceTarget = {
   label: string;
 };
 
-const PROXY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const PROXY_URL = PROVIDERS.lovable.url;
 
-/** OpenAI-compatible endpoints exposed by each provider. */
-const BYOK_URL: Record<KeyProvider, string> = {
-  anthropic: "https://api.anthropic.com/v1/chat/completions",
-  google: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-};
-
-/** Model ladder used when the learner's own key is paying. */
-const BYOK_MODELS: Record<KeyProvider, Record<InferenceRung, string>> = {
-  anthropic: {
-    cheap: "claude-haiku-4-5",
-    standard: "claude-sonnet-4-5",
-    premium: "claude-sonnet-4-5",
-  },
-  google: {
-    cheap: "gemini-2.5-flash-lite",
-    standard: "gemini-2.5-flash",
-    premium: "gemini-2.5-pro",
-  },
-};
-
-/** Preference order when a learner has stored more than one key. */
+/** Default preference order when the learner picked "Automatic". */
 const PREFERENCE: KeyProvider[] = ["anthropic", "google"];
 
 type CacheEntry = { at: number; provider: KeyProvider | null; key: string | null };
 const CACHE_MS = 30_000;
 const cache = new Map<string, CacheEntry>();
+
+/** F2 — the learner's saved provider choice (defaults to automatic). */
+async function providerPref(userId: string): Promise<ProviderPref> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("profiles")
+      .select("preferred_provider")
+      .eq("id", userId)
+      .maybeSingle();
+    const v = (data as { preferred_provider?: string } | null)?.preferred_provider;
+    return isProviderPref(v) ? v : "auto";
+  } catch {
+    return "auto";
+  }
+}
 
 /** Cheapest correct lookup: one short-lived cache entry per learner. */
 async function activeVaultKey(
@@ -63,7 +60,16 @@ async function activeVaultKey(
     return hit.provider && hit.key ? { provider: hit.provider, key: hit.key } : null;
   }
 
-  for (const provider of PREFERENCE) {
+  const pref = await providerPref(userId);
+  // "Built-in" means never use a stored key; a named provider is tried first.
+  const order: KeyProvider[] =
+    pref === "lovable"
+      ? []
+      : pref === "auto"
+        ? PREFERENCE
+        : [pref, ...PREFERENCE.filter((p) => p !== pref)];
+
+  for (const provider of order) {
     if (!KEY_PROVIDERS.includes(provider)) continue;
     const key = await getActiveKey(userId, provider);
     // Validation gate: a paused, missing or malformed key never overrides the proxy.
@@ -76,7 +82,7 @@ async function activeVaultKey(
   return null;
 }
 
-/** Drop the cached decision for a learner (called when their vault changes). */
+/** Drop the cached decision for a learner (called when their vault or choice changes). */
 export function invalidateInferenceTarget(userId: string): void {
   cache.delete(userId);
 }
