@@ -531,34 +531,31 @@ export type Database = {
           created_at: string
           created_by: string | null
           error: string | null
-          exam_id: string | null
+          exam_id: string
           focus: string | null
           id: string
           stages: Json
           status: string
-          updated_at: string
         }
         Insert: {
           created_at?: string
           created_by?: string | null
           error?: string | null
-          exam_id?: string | null
+          exam_id: string
           focus?: string | null
           id?: string
           stages?: Json
           status?: string
-          updated_at?: string
         }
         Update: {
           created_at?: string
           created_by?: string | null
           error?: string | null
-          exam_id?: string | null
+          exam_id?: string
           focus?: string | null
           id?: string
           stages?: Json
           status?: string
-          updated_at?: string
         }
         Relationships: [
           {
@@ -572,11 +569,11 @@ export type Database = {
       }
       bank_sources: {
         Row: {
-          answer_coverage: string
+          answer_coverage: number
           created_at: string
-          exam_id: string | null
+          exam_id: string
           extracted: Json
-          host: string
+          host: string | null
           id: string
           imported_at: string | null
           job_id: string | null
@@ -588,11 +585,11 @@ export type Database = {
           url: string
         }
         Insert: {
-          answer_coverage?: string
+          answer_coverage?: number
           created_at?: string
-          exam_id?: string | null
+          exam_id: string
           extracted?: Json
-          host: string
+          host?: string | null
           id?: string
           imported_at?: string | null
           job_id?: string | null
@@ -604,11 +601,11 @@ export type Database = {
           url: string
         }
         Update: {
-          answer_coverage?: string
+          answer_coverage?: number
           created_at?: string
-          exam_id?: string | null
+          exam_id?: string
           extracted?: Json
-          host?: string
+          host?: string | null
           id?: string
           imported_at?: string | null
           job_id?: string | null
@@ -824,6 +821,68 @@ export type Database = {
           },
         ]
       }
+      crawl_targets: {
+        Row: {
+          crawl_interval_hours: number
+          created_at: string
+          created_by: string | null
+          enabled: boolean
+          id: string
+          label: string | null
+          last_chars: number | null
+          last_chunks: number | null
+          last_crawled_at: string | null
+          last_ok: boolean | null
+          last_status: string | null
+          source_id: string | null
+          tags: string[]
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          crawl_interval_hours?: number
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string | null
+          last_chars?: number | null
+          last_chunks?: number | null
+          last_crawled_at?: string | null
+          last_ok?: boolean | null
+          last_status?: string | null
+          source_id?: string | null
+          tags?: string[]
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          crawl_interval_hours?: number
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string | null
+          last_chars?: number | null
+          last_chunks?: number | null
+          last_crawled_at?: string | null
+          last_ok?: boolean | null
+          last_status?: string | null
+          source_id?: string | null
+          tags?: string[]
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crawl_targets_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "authoring_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       domain_confidence: {
         Row: {
           created_at: string
@@ -865,8 +924,10 @@ export type Database = {
           description: string | null
           exam_id: string | null
           id: string
+          provenance: string
           slug: string
           sort_order: number
+          source_url: string | null
           title: string
           weight: number
         }
@@ -875,8 +936,10 @@ export type Database = {
           description?: string | null
           exam_id?: string | null
           id?: string
+          provenance?: string
           slug: string
           sort_order?: number
+          source_url?: string | null
           title: string
           weight?: number
         }
@@ -885,8 +948,10 @@ export type Database = {
           description?: string | null
           exam_id?: string | null
           id?: string
+          provenance?: string
           slug?: string
           sort_order?: number
+          source_url?: string | null
           title?: string
           weight?: number
         }
@@ -903,6 +968,7 @@ export type Database = {
       exams: {
         Row: {
           created_at: string
+          created_by: string | null
           description: string | null
           duration_minutes: number
           id: string
@@ -913,9 +979,11 @@ export type Database = {
           short_name: string | null
           slug: string
           status: string
+          updated_at: string
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           description?: string | null
           duration_minutes?: number
           id?: string
@@ -926,9 +994,11 @@ export type Database = {
           short_name?: string | null
           slug: string
           status?: string
+          updated_at?: string
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           description?: string | null
           duration_minutes?: number
           id?: string
@@ -939,6 +1009,7 @@ export type Database = {
           short_name?: string | null
           slug?: string
           status?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1230,7 +1301,7 @@ export type Database = {
           result: string | null
           score: number | null
           selected_option_id: string | null
-          selected_option_ids: string[]
+          selected_option_ids: string[] | null
           time_ms: number
           user_id: string
         }
@@ -1242,7 +1313,7 @@ export type Database = {
           result?: string | null
           score?: number | null
           selected_option_id?: string | null
-          selected_option_ids?: string[]
+          selected_option_ids?: string[] | null
           time_ms?: number
           user_id: string
         }
@@ -1254,7 +1325,7 @@ export type Database = {
           result?: string | null
           score?: number | null
           selected_option_id?: string | null
-          selected_option_ids?: string[]
+          selected_option_ids?: string[] | null
           time_ms?: number
           user_id?: string
         }
