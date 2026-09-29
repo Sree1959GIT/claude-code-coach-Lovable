@@ -22,8 +22,10 @@ function load(): Promise<Piper> {
 
 export async function isOfflineVoiceInstalled(): Promise<boolean> {
   try {
-    const p = await load();
-    return (await p.stored()).includes(OFFLINE_VOICE_ID);
+    const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle("piper");
+    const model = await (await dir.getFileHandle(`${OFFLINE_VOICE_ID}.onnx`)).getFile();
+    const config = await (await dir.getFileHandle(`${OFFLINE_VOICE_ID}.onnx.json`)).getFile();
+    return model.size > 1_000_000 && config.size > 0;
   } catch {
     return false;
   }
@@ -45,6 +47,13 @@ export async function downloadOfflineVoice(
     }
     onProgress({ loaded, total });
   });
+  // Piper starts its private-storage write without awaiting it. Do not show
+  // "Installed" until the model can actually be found by the Mentor.
+  for (let attempt = 0; attempt < 40; attempt++) {
+    if (await isOfflineVoiceInstalled()) return;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  throw new Error("The voice download finished but could not be saved in this browser. Check available storage and try again.");
 }
 
 export async function removeOfflineVoice(): Promise<void> {

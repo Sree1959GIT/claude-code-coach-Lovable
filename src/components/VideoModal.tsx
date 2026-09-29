@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import type { LearnResource } from "@/lib/resources";
 import { useFocusSurface } from "@/hooks/use-focus-surface";
 import { clipLabel, embedUrl, useClipWindow } from "@/lib/clip-windows";
+import { Button } from "@/components/ui/button";
 
 export function VideoModal({
   resource,
@@ -22,7 +23,7 @@ export function VideoModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-foreground/75 p-4"
       onClick={onClose}
     >
       <div
@@ -31,10 +32,10 @@ export function VideoModal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="w-full max-w-3xl border border-border bg-card outline-none"
+        className="floating-workspace w-full max-w-3xl outline-none"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="flex items-center justify-between border-b border-border px-4 py-2">
+        <header className="flex items-center justify-between border-b border-primary/30 bg-surface px-4 py-2">
           <div className="min-w-0">
             <div className="truncate font-mono text-xs uppercase tracking-widest text-primary">
               {resource.source}
@@ -48,15 +49,17 @@ export function VideoModal({
               {badge}
             </span>
           )}
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
             aria-label="Close video"
             className="-m-2 inline-flex min-h-11 min-w-11 items-center justify-center p-2 text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </header>
-        <div className="aspect-video w-full bg-black">
+        <div className="aspect-video w-full bg-foreground">
           <iframe
             src={src}
             title={resource.title}
