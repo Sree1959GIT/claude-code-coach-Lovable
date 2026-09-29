@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/analytics";
 import { matchResources, thumbnailFor, type LearnResource } from "@/lib/resources";
 import { VideoModal } from "@/components/VideoModal";
+import { Button } from "@/components/ui/button";
 import type { CodeAdvice } from "@/lib/advice";
 
 
@@ -1100,7 +1101,7 @@ export function MentorCanvas({
           </div>
         )}
         {voicePref === "instant" && voiceNeedsDownload && (
-          <button
+          <Button
             type="button"
             disabled={voiceDownloading}
             onClick={async () => {
@@ -1116,10 +1117,11 @@ export function MentorCanvas({
                 setVoiceDownloading(false);
               }
             }}
-            className="mb-2 min-h-11 border border-primary px-3 text-xs font-medium text-primary disabled:opacity-50"
+            variant="outline"
+            className="mb-2 min-h-11 border-primary px-3 text-xs font-medium text-primary"
           >
             {voiceDownloading ? `Downloading voice · ${voiceDownloadProgress.total ? Math.round(voiceDownloadProgress.loaded / voiceDownloadProgress.total * 100) : 0}%` : "Download Instant voice here (about 60 MB)"}
-          </button>
+          </Button>
         )}
         {voiceDownloading && <progress className="mb-2 w-full accent-primary" max={voiceDownloadProgress.total || 1} value={voiceDownloadProgress.loaded} aria-label="Instant voice download progress" />}
         {speaking && (

@@ -65,6 +65,6 @@
 - [ ] F4: Health badges and fallback
 
 ### Current fixes
-- [ ] Make Mentor use the downloaded Instant voice reliably when returning from Settings.
-- [ ] Increase floating Study Canvas and video frame contrast in both themes.
-- [ ] Provide a published multi-answer question for a real practice test and verify selection/partial credit.
+- [x] Recheck the cached Instant voice when Mentor opens and before playback; offer download inside Mentor when absent (existing browser download still needs user-browser playback verification).
+- [x] Increase floating Study Canvas and video frame contrast in both themes; verified canvas in preview.
+- [x] Publish an Agentic Workflows multi-answer question; verified checkbox selection and 0.5/1 partial credit in authenticated practice.
