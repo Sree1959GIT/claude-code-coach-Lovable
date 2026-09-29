@@ -12,7 +12,23 @@ import { useSession } from "@/hooks/useSession";
 import { supabase } from "@/integrations/supabase/client";
 import { getQuotaStatus } from "@/lib/quotas.functions";
 import { getProviderPref, setProviderPref } from "@/lib/provider-pref.functions";
-import { listMyProviderKeys } from "@/lib/byok.functions";
+import { listMyProviderKeys, testProviderKey, type StoredKeyMeta } from "@/lib/byok.functions";
+import { LocalModelAdvisor } from "@/components/LocalModelAdvisor";
+
+/** F4 — per-provider health badge (colour + word). */
+function HealthBadge({ id, keys }: { id: string; keys: StoredKeyMeta[] }) {
+  if (id === "auto") return null;
+  let tone = "bg-success-soft text-success";
+  let word = "Ready";
+  if (id !== "lovable") {
+    const k = keys.find((x) => x.provider === id);
+    if (!k) { tone = "bg-muted text-muted-foreground"; word = "No key"; }
+    else if (!k.isActive) { tone = "bg-muted text-muted-foreground"; word = "Paused"; }
+    else if (k.lastVerifyStatus && k.lastVerifyStatus !== "ok") { tone = "bg-danger-soft text-danger"; word = "Failing — using built-in"; }
+    else if (!k.lastVerifyStatus) { tone = "bg-warning-soft text-warning"; word = "Not checked"; }
+  }
+  return <span className={`rounded px-2 text-xs font-normal ${tone}`}>{word}</span>;
+}
 import { PROVIDERS, type ProviderId, type ProviderPref } from "@/lib/model-providers";
 import { createSeo } from "@/lib/seo";
 import { Progress } from "@/components/ui/progress";
@@ -291,6 +307,7 @@ function ModelsTab() {
         </select>
       </Field>
       <ProviderPicker />
+      <LocalModelAdvisor />
     </section>
   );
 }
@@ -364,6 +381,21 @@ function ProviderPicker() {
     }
   }
 
+  const testKey = useServerFn(testProviderKey);
+  const [checking, setChecking] = useState<string | null>(null);
+  async function check(provider: "anthropic" | "google") {
+    setChecking(provider);
+    try {
+      const r = await testKey({ data: { provider } });
+      setMsg(r.ok ? `${PROVIDERS[provider].label}: working.` : `${PROVIDERS[provider].label} failed (${r.status}) — the built-in option will answer instead.`);
+      await keysQ.refetch();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Check failed.");
+    } finally {
+      setChecking(null);
+    }
+  }
+
   const options: Array<{ id: ProviderPref; label: string; description: string; ok: boolean }> = [
     {
       id: "auto",
@@ -400,10 +432,23 @@ function ProviderPicker() {
               disabled={!o.ok || saving || prefQ.isLoading}
               onChange={() => choose(o.id)}
             />
-            <span>
-              <span className="block text-sm font-medium">{o.label}</span>
+            <span className="flex-1">
+              <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
+                {o.label}
+                <HealthBadge id={o.id} keys={keysQ.data ?? []} />
+              </span>
               <span className="block text-xs text-muted-foreground">{o.description}</span>
             </span>
+            {(o.id === "anthropic" || o.id === "google") && activeKeys.has(o.id) && (
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); void check(o.id as "anthropic" | "google"); }}
+                disabled={checking === o.id}
+                className="rounded-md border border-border px-2 py-1 text-xs hover:bg-secondary"
+              >
+                {checking === o.id ? "Checking…" : "Check now"}
+              </button>
+            )}
           </label>
         ))}
       </div>
