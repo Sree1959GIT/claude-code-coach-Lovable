@@ -14,6 +14,7 @@ import {
   type MicPref,
   type VoicePref,
 } from "@/lib/offline-voice";
+import { isSttInstalled, listenOnce } from "@/lib/offline-stt";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/analytics";
 import { matchResources, thumbnailFor, type LearnResource } from "@/lib/resources";
@@ -320,7 +321,7 @@ export function MentorCanvas({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUnlockedRef = useRef(false);
 
-  const recogRef = useRef<SpeechRecognitionLike | null>(null);
+  const recogRef = useRef<{ stop: () => void; abort: () => void } | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const liveRef = useRef(false);
   const voiceRef = useRef(true);
@@ -677,27 +678,60 @@ export function MentorCanvas({
   }
 
   // ---- speech recognition ------------------------------------------------
+  function startLocalListening() {
+    void listenOnce({
+      onStart: () => setListening(true),
+      onTranscribing: () => {
+        setListening(false);
+        setStatus("Transcribing on your device…");
+      },
+      onText: (text) => {
+        setStatus(null);
+        void send(text);
+      },
+      onError: (msg) => {
+        setStatus(null);
+        announce("mic", `On-device listening failed (${msg}), so browser dictation will be used next time.`);
+        micPrefRef.current = "browser";
+      },
+      onEnd: () => {
+        setListening(false);
+        setStatus((s) => (s === "Transcribing on your device…" ? null : s));
+        if (liveRef.current && !busyRef.current && !drainingRef.current && !stoppedRef.current) {
+          setTimeout(() => {
+            if (liveRef.current && !busyRef.current && !drainingRef.current) startRecognition(true);
+          }, 300);
+        }
+      },
+    })
+      .then((l) => {
+        recogRef.current = l;
+      })
+      .catch(() => {
+        setListening(false);
+        announce("mic", "Microphone access was blocked. Allow it in the browser's address bar and try again.");
+      });
+  }
+
   function startRecognition(continuous: boolean) {
-    const Ctor = getSpeechRecognition();
-    if (!Ctor || busyRef.current || drainingRef.current) return;
+    if (busyRef.current || drainingRef.current) return;
     try {
       recogRef.current?.abort();
     } catch {
       /* noop */
     }
+    // L1 — open-source Whisper on the device when downloaded.
+    const wantLocal = micPrefRef.current === "device";
+    if (wantLocal && isSttInstalled()) return startLocalListening();
+    const Ctor = getSpeechRecognition();
+    if (!Ctor) return;
+    if (wantLocal) {
+      announce("mic", "On-device listening isn't downloaded yet — get it in Settings › Mentor & voice. Using browser dictation for now.");
+    }
     const recog = new Ctor();
     recog.lang = "en-US";
     recog.interimResults = false;
     recog.continuous = continuous;
-    // A5 — on-device transcription where the browser offers it.
-    const wantLocal = micPrefRef.current === "device";
-    if (wantLocal) {
-      if ("processLocally" in recog) {
-        (recog as unknown as { processLocally: boolean }).processLocally = true;
-      } else {
-        announce("mic", "This browser can't transcribe on your device, so browser dictation is listening instead.");
-      }
-    }
     recog.onstart = () => setListening(true);
     recog.onresult = (e) => {
       const from = typeof e.resultIndex === "number" ? e.resultIndex : 0;
@@ -714,16 +748,8 @@ export function MentorCanvas({
       }
       void send(transcript);
     };
-    recog.onerror = (ev?: unknown) => {
+    recog.onerror = () => {
       setListening(false);
-      const code = (ev as { error?: string } | undefined)?.error;
-      if (wantLocal && (code === "language-not-supported" || code === "service-not-allowed")) {
-        announce(
-          "mic",
-          "On-device transcription isn't ready in this browser, so browser dictation will be used. Press the mic again.",
-        );
-        micPrefRef.current = "browser";
-      }
     };
     recog.onend = () => {
       setListening(false);
