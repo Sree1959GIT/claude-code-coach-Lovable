@@ -59,7 +59,12 @@
 - [x] E4: Safety and dedupe
 
 ### F — Model configuration
-- [ ] F1: Provider registry
-- [ ] F2: Learner picker in Settings
+- [x] F1: Provider registry
+- [x] F2: Learner picker in Settings
 - [ ] F3: Hardware scan and recommendation
 - [ ] F4: Health badges and fallback
+
+### Current fixes
+- [x] Recheck the cached Instant voice when Mentor opens and before playback; offer download inside Mentor when absent (existing browser download still needs user-browser playback verification).
+- [x] Increase floating Study Canvas and video frame contrast in both themes; verified canvas in preview.
+- [x] Publish an Agentic Workflows multi-answer question; verified checkbox selection and 0.5/1 partial credit in authenticated practice.

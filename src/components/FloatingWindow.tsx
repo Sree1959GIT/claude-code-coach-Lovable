@@ -8,6 +8,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useFocusSurface } from "@/hooks/use-focus-surface";
 
@@ -159,14 +160,14 @@ export function FloatingWindow({
       }
       className={
         isMobile
-          ? "surface-raised fixed inset-x-0 bottom-0 z-40 flex h-[75dvh] max-h-[85dvh] flex-col overflow-hidden border-x border-t border-foreground/20"
-          : "surface-raised fixed z-40 flex flex-col overflow-hidden border border-foreground/20 ring-1 ring-background/80"
+          ? "floating-workspace fixed inset-x-0 bottom-0 z-40 flex h-[75dvh] max-h-[85dvh] flex-col overflow-hidden border-x border-t"
+          : "floating-workspace fixed z-40 flex flex-col overflow-hidden border"
       }
     >
       <header
         onPointerDown={beginMove}
         style={isMobile ? undefined : { touchAction: "none" }}
-        className={`relative flex shrink-0 items-center justify-between gap-3 border-b border-foreground/15 bg-surface px-3 py-2 ${
+        className={`relative flex shrink-0 items-center justify-between gap-3 border-b border-primary/30 bg-surface px-3 py-2 ${
           isMobile ? "" : "cursor-grab active:cursor-grabbing"
         }`}
       >
@@ -187,15 +188,17 @@ export function FloatingWindow({
             {title}
           </div>
         </div>
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={onClose}
           aria-label={`Close ${title}`}
           className="-m-2 inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 text-muted-foreground hover:text-foreground"
         >
           <X className="h-4 w-4" />
-        </button>
+        </Button>
       </header>
 
       <div className="min-h-0 flex-1 overflow-auto overscroll-contain bg-surface-raised">{children}</div>

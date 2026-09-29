@@ -37,9 +37,6 @@ export function AnswerOptions({
       {multi && (
         <p className="mb-2 text-sm font-medium text-foreground">
           Select all that apply
-          <span className="ml-2 text-xs text-muted-foreground">
-            ({options.filter((o) => o.is_correct).length} correct)
-          </span>
         </p>
       )}
       <ul className="space-y-1.5" role={multi ? "group" : "radiogroup"}>

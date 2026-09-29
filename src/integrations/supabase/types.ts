@@ -1262,6 +1262,7 @@ export type Database = {
           id: string
           membership_tier: string
           onboarded_at: string | null
+          preferred_provider: string
           target_score: number | null
           updated_at: string
           weekly_hours: number | null
@@ -1274,6 +1275,7 @@ export type Database = {
           id: string
           membership_tier?: string
           onboarded_at?: string | null
+          preferred_provider?: string
           target_score?: number | null
           updated_at?: string
           weekly_hours?: number | null
@@ -1286,6 +1288,7 @@ export type Database = {
           id?: string
           membership_tier?: string
           onboarded_at?: string | null
+          preferred_provider?: string
           target_score?: number | null
           updated_at?: string
           weekly_hours?: number | null
