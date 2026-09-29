@@ -22,13 +22,6 @@ function load(): Promise<Piper> {
 
 export async function isOfflineVoiceInstalled(): Promise<boolean> {
   try {
-    const p = await load();
-    if ((await p.stored()).includes(OFFLINE_VOICE_ID)) return true;
-  } catch {
-    // Some browsers cannot enumerate directory keys, even though the model
-    // files are readable (and the Settings test can play them).
-  }
-  try {
     const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle("piper");
     const model = await (await dir.getFileHandle(`${OFFLINE_VOICE_ID}.onnx`)).getFile();
     const config = await (await dir.getFileHandle(`${OFFLINE_VOICE_ID}.onnx.json`)).getFile();
