@@ -61,8 +61,8 @@
 ### F — Model configuration
 - [x] F1: Provider registry
 - [x] F2: Learner picker in Settings
-- [ ] F3: Hardware scan and recommendation
-- [ ] F4: Health badges and fallback
+- [x] F3: Hardware scan and recommendation
+- [x] F4: Health badges and fallback
 
 ### Current fixes
 - [x] Recheck the cached Instant voice when Mentor opens and before playback; offer download inside Mentor when absent (existing browser download still needs user-browser playback verification).
