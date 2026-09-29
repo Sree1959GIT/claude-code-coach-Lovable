@@ -263,6 +263,7 @@ export function MentorCanvas({
   const [notice, setNotice] = useState<string | null>(null);
   const [voiceNeedsDownload, setVoiceNeedsDownload] = useState(false);
   const [voiceDownloading, setVoiceDownloading] = useState(false);
+  const [voiceDownloadProgress, setVoiceDownloadProgress] = useState({ loaded: 0, total: 0 });
   // A6 — true while a clip is playing, so Stop is prominent and the mic can barge in.
   const [speaking, setSpeaking] = useState(false);
   const voicePrefRef = useRef<VoicePref>("studio");
@@ -1106,7 +1107,7 @@ export function MentorCanvas({
               setVoiceDownloading(true);
               try {
                 const { downloadOfflineVoice } = await import("@/lib/offline-voice");
-                await downloadOfflineVoice(() => {});
+                await downloadOfflineVoice(setVoiceDownloadProgress);
                 setVoiceNeedsDownload(false);
                 setNotice(null);
               } catch (e) {
@@ -1117,9 +1118,10 @@ export function MentorCanvas({
             }}
             className="mb-2 min-h-11 border border-primary px-3 text-xs font-medium text-primary disabled:opacity-50"
           >
-            {voiceDownloading ? "Saving voice…" : "Download Instant voice here (about 60 MB)"}
+            {voiceDownloading ? `Downloading voice · ${voiceDownloadProgress.total ? Math.round(voiceDownloadProgress.loaded / voiceDownloadProgress.total * 100) : 0}%` : "Download Instant voice here (about 60 MB)"}
           </button>
         )}
+        {voiceDownloading && <progress className="mb-2 w-full accent-primary" max={voiceDownloadProgress.total || 1} value={voiceDownloadProgress.loaded} aria-label="Instant voice download progress" />}
         {speaking && (
           <button
             onClick={stopAll}
