@@ -63,3 +63,8 @@
 - [x] F2: Learner picker in Settings
 - [ ] F3: Hardware scan and recommendation
 - [ ] F4: Health badges and fallback
+
+### Current fixes
+- [ ] Make Mentor use the downloaded Instant voice reliably when returning from Settings.
+- [ ] Increase floating Study Canvas and video frame contrast in both themes.
+- [ ] Provide a published multi-answer question for a real practice test and verify selection/partial credit.
