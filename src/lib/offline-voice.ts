@@ -45,6 +45,13 @@ export async function downloadOfflineVoice(
     }
     onProgress({ loaded, total });
   });
+  // Piper starts its private-storage write without awaiting it. Do not show
+  // "Installed" until the model can actually be found by the Mentor.
+  for (let attempt = 0; attempt < 40; attempt++) {
+    if (await isOfflineVoiceInstalled()) return;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  throw new Error("The voice download finished but could not be saved in this browser. Check available storage and try again.");
 }
 
 export async function removeOfflineVoice(): Promise<void> {

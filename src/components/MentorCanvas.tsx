@@ -261,6 +261,8 @@ export function MentorCanvas({
   const [voicePref, setVoicePrefState] = useState<VoicePref>("studio");
   const [micPref, setMicPrefState] = useState<MicPref>("browser");
   const [notice, setNotice] = useState<string | null>(null);
+  const [voiceNeedsDownload, setVoiceNeedsDownload] = useState(false);
+  const [voiceDownloading, setVoiceDownloading] = useState(false);
   // A6 — true while a clip is playing, so Stop is prominent and the mic can barge in.
   const [speaking, setSpeaking] = useState(false);
   const voicePrefRef = useRef<VoicePref>("studio");
@@ -274,6 +276,20 @@ export function MentorCanvas({
     voicePrefRef.current = v;
     micPrefRef.current = m;
   }, []);
+  // The frame remains mounted while Settings changes local preferences in
+  // another tab, or while a user returns to this practice view.
+  useEffect(() => {
+    if (!open) return;
+    const v = getVoicePref();
+    voicePrefRef.current = v;
+    setVoicePrefState(v);
+    if (v === "instant") {
+      void isOfflineVoiceInstalled().then((installed) => {
+        setVoiceNeedsDownload(!installed);
+        if (installed) setNotice(null);
+      });
+    }
+  }, [open]);
   const announce = useCallback((key: string, text: string) => {
     if (announcedRef.current.has(key)) return;
     announcedRef.current.add(key);
@@ -285,6 +301,7 @@ export function MentorCanvas({
     voicePrefRef.current = v;
     announcedRef.current.delete("voice");
     setNotice(null);
+    if (v === "instant") void isOfflineVoiceInstalled().then((installed) => setVoiceNeedsDownload(!installed));
   }
   function chooseMic(m: MicPref) {
     setMicPref(m);
@@ -404,7 +421,14 @@ export function MentorCanvas({
     // A3/A4 — on-device voice when chosen and installed; cloud voice otherwise,
     // and the learner is told once why the voice changed.
     if (voicePrefRef.current === "instant") {
-      if (await isOfflineVoiceInstalled()) {
+      // Storage writes can finish just after the Settings download returns.
+      let installed = await isOfflineVoiceInstalled();
+      if (!installed) {
+        await sleep(300);
+        installed = await isOfflineVoiceInstalled();
+      }
+      if (installed) {
+        setVoiceNeedsDownload(false);
         try {
           return await speakOffline(text);
         } catch (e) {
@@ -412,9 +436,10 @@ export function MentorCanvas({
           announce("voice", "The Instant voice hit a problem, so the Studio voice is speaking instead.");
         }
       } else {
+        setVoiceNeedsDownload(true);
         announce(
           "voice",
-          "Instant voice isn't downloaded yet — using the Studio voice. Download it in Settings › Mentor & voice.",
+          "Instant voice isn't saved on this site yet — using Studio voice. Download it here to use it for Mentor.",
         );
       }
     }
@@ -1072,6 +1097,28 @@ export function MentorCanvas({
               <X className="h-3 w-3" />
             </button>
           </div>
+        )}
+        {voicePref === "instant" && voiceNeedsDownload && (
+          <button
+            type="button"
+            disabled={voiceDownloading}
+            onClick={async () => {
+              setVoiceDownloading(true);
+              try {
+                const { downloadOfflineVoice } = await import("@/lib/offline-voice");
+                await downloadOfflineVoice(() => {});
+                setVoiceNeedsDownload(false);
+                setNotice(null);
+              } catch (e) {
+                setNotice(e instanceof Error ? e.message : "Voice download failed. Try again in Settings.");
+              } finally {
+                setVoiceDownloading(false);
+              }
+            }}
+            className="mb-2 min-h-11 border border-primary px-3 text-xs font-medium text-primary disabled:opacity-50"
+          >
+            {voiceDownloading ? "Saving voice…" : "Download Instant voice here (about 60 MB)"}
+          </button>
         )}
         {speaking && (
           <button
