@@ -212,26 +212,58 @@ export const Route = createFileRoute("/api/mentor-stream")({
           input: { turn: turn.slice(0, 500), selectedOption: context?.selectedOption ?? null },
           output: plan,
         }).catch(() => {});
+        // L4 — Jev decision step in shadow mode: logged beside the keyword route.
+        void decideTurn({
+          turn,
+          hasQuestion: Boolean(context?.stem),
+          selectedOption: context?.selectedOption ?? null,
+        })
+          .then((d) =>
+            d
+              ? logStep(supabase, {
+                  runId,
+                  userId,
+                  stepIndex: 7,
+                  agent: "orchestrator",
+                  role: "decide",
+                  model: "typesafe/jev-latest",
+                  input: { keywordIntent: plan.intent, keywordRetrieval: plan.useRetrieval },
+                  output: { ...d, agrees: d.intent === plan.intent },
+                  durationMs: d.ms,
+                })
+              : undefined,
+          )
+          .catch(() => {});
         const tCtx = Date.now();
 
-        // --- 2. Memory + retrieval (parallel) ---------------------------------
+        // --- 2. Memory + retrieval (parallel, L3 time-boxed) -----------------
         const [profile, retrieval] = await Promise.all([
-          runMemoryAgent({
-            db: supabase,
-            userId,
-            intent: plan.intent,
-            currentDomain: context?.domain ?? null,
-            // Sub-task 15: recall earlier mentor turns, except on filler turns.
-            includeThread: plan.intent !== "smalltalk",
-            trace: { runId, stepIndex: 1 },
-          }),
+          withTimeout(
+            runMemoryAgent({
+              db: supabase,
+              userId,
+              intent: plan.intent,
+              currentDomain: context?.domain ?? null,
+              // Sub-task 15: recall earlier mentor turns, except on filler turns.
+              includeThread: plan.intent !== "smalltalk",
+              trace: { runId, stepIndex: 1 },
+            }),
+            MEMORY_BUDGET_MS,
+            { note: "" } as { note: string },
+            () => (timings["memory_skipped"] = MEMORY_BUDGET_MS),
+          ),
           plan.useRetrieval
-            ? runRetrievalAgent({
-                message: turn,
-                context,
-                intent: plan.intent,
-                trace: trace(2),
-              })
+            ? withTimeout(
+                runRetrievalAgent({
+                  message: turn,
+                  context,
+                  intent: plan.intent,
+                  trace: trace(2),
+                }),
+                RETRIEVAL_BUDGET_MS,
+                null,
+                () => (timings["retrieval_skipped"] = RETRIEVAL_BUDGET_MS),
+              )
             : Promise.resolve(null),
         ]);
         mark("context", tCtx);
