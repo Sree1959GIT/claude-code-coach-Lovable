@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { logEvent } from "@/lib/analytics";
 import { fetchAgentRuns, fetchAgentSteps, type AgentRun, type AgentStep } from "@/lib/traces";
 import { createSeo } from "@/lib/seo";
+import { JevAgreementPanel } from "@/components/JevAgreementPanel";
 
 export const Route = createFileRoute("/_authenticated/traces")({
   component: TracesPage,
@@ -235,6 +236,8 @@ function TracesPage() {
             </div>
           ))}
         </div>
+
+        <JevAgreementPanel />
 
         <button
           onClick={() => setFlaggedOnly((v) => !v)}

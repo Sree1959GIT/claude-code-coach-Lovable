@@ -252,13 +252,19 @@ export const Route = createFileRoute("/api/mentor-stream")({
                   agent: "orchestrator",
                   role: "decide",
                   model: "typesafe/jev-latest",
-                  input: { keywordIntent: plan.intent, keywordRetrieval: plan.useRetrieval },
-                  output: { ...d, agrees: d.intent === plan.intent },
+                  input: {
+                    keywordIntent: plan.intent,
+                    keywordRetrieval: plan.useRetrieval,
+                    turn: turn.slice(0, 300),
+                  },
+                  output: d.ok ? { ...d, agrees: d.intent === plan.intent } : d,
+                  status: d.ok ? "ok" : "error",
+                  error: d.ok ? undefined : d.reason,
                   durationMs: d.ms,
                 })
               : undefined,
           )
-          .catch(() => {});
+          .catch((e) => console.error("decide trace failed", e));
         const tCtx = Date.now();
 
         // --- 2. Memory + retrieval (parallel, L3 time-boxed) -----------------

@@ -25,15 +25,21 @@ const INTENTS: Record<AgentIntent, string> = {
   smalltalk: "Greeting, thanks, acknowledgement or other filler with no real question.",
 };
 
+/** L4b — failures are returned (not swallowed) so they can be traced. */
+export type DecideResult =
+  | ({ ok: true } & Decision)
+  | { ok: false; reason: string; status: number | null; ms: number };
+
 export async function decideTurn(args: {
   turn: string;
   hasQuestion: boolean;
   selectedOption: string | null;
   timeoutMs?: number;
-}): Promise<Decision | null> {
+}): Promise<DecideResult | null> {
   const key = process.env["LOVABLE_API_KEY"];
-  if (!key || !args.turn.trim()) return null;
+  if (!args.turn.trim()) return null;
   const t0 = Date.now();
+  if (!key) return { ok: false, reason: "missing_api_key", status: null, ms: 0 };
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), args.timeoutMs ?? 2500);
   try {
@@ -70,20 +76,32 @@ export async function decideTurn(args: {
         },
       }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const body = (await res.text().catch(() => "")).slice(0, 200);
+      return { ok: false, reason: `http_${res.status}: ${body}`, status: res.status, ms: Date.now() - t0 };
+    }
     const json = (await res.json()) as {
       answers?: Record<string, { choice?: string; confidence?: number; noul?: number }>;
     };
     const choice = json.answers?.intent?.choice;
-    if (!choice || !(choice in INTENTS)) return null;
+    if (!choice || !(choice in INTENTS)) {
+      return { ok: false, reason: `unexpected_choice: ${String(choice)}`, status: 200, ms: Date.now() - t0 };
+    }
     return {
+      ok: true,
       intent: choice as AgentIntent,
       intentConfidence: json.answers?.intent?.confidence ?? null,
       needsLibrary: json.answers?.needs_library?.noul ?? null,
       ms: Date.now() - t0,
     };
-  } catch {
-    return null;
+  } catch (e) {
+    const aborted = ctrl.signal.aborted;
+    return {
+      ok: false,
+      reason: aborted ? "timeout" : `fetch_error: ${(e as Error)?.message ?? "unknown"}`,
+      status: null,
+      ms: Date.now() - t0,
+    };
   } finally {
     clearTimeout(timer);
   }
