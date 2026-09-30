@@ -16,6 +16,21 @@ import { runResourceAgent } from "@/lib/agents/resource.agent.server";
 import { runCriticAgent } from "@/lib/agents/critic.agent.server";
 import { textToSseStream, buildFallbackAnswer } from "@/lib/agents/gateway.server";
 import type { Db, AgentIntent } from "@/lib/orchestrator.server";
+import { decideTurn } from "@/lib/agents/decide.server";
+
+/** L3 — context steps get a short budget; a slow one is skipped, not awaited. */
+const MEMORY_BUDGET_MS = 900;
+const RETRIEVAL_BUDGET_MS = 1500;
+function withTimeout<T, F>(p: Promise<T>, ms: number, fallback: F, onSkip: () => void): Promise<T | F> {
+  let timer: ReturnType<typeof setTimeout>;
+  const late = new Promise<F>((resolve) => {
+    timer = setTimeout(() => {
+      onSkip();
+      resolve(fallback);
+    }, ms);
+  });
+  return Promise.race([p.catch(() => fallback), late]).finally(() => clearTimeout(timer));
+}
 
 /**
  * Passes SSE bytes straight through while accumulating the assistant text, so
@@ -32,6 +47,7 @@ function makeRunCloser(
     intent: AgentIntent;
     retrievedCount: number;
     answerRevealed: boolean;
+    requestStartedAt: number;
   },
 ) {
   const decoder = new TextDecoder();
@@ -40,6 +56,8 @@ function makeRunCloser(
   let failed: string | null = null;
   let promptTokens = 0;
   let completionTokens = 0;
+  // L3 — time to first written word, measured from the request start.
+  let firstTokenAt: number | null = null;
 
   const consume = (chunk: string) => {
     buffer += chunk;
@@ -55,7 +73,9 @@ function makeRunCloser(
           choices?: { delta?: { content?: string } }[];
           usage?: { prompt_tokens?: number; completion_tokens?: number } | null;
         };
-        answer += json.choices?.[0]?.delta?.content ?? "";
+        const delta = json.choices?.[0]?.delta?.content ?? "";
+        if (delta && firstTokenAt === null) firstTokenAt = Date.now();
+        answer += delta;
         if (json.usage) {
           promptTokens = json.usage.prompt_tokens ?? promptTokens;
           completionTokens = json.usage.completion_tokens ?? completionTokens;
@@ -82,8 +102,13 @@ function makeRunCloser(
       durationMs: Date.now() - startedAt,
       promptTokens,
       completionTokens,
-      ...(verdict
-        ? { metadata: { critic: { score: verdict.score, issues: verdict.issues } } }
+      ...(verdict || firstTokenAt
+        ? {
+            metadata: {
+              ...(verdict ? { critic: { score: verdict.score, issues: verdict.issues } } : {}),
+              ...(firstTokenAt ? { ttft_ms: firstTokenAt - critic.requestStartedAt } : {}),
+            },
+          }
         : {}),
     }).catch(() => {});
   };
