@@ -388,6 +388,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
             intent: plan.intent,
             retrievedCount: retrieval?.matches?.length ?? 0,
             answerRevealed: false,
+            requestStartedAt: t0,
           }),
         );
 
