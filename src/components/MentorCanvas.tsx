@@ -4,6 +4,7 @@ import { useFocusSurface } from "@/hooks/use-focus-surface";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, Mic, MicOff, PlayCircle, Radio, Square, User, Volume2, X } from "lucide-react";
 import { synthesizeSpeech } from "@/lib/mentor.functions";
+import { getLocalMentorModel, streamLocalMentor } from "@/lib/local-mentor";
 import {
   getMicPref,
   getVoicePref,
@@ -14,6 +15,7 @@ import {
   type MicPref,
   type VoicePref,
 } from "@/lib/offline-voice";
+import { isSttInstalled, listenOnce } from "@/lib/offline-stt";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/analytics";
 import { matchResources, thumbnailFor, type LearnResource } from "@/lib/resources";
@@ -52,7 +54,7 @@ type Props = {
   onPromptConsumed?: () => void;
 };
 
-type Segment = { text: string; target: HighlightTarget };
+type Segment = { text: string; target: HighlightTarget; audio?: Promise<string | null> };
 
 type Citation = { n: number; title: string; url: string | null; source: string; similarity?: number };
 
@@ -157,6 +159,8 @@ class SegmentParser {
     else this.display += text;
   }
 
+  private emitted = 0;
+
   private drainSentences() {
     if (!this.speaking) return;
     // Emit whole sentences as soon as they're complete so speech starts early.
@@ -165,10 +169,22 @@ class SegmentParser {
     let m: RegExpExecArray | null;
     while ((m = re.exec(this.pending))) {
       const sentence = m[0].trim();
-      if (sentence.length > 1) this.emit({ text: sentence, target: this.target });
+      if (sentence.length > 1) {
+        this.emit({ text: sentence, target: this.target });
+        this.emitted++;
+      }
       last = re.lastIndex;
     }
     if (last) this.pending = this.pending.slice(last);
+    // L2 — a long first sentence is spoken from its first clause, not held back.
+    if (this.emitted === 0 && this.pending.length > 70) {
+      const cut = this.pending.search(/[,;:—]\s/);
+      if (cut > 25) {
+        this.emit({ text: this.pending.slice(0, cut + 1).trim(), target: this.target });
+        this.emitted++;
+        this.pending = this.pending.slice(cut + 1);
+      }
+    }
   }
 
   private flush() {
@@ -320,7 +336,7 @@ export function MentorCanvas({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUnlockedRef = useRef(false);
 
-  const recogRef = useRef<SpeechRecognitionLike | null>(null);
+  const recogRef = useRef<{ stop: () => void; abort: () => void } | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const liveRef = useRef(false);
   const voiceRef = useRef(true);
@@ -489,8 +505,10 @@ export function MentorCanvas({
           await sleep(Math.min(5000, 400 + seg.text.length * 38));
           continue;
         }
-        const url = next ? await next : await synth(seg.text);
-        next = queueRef.current[0] ? synth(queueRef.current[0].text) : null;
+        const url = await (seg.audio ?? next ?? synth(seg.text));
+        const upcoming = queueRef.current[0];
+        next = null;
+        if (upcoming && !upcoming.audio) upcoming.audio = synth(upcoming.text);
         if (stoppedRef.current) break;
         if (url) {
           setSpeaking(true);
@@ -561,11 +579,44 @@ export function MentorCanvas({
     setListening(false);
 
     const parser = new SegmentParser((seg) => {
+      // L2 — start preparing the voice for the next two sentences right away,
+      // so each one is ready by the time the previous one finishes playing.
+      if (voiceRef.current && queueRef.current.length < 2) seg.audio = synth(seg.text);
       queueRef.current.push(seg);
       void drain();
     });
 
     try {
+      // L5 — answer through the learner's own Ollama when chosen and reachable.
+      const localModel = getLocalMentorModel();
+      if (localModel) {
+        setStatus("Mentor speaking");
+        const ok = await streamLocalMentor({
+          model: localModel,
+          messages: next,
+          context: contextRef.current as never,
+          onDelta: (d) => {
+            parser.push(d);
+            setStreaming(parser.display);
+          },
+        });
+        if (ok) {
+          parser.end();
+          const full = parser.display.trim();
+          setStreaming("");
+          if (full) {
+            setMessages((m) => {
+              const updated: Msg[] = [...m, { role: "assistant", content: full }];
+              messagesRef.current = updated;
+              return updated;
+            });
+            logEvent("mentor_reply", { chars: full.length, local: true });
+          }
+          return;
+        }
+        announce("local", "Ollama on this computer isn't reachable, so the cloud mentor is answering.");
+      }
+
       const { data: sess } = await supabase.auth.getSession();
       const token = sess.session?.access_token;
       if (!token) throw new Error("Session expired — sign in again.");
@@ -677,27 +728,60 @@ export function MentorCanvas({
   }
 
   // ---- speech recognition ------------------------------------------------
+  function startLocalListening() {
+    void listenOnce({
+      onStart: () => setListening(true),
+      onTranscribing: () => {
+        setListening(false);
+        setStatus("Transcribing on your device…");
+      },
+      onText: (text) => {
+        setStatus(null);
+        void send(text);
+      },
+      onError: (msg) => {
+        setStatus(null);
+        announce("mic", `On-device listening failed (${msg}), so browser dictation will be used next time.`);
+        micPrefRef.current = "browser";
+      },
+      onEnd: () => {
+        setListening(false);
+        setStatus((s) => (s === "Transcribing on your device…" ? null : s));
+        if (liveRef.current && !busyRef.current && !drainingRef.current && !stoppedRef.current) {
+          setTimeout(() => {
+            if (liveRef.current && !busyRef.current && !drainingRef.current) startRecognition(true);
+          }, 300);
+        }
+      },
+    })
+      .then((l) => {
+        recogRef.current = l;
+      })
+      .catch(() => {
+        setListening(false);
+        announce("mic", "Microphone access was blocked. Allow it in the browser's address bar and try again.");
+      });
+  }
+
   function startRecognition(continuous: boolean) {
-    const Ctor = getSpeechRecognition();
-    if (!Ctor || busyRef.current || drainingRef.current) return;
+    if (busyRef.current || drainingRef.current) return;
     try {
       recogRef.current?.abort();
     } catch {
       /* noop */
     }
+    // L1 — open-source Whisper on the device when downloaded.
+    const wantLocal = micPrefRef.current === "device";
+    if (wantLocal && isSttInstalled()) return startLocalListening();
+    const Ctor = getSpeechRecognition();
+    if (!Ctor) return;
+    if (wantLocal) {
+      announce("mic", "On-device listening isn't downloaded yet — get it in Settings › Mentor & voice. Using browser dictation for now.");
+    }
     const recog = new Ctor();
     recog.lang = "en-US";
     recog.interimResults = false;
     recog.continuous = continuous;
-    // A5 — on-device transcription where the browser offers it.
-    const wantLocal = micPrefRef.current === "device";
-    if (wantLocal) {
-      if ("processLocally" in recog) {
-        (recog as unknown as { processLocally: boolean }).processLocally = true;
-      } else {
-        announce("mic", "This browser can't transcribe on your device, so browser dictation is listening instead.");
-      }
-    }
     recog.onstart = () => setListening(true);
     recog.onresult = (e) => {
       const from = typeof e.resultIndex === "number" ? e.resultIndex : 0;
@@ -714,16 +798,8 @@ export function MentorCanvas({
       }
       void send(transcript);
     };
-    recog.onerror = (ev?: unknown) => {
+    recog.onerror = () => {
       setListening(false);
-      const code = (ev as { error?: string } | undefined)?.error;
-      if (wantLocal && (code === "language-not-supported" || code === "service-not-allowed")) {
-        announce(
-          "mic",
-          "On-device transcription isn't ready in this browser, so browser dictation will be used. Press the mic again.",
-        );
-        micPrefRef.current = "browser";
-      }
     };
     recog.onend = () => {
       setListening(false);

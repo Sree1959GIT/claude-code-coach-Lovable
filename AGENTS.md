@@ -105,7 +105,12 @@
 - [x] **F1–F2 (model configuration):** Provider registry `src/lib/model-providers.ts` (built-in Lovable AI, Anthropic and Google learner keys — endpoint, label, cheap/standard/premium models) now drives `inference-target.server.ts`; `profiles.preferred_provider` (auto | lovable | anthropic | google) set from a Settings › Models picker (`provider-pref.functions.ts`), honoured by routing with built-in fallback. Provider choice is per learner, not per exam, so exam isolation is unchanged.
 - [x] **Fixes:** Mentor rechecks cached Piper voice and offers download; floating canvas/video contrast improved. Agentic Workflows Q4 tests multiple answers (0.5/1 verified). Existing browser voice playback unverified; exam isolation unchanged.
 - [x] **F3–F4 (model configuration):** Settings › Models "Run a model on your computer" — browser-side hardware scan (cores, reported RAM, GPU via WebGPU/WebGL), local Ollama probe (`localhost:11434/api/tags`, installed badges), memory override, tool-calling filter, ranked model picks with `ollama pull` commands and speed tips (quantisation, flash attention, KV cache, speculative decoding/DFlash, keep-alive) in `src/lib/local-models.ts` + `LocalModelAdvisor.tsx`; provider health badges (Ready / No key / Paused / Not checked / Failing — using built-in) with a Check now action that re-verifies the stored key. Client/UI only; exam isolation unchanged.
-- **Next:** Wave complete — pick the next item from roadmap.md.
+- [x] **L1:** On-device listening — open-source Whisper (tiny.en, WebGPU→WASM) in `src/lib/offline-stt.ts`, silence-detected recording, Settings download card; replaces the unreliable Chrome processLocally path. Client only; exam isolation unchanged.
+- [x] **L2:** Voice starts early — a long first sentence is spoken from its first clause, and each sentence's voice is prepared as soon as it arrives (two ahead). Client only.
+- [x] **L3:** Faster first words — memory (900 ms) and library lookup (1500 ms) are time-boxed and skipped when slow; time-to-first-word (`ttft_ms`) saved on each run's metadata for Traces.
+- [x] **L4:** Jev decision step (`src/lib/agents/decide.server.ts`, `typesafe/jev-latest` via `/v1/systemone`) runs in shadow mode — intent + needs-library logged as a `decide` trace step with `agrees` vs the keyword router; routing still uses `planRoute` until agreement is proven.
+- [x] **L5:** Mentor through local Ollama — Settings › Models picker (`src/lib/local-mentor.ts`, browser storage) streams from `localhost:11434/api/chat`; falls back to the cloud with a notice when unreachable. Per-exam isolation unchanged (no data paths changed).
+- **Next:** No open build items — review L4 agreement on Traces before switching routing to Jev.
 
 
 

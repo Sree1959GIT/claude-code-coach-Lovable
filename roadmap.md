@@ -68,3 +68,10 @@
 - [x] Recheck the cached Instant voice when Mentor opens and before playback; offer download inside Mentor when absent (existing browser download still needs user-browser playback verification).
 - [x] Increase floating Study Canvas and video frame contrast in both themes; verified canvas in preview.
 - [x] Publish an Agentic Workflows multi-answer question; verified checkbox selection and 0.5/1 partial credit in authenticated practice.
+
+### L — Latency (Jev-style article)
+- [x] L1: On-device listening (open-source Whisper in the browser)
+- [x] L2: Voice starts on the first sentence
+- [x] L3: Faster first words of text
+- [x] L4: Fast decision step (letter-scoring, Semlf/mini-Jev style)
+- [x] L5: Mentor answers through local Ollama

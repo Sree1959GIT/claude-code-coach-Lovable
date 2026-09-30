@@ -1,6 +1,7 @@
 /** F3 — hardware scan + local model recommendations (Settings › Models). */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { probeOllama, recommend, scanHardware, SPEED_TIPS, type HardwareScan, type OllamaProbe } from "@/lib/local-models";
+import { getLocalMentorModel, setLocalMentorModel } from "@/lib/local-mentor";
 
 export function LocalModelAdvisor() {
   const [hw, setHw] = useState<HardwareScan | null>(null);
@@ -8,6 +9,8 @@ export function LocalModelAdvisor() {
   const [memory, setMemory] = useState<string>("");
   const [tools, setTools] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [localModel, setLocalModel] = useState("");
+  useEffect(() => setLocalModel(getLocalMentorModel() ?? ""), []);
 
   async function scan() {
     setBusy(true);
@@ -67,6 +70,27 @@ export function LocalModelAdvisor() {
               <span className="text-warning">{ollama?.reason}</span>
             )}
           </p>
+
+          {ollama?.ok && ollama.models.length > 0 && (
+            <label className="block text-xs text-muted-foreground">
+              Mentor writes its answers with
+              <select
+                value={localModel}
+                onChange={(e) => {
+                  setLocalModel(e.target.value);
+                  setLocalMentorModel(e.target.value || null);
+                }}
+                className="touch-target mt-1 block rounded-md border border-border bg-background px-3 text-sm text-foreground"
+              >
+                <option value="">Cloud (default)</option>
+                {ollama.models.map((m) => (
+                  <option key={m.name} value={m.name}>{m.name} on this computer</option>
+                ))}
+              </select>
+              <span className="mt-1 block">If Ollama isn't reachable, the cloud answers instead.</span>
+            </label>
+          )}
+
 
           <ul className="space-y-2">
             {picks.slice(0, 4).map((m, i) => (

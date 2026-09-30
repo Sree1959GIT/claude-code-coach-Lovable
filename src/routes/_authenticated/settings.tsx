@@ -193,7 +193,7 @@ function VoiceTab() {
           <option value="studio">Studio (cloud)</option>
         </select>
       </Field>
-      <Field label="Microphone" hint="On-device transcription keeps your speech on this device where the browser supports it (recent Chrome). Otherwise the mentor tells you and uses browser dictation.">
+      <Field label="Microphone" hint="On-device transcription runs an open-source speech model in this browser, so your speech never leaves the device. Download it below first.">
         <select
           value={mic}
           onChange={(e) => setMic(e.target.value)}
@@ -203,6 +203,7 @@ function VoiceTab() {
           <option value="device">On-device transcription</option>
         </select>
       </Field>
+      <OfflineSttCard />
       <OfflineVoiceCard />
     </section>
   );
@@ -211,6 +212,68 @@ function VoiceTab() {
 const mb = (n: number) => (n / 1_048_576).toFixed(1);
 
 /** A3 — one-time download of the on-device voice, with a real progress bar. */
+/** L1 — one-time download of the on-device listening model (Whisper). */
+function OfflineSttCard() {
+  const [state, setState] = useState<"missing" | "downloading" | "ready" | "error">("missing");
+  const [prog, setProg] = useState({ loaded: 0, total: 0 });
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    void import("@/lib/offline-stt").then((m) => setState(m.isSttInstalled() ? "ready" : "missing"));
+  }, []);
+  async function start() {
+    setErr(null);
+    setState("downloading");
+    try {
+      const m = await import("@/lib/offline-stt");
+      await m.downloadStt(setProg);
+      setState("ready");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Download failed");
+      setState("error");
+    }
+  }
+  async function remove() {
+    const m = await import("@/lib/offline-stt");
+    await m.removeStt();
+    setState("missing");
+  }
+  const pct = prog.total ? Math.min(100, Math.round((prog.loaded / prog.total) * 100)) : 0;
+  return (
+    <div className="rounded-md border border-border bg-card p-4 text-sm">
+      <p className="font-medium">On-device listening</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        About 40 MB, downloaded once and kept in this browser. Works in any modern browser; fastest with a recent graphics chip.
+      </p>
+      {state === "downloading" && (
+        <div className="mt-3" aria-live="polite">
+          <div className="h-2 overflow-hidden rounded bg-muted">
+            <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">{pct}%</p>
+        </div>
+      )}
+      {err && <p className="mt-2 text-xs text-destructive">{err}</p>}
+      <div className="mt-3 flex gap-2">
+        {state === "ready" ? (
+          <>
+            <span className="text-xs text-success">Installed</span>
+            <button type="button" onClick={remove} className="text-xs underline">Remove</button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={start}
+            disabled={state === "downloading"}
+            className="touch-target rounded-md border border-border px-3 text-sm disabled:opacity-50"
+          >
+            {state === "downloading" ? "Downloading…" : "Download"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function OfflineVoiceCard() {
   const [state, setState] = useState<"checking" | "missing" | "downloading" | "ready" | "error">("checking");
   const [prog, setProg] = useState({ loaded: 0, total: 0 });
