@@ -71,7 +71,7 @@
 
 ### L — Latency (Jev-style article)
 - [x] L1: On-device listening (open-source Whisper in the browser)
-- [ ] L2: Voice starts on the first sentence
-- [ ] L3: Faster first words of text
-- [ ] L4: Fast decision step (letter-scoring, Semlf/mini-Jev style)
-- [ ] L5: Mentor answers through local Ollama
+- [x] L2: Voice starts on the first sentence
+- [x] L3: Faster first words of text
+- [x] L4: Fast decision step (letter-scoring, Semlf/mini-Jev style)
+- [x] L5: Mentor answers through local Ollama

@@ -4,6 +4,7 @@ import { useFocusSurface } from "@/hooks/use-focus-surface";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, Mic, MicOff, PlayCircle, Radio, Square, User, Volume2, X } from "lucide-react";
 import { synthesizeSpeech } from "@/lib/mentor.functions";
+import { getLocalMentorModel, streamLocalMentor } from "@/lib/local-mentor";
 import {
   getMicPref,
   getVoicePref,
@@ -53,7 +54,7 @@ type Props = {
   onPromptConsumed?: () => void;
 };
 
-type Segment = { text: string; target: HighlightTarget };
+type Segment = { text: string; target: HighlightTarget; audio?: Promise<string | null> };
 
 type Citation = { n: number; title: string; url: string | null; source: string; similarity?: number };
 
@@ -158,6 +159,8 @@ class SegmentParser {
     else this.display += text;
   }
 
+  private emitted = 0;
+
   private drainSentences() {
     if (!this.speaking) return;
     // Emit whole sentences as soon as they're complete so speech starts early.
@@ -166,10 +169,22 @@ class SegmentParser {
     let m: RegExpExecArray | null;
     while ((m = re.exec(this.pending))) {
       const sentence = m[0].trim();
-      if (sentence.length > 1) this.emit({ text: sentence, target: this.target });
+      if (sentence.length > 1) {
+        this.emit({ text: sentence, target: this.target });
+        this.emitted++;
+      }
       last = re.lastIndex;
     }
     if (last) this.pending = this.pending.slice(last);
+    // L2 — a long first sentence is spoken from its first clause, not held back.
+    if (this.emitted === 0 && this.pending.length > 70) {
+      const cut = this.pending.search(/[,;:—]\s/);
+      if (cut > 25) {
+        this.emit({ text: this.pending.slice(0, cut + 1).trim(), target: this.target });
+        this.emitted++;
+        this.pending = this.pending.slice(cut + 1);
+      }
+    }
   }
 
   private flush() {
@@ -490,8 +505,10 @@ export function MentorCanvas({
           await sleep(Math.min(5000, 400 + seg.text.length * 38));
           continue;
         }
-        const url = next ? await next : await synth(seg.text);
-        next = queueRef.current[0] ? synth(queueRef.current[0].text) : null;
+        const url = await (seg.audio ?? next ?? synth(seg.text));
+        const upcoming = queueRef.current[0];
+        next = null;
+        if (upcoming && !upcoming.audio) upcoming.audio = synth(upcoming.text);
         if (stoppedRef.current) break;
         if (url) {
           setSpeaking(true);
@@ -562,11 +579,44 @@ export function MentorCanvas({
     setListening(false);
 
     const parser = new SegmentParser((seg) => {
+      // L2 — start preparing the voice for the next two sentences right away,
+      // so each one is ready by the time the previous one finishes playing.
+      if (voiceRef.current && queueRef.current.length < 2) seg.audio = synth(seg.text);
       queueRef.current.push(seg);
       void drain();
     });
 
     try {
+      // L5 — answer through the learner's own Ollama when chosen and reachable.
+      const localModel = getLocalMentorModel();
+      if (localModel) {
+        setStatus("Mentor speaking");
+        const ok = await streamLocalMentor({
+          model: localModel,
+          messages: next,
+          context: contextRef.current as never,
+          onDelta: (d) => {
+            parser.push(d);
+            setStreaming(parser.display);
+          },
+        });
+        if (ok) {
+          parser.end();
+          const full = parser.display.trim();
+          setStreaming("");
+          if (full) {
+            setMessages((m) => {
+              const updated: Msg[] = [...m, { role: "assistant", content: full }];
+              messagesRef.current = updated;
+              return updated;
+            });
+            logEvent("mentor_reply", { chars: full.length, local: true });
+          }
+          return;
+        }
+        announce("local", "Ollama on this computer isn't reachable, so the cloud mentor is answering.");
+      }
+
       const { data: sess } = await supabase.auth.getSession();
       const token = sess.session?.access_token;
       if (!token) throw new Error("Session expired — sign in again.");
