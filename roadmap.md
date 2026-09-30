@@ -75,3 +75,4 @@
 - [x] L3: Faster first words of text
 - [x] L4: Fast decision step (letter-scoring, Semlf/mini-Jev style)
 - [x] L5: Mentor answers through local Ollama
+- [x] L4b: Jev agreement review panel on Traces (review only; switching waits on 50+ decisions and your decision)
