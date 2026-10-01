@@ -16,7 +16,35 @@ import { runResourceAgent } from "@/lib/agents/resource.agent.server";
 import { runCriticAgent } from "@/lib/agents/critic.agent.server";
 import { textToSseStream, buildFallbackAnswer } from "@/lib/agents/gateway.server";
 import type { Db, AgentIntent } from "@/lib/orchestrator.server";
-import { decideTurn } from "@/lib/agents/decide.server";
+import { decideTurn, openerFor, focusMarker, type FocusTarget } from "@/lib/agents/decide.server";
+
+/** Phase 1 — encode a text fragment as one SSE delta the mentor panel parses. */
+function sseDelta(content: string): Uint8Array {
+  return new TextEncoder().encode(
+    `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`,
+  );
+}
+
+/** Phase 1 — emit `prefix` immediately, then the model stream. */
+function withOpener(prefix: string, rest: ReadableStream<Uint8Array>): ReadableStream<Uint8Array> {
+  return new ReadableStream<Uint8Array>({
+    async start(controller) {
+      controller.enqueue(sseDelta(prefix));
+      const reader = rest.getReader();
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          if (value) controller.enqueue(value);
+        }
+      } catch {
+        /* upstream ended */
+      } finally {
+        controller.close();
+      }
+    },
+  });
+}
 
 /** L3 — context steps get a short budget; a slow one is skipped, not awaited. */
 const MEMORY_BUDGET_MS = 900;
