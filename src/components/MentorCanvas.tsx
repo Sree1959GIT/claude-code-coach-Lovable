@@ -378,7 +378,20 @@ export function MentorCanvas({
   const stopAll = useCallback(() => {
     stoppedRef.current = true;
     queueRef.current = [];
-    audioRef.current?.pause();
+    // Phase 1 — a barge-in must silence the current clip instantly, not just
+    // pause it and leave the buffered audio ready to resume.
+    const el = audioRef.current;
+    if (el) {
+      el.pause();
+      try {
+        el.currentTime = 0;
+        el.removeAttribute("src");
+        el.load();
+      } catch {
+        /* noop */
+      }
+    }
+    setSpeaking(false);
     try {
       recogRef.current?.abort();
     } catch {
