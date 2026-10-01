@@ -133,11 +133,15 @@ export async function decideTurn(args: {
     if (!choice || !(choice in INTENTS)) {
       return { ok: false, reason: `unexpected_choice: ${String(choice)}`, status: 200, ms: Date.now() - t0 };
     }
+    const rawFocus = json.answers?.focus?.choice;
+    const focus: FocusTarget =
+      rawFocus && rawFocus in FOCUS ? (rawFocus as FocusTarget) : "none";
     return {
       ok: true,
       intent: choice as AgentIntent,
       intentConfidence: json.answers?.intent?.confidence ?? null,
       needsLibrary: json.answers?.needs_library?.noul ?? null,
+      focus,
       ms: Date.now() - t0,
     };
   } catch (e) {
