@@ -10,12 +10,52 @@
 
 import type { AgentIntent } from "@/lib/orchestrator.server";
 
+/** Phase 1 — what the learner's eye should be on while the answer starts. */
+export type FocusTarget = "scenario" | "stem" | "option" | "none";
+
 export type Decision = {
   intent: AgentIntent;
   intentConfidence: number | null;
   needsLibrary: number | null;
+  focus: FocusTarget;
   ms: number;
 };
+
+const FOCUS: Record<FocusTarget, string> = {
+  scenario: "The background/scenario paragraph above the question.",
+  stem: "The question sentence itself — what is actually being asked.",
+  option: "A specific answer option (the one selected or named in the message).",
+  none: "Nothing on screen in particular — general talk or study advice.",
+};
+
+/**
+ * Phase 1 — a short spoken opener built from the decision alone, with no model
+ * call, so the voice can start speaking before the first model token lands.
+ */
+export function openerFor(d: {
+  intent: AgentIntent;
+  focus: FocusTarget;
+  selectedOption?: string | null;
+}): string {
+  if (d.intent === "smalltalk") return "Sure thing.";
+  if (d.focus === "option") {
+    return d.selectedOption
+      ? `Right, let's weigh up option ${d.selectedOption}.`
+      : "Right, let's weigh up that option.";
+  }
+  if (d.focus === "scenario") return "Okay, let's start with the scenario.";
+  if (d.focus === "stem") return "Okay, look at what the question is actually asking.";
+  if (d.intent === "study_strategy") return "Good question — here's how I'd approach it.";
+  return "Good question, let me take you through it.";
+}
+
+/** Marker the mentor panel uses to highlight while the opener is spoken. */
+export function focusMarker(focus: FocusTarget, selectedOption?: string | null): string {
+  if (focus === "option" && selectedOption) return `[[opt:${selectedOption.toUpperCase()}]]`;
+  if (focus === "scenario") return "[[scenario]]";
+  if (focus === "stem") return "[[stem]]";
+  return "[[none]]";
+}
 
 const INTENTS: Record<AgentIntent, string> = {
   explain_question: "Wants the question or scenario on screen interpreted or rephrased, without the answer.",
