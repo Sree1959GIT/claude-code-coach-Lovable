@@ -193,8 +193,9 @@ export function routeErrorComponent({
   error,
   reset,
 }: {
-  error: Error;
+  error: unknown;
   reset: () => void;
 }) {
-  return <RouteErrorView error={error} reset={reset} />;
+  const err = error instanceof Error ? error : new Error(String(error));
+  return <RouteErrorView error={err} reset={reset} />;
 }
