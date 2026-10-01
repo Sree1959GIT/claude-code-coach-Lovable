@@ -108,8 +108,9 @@
 - [x] **L2:** Voice starts early — a long first sentence is spoken from its first clause; each sentence's voice is prepared two ahead. Client only.
 - [x] **L3:** Faster first words — memory (900 ms) and library lookup (1500 ms) time-boxed and skipped when slow; `ttft_ms` saved on run metadata for Traces.
 - [x] **L4:** Jev decision step (`src/lib/agents/decide.server.ts`, `typesafe/jev-latest` via `/v1/systemone`) in shadow mode — intent + needs-library logged as a `decide` trace step with `agrees`; routing still uses `planRoute`.
-- [x] **L5:** Mentor through local Ollama — Settings › Models picker (`src/lib/local-mentor.ts`, browser storage) streams from `localhost:11434/api/chat`; falls back to the cloud with a notice when unreachable. Per-exam isolation unchanged (no data paths changed).
-- **Next:** No open build items — review L4 agreement on Traces before switching routing to Jev.
+- [x] **L5:** Mentor via local Ollama; cloud fallback. Isolation unchanged.
+- [x] **P1 (Jev Ph1):** Fast voice — instant spoken opener + focus highlight from the Jev decision; barge-in hard-stop. Isolation unchanged.
+- **Next (ACTIVE TASK):** Phase 2 t1 — Active Jev router (keyword fallback); then gating + prompt conditioning.
 
 
 
