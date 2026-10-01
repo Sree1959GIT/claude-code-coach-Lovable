@@ -674,6 +674,24 @@ export function MentorCanvas({
         /* ignore malformed resource header */
       }
 
+      // Phase 1 — point the learner's eye at the right part of the question
+      // before the first word arrives.
+      try {
+        const rawFocus = res.headers.get("X-Mentor-Focus");
+        if (rawFocus) {
+          const { focus, option } = JSON.parse(decodeURIComponent(rawFocus)) as {
+            focus: "scenario" | "stem" | "option" | "none";
+            option: string | null;
+          };
+          if (focus === "scenario") highlight({ type: "scenario" });
+          else if (focus === "stem") highlight({ type: "stem" });
+          else if (focus === "option" && option)
+            highlight({ type: "option", label: option.toUpperCase() });
+        }
+      } catch {
+        /* ignore malformed focus header */
+      }
+
 
 
       const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
