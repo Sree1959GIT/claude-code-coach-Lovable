@@ -113,6 +113,12 @@ export async function decideTurn(args: {
               false: "Filler, study advice or a reply that needs no reference material.",
             },
           },
+          focus: {
+            type: "choice",
+            instructions:
+              "Which part of the screen should the learner be looking at as the answer begins?",
+            criteria: FOCUS,
+          },
         },
       }),
     });
