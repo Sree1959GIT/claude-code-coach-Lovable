@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/study/report")({
   }),
   errorComponent: ({ error }) => (
     <div className="p-8 font-mono text-sm text-destructive">
-      Report error: {error.message}
+      Report error: {(error as Error).message}
     </div>
   ),
   component: ReportPage,

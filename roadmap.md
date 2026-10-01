@@ -83,7 +83,7 @@
 - [x] P1.3: Deterministic highlighting — the focus target travels in an `X-Mentor-Focus` header and highlights the question part as the reply begins, then per-sentence markers take over.
 - Verified: typecheck clean, live Jev call returns the focus answer. Not verified: audible playback in a real browser session.
 
-### Phase 2 — Jev-driven Ask_Mentor text generation (next)
-- [ ] P2.1 (ACTIVE TASK): Active Jev router — Jev's intent drives `planRoute` with automatic fallback to keyword routing on Jev error or timeout; agreement still logged to Traces.
-- [ ] P2.2: Dynamic library gating — skip retrieval when Jev indicates the answer needs no reference material; time-box still applies.
-- [ ] P2.3: Prompt conditioning & scoping — pass Jev's intent and learner-misconception signals to the explainer/evaluator prompts; per-exam isolation must remain strictly maintained.
+### Phase 2 — Jev-driven Ask_Mentor text generation
+- [x] P2.1: Active Jev router — Jev's intent drives `planRoute` with automatic fallback to keyword routing on Jev error or timeout; agreement still logged to Traces.
+- [x] P2.2: Dynamic library gating — skip retrieval when Jev indicates the answer needs no reference material; time-box still applies.
+- [x] P2.3: Prompt conditioning & scoping — pass Jev's intent and learner-misconception signals to the explainer/evaluator prompts; per-exam isolation must remain strictly maintained.

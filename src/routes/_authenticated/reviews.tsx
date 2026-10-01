@@ -23,7 +23,7 @@ import { createSeo } from "@/lib/seo";
 export const Route = createFileRoute("/_authenticated/reviews")({
   component: ReviewsPage,
   errorComponent: ({ error }) => (
-    <div className="p-8 font-mono text-sm text-destructive">Review workspace error: {error.message}</div>
+    <div className="p-8 font-mono text-sm text-destructive">Review workspace error: {(error as Error).message}</div>
   ),
   head: () => createSeo({
     title: "Draft Review Queue · Claude Architect Prep",
