@@ -208,11 +208,19 @@ export const Route = createFileRoute("/api/mentor-stream")({
         const lastUser = [...messages].reverse().find((m) => m.role === "user");
         const turn = lastUser?.content ?? "";
 
-        // --- 1. Route the turn (sync, no I/O) ---------------------------------
-        const plan = planRoute(turn, {
+        // --- 1. Route the turn ------------------------------------------------
+        // Keyword plan is the instant fallback; Jev starts now so it overlaps
+        // the quota check and run start (P2.1).
+        const keywordPlan = planRoute(turn, {
           selectedOption: context?.selectedOption ?? null,
           hasQuestion: Boolean(context?.stem),
         });
+        let plan = keywordPlan;
+        const decidePromise = decideTurn({
+          turn,
+          hasQuestion: Boolean(context?.stem),
+          selectedOption: context?.selectedOption ?? null,
+        }).catch(() => null);
 
         // --- 0. Quota check and run start in parallel (A1) ---------------------
         const { getMembershipTier } = await import("@/lib/model-routing.server");
@@ -255,6 +263,29 @@ export const Route = createFileRoute("/api/mentor-stream")({
 
         const trace = (stepIndex: number) => ({ db: supabase, runId, userId, stepIndex });
 
+        // P2.1 — active Jev router: wait a short budget, else keyword fallback.
+        const tDecide = Date.now();
+        const decision = await Promise.race([
+          decidePromise,
+          new Promise<null>((r) => setTimeout(() => r(null), DECIDE_BUDGET_MS)),
+        ]);
+        mark("decide", tDecide);
+        const jevOk = decision?.ok ? decision : null;
+        const routedBy: "jev" | "keyword" = jevOk ? "jev" : "keyword";
+        if (jevOk) plan = planForIntent(jevOk.intent);
+        // P2.2 — dynamic library gating: skip lookup when Jev is confident
+        // no reference material is needed.
+        let libraryGated = false;
+        if (
+          plan.useRetrieval &&
+          jevOk?.needsLibrary != null &&
+          jevOk.needsLibrary < NO_LIBRARY_THRESHOLD
+        ) {
+          plan = { ...plan, useRetrieval: false, agents: plan.agents.filter((a) => a !== "retrieval") };
+          libraryGated = true;
+        }
+        if (!jevOk) timings["decide_fallback"] = 1;
+
         // Router trace is fire-and-forget — it must not delay the first token.
         void logStep(supabase, {
           runId,
@@ -263,16 +294,9 @@ export const Route = createFileRoute("/api/mentor-stream")({
           agent: "orchestrator",
           role: "router",
           input: { turn: turn.slice(0, 500), selectedOption: context?.selectedOption ?? null },
-          output: plan,
+          output: { ...plan, routedBy, libraryGated, keywordIntent: keywordPlan.intent },
         }).catch(() => {});
-        // L4 — Jev decision step in shadow mode: logged beside the keyword route.
-        // Phase 1 — the same decision also supplies the instant spoken opener,
-        // so the promise is kept rather than fired and forgotten.
-        const decidePromise = decideTurn({
-          turn,
-          hasQuestion: Boolean(context?.stem),
-          selectedOption: context?.selectedOption ?? null,
-        }).catch(() => null);
+        // Agreement still logged to Traces (L4b), whether or not Jev routed.
         void decidePromise
           .then((d) =>
             d
@@ -284,11 +308,13 @@ export const Route = createFileRoute("/api/mentor-stream")({
                   role: "decide",
                   model: "typesafe/jev-latest",
                   input: {
-                    keywordIntent: plan.intent,
-                    keywordRetrieval: plan.useRetrieval,
+                    keywordIntent: keywordPlan.intent,
+                    keywordRetrieval: keywordPlan.useRetrieval,
                     turn: turn.slice(0, 300),
                   },
-                  output: d.ok ? { ...d, agrees: d.intent === plan.intent } : d,
+                  output: d.ok
+                    ? { ...d, agrees: d.intent === keywordPlan.intent, routedBy, libraryGated }
+                    : { ...d, routedBy },
                   status: d.ok ? "ok" : "error",
                   error: d.ok ? undefined : d.reason,
                   durationMs: d.ms,
@@ -296,6 +322,27 @@ export const Route = createFileRoute("/api/mentor-stream")({
               : undefined,
           )
           .catch((e) => console.error("decide trace failed", e));
+
+        // P2.3 — prompt conditioning from Jev's signals (no data paths change).
+        const jevNote = jevOk
+          ? [
+              `Routing signal: the learner's turn was classified as "${jevOk.intent}"` +
+                (jevOk.intentConfidence != null
+                  ? ` (confidence ${Math.round(jevOk.intentConfidence * 100)}%).`
+                  : "."),
+              jevOk.focus !== "none"
+                ? `Anchor the opening on the ${jevOk.focus === "option" ? "selected answer option" : jevOk.focus} — the learner's attention is there.`
+                : "",
+              jevOk.intent === "evaluate_option" && context?.selectedOption
+                ? `The learner chose option ${context.selectedOption}; if it is wrong, name the specific misconception that makes it look right, then correct it without revealing the key unless asked.`
+                : "",
+              jevOk.intentConfidence != null && jevOk.intentConfidence < 0.5
+                ? "The request is ambiguous — answer the most likely reading briefly and offer one clarifying follow-up."
+                : "",
+            ]
+              .filter(Boolean)
+              .join(" ")
+          : "";
         const tCtx = Date.now();
 
         // --- 2. Memory + retrieval (parallel, L3 time-boxed) -----------------
@@ -347,7 +394,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
           context,
           intent: plan.intent,
           retrieval,
-          profileNote: profile.note || null,
+          profileNote: [profile.note, jevNote].filter(Boolean).join("\n\n") || null,
           // Phase F5 — lets the agents route through this learner's own key.
           userId,
           trace: trace(4),
@@ -429,19 +476,13 @@ export const Route = createFileRoute("/api/mentor-stream")({
           }),
         );
 
-        // --- Phase 1: instant spoken opener ----------------------------------
-        // The decision usually lands while the model connection is opening; it
-        // gets a tiny extra grace, then the opener is skipped rather than waited on.
-        const decision = await Promise.race([
-          decidePromise,
-          new Promise<null>((r) => setTimeout(() => r(null), 250)),
-        ]);
+        // --- Phase 1: instant spoken opener (decision already resolved) -------
         let focus: FocusTarget = "none";
         let opener = "";
-        if (decision?.ok && !degraded) {
-          focus = decision.focus;
+        if (jevOk && !degraded) {
+          focus = jevOk.focus;
           opener = `[[brief]]${focusMarker(focus, context?.selectedOption ?? null)} ${openerFor({
-            intent: decision.intent,
+            intent: jevOk.intent,
             focus,
             selectedOption: context?.selectedOption ?? null,
           })} `;
