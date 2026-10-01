@@ -447,9 +447,9 @@ export const Route = createFileRoute("/api/mentor-stream")({
           })} `;
         }
         mark("opener", t0);
-        const body = opener ? withOpener(opener, tapped) : tapped;
+        const responseBody = opener ? withOpener(opener, tapped) : tapped;
 
-        return new Response(body, {
+        return new Response(responseBody, {
 
           headers: {
             "Content-Type": "text/event-stream",
