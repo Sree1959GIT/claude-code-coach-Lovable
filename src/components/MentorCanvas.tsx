@@ -506,9 +506,12 @@ export function MentorCanvas({
           continue;
         }
         const url = await (seg.audio ?? next ?? synth(seg.text));
-        const upcoming = queueRef.current[0];
         next = null;
-        if (upcoming && !upcoming.audio) upcoming.audio = synth(upcoming.text);
+        // Phase 1 — keep two sentences of voice prepared ahead of playback so
+        // there is no gap between one sentence ending and the next starting.
+        for (const upcoming of queueRef.current.slice(0, 2)) {
+          if (upcoming && !upcoming.audio) upcoming.audio = synth(upcoming.text);
+        }
         if (stoppedRef.current) break;
         if (url) {
           setSpeaking(true);
