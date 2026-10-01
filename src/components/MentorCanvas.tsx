@@ -597,7 +597,7 @@ export function MentorCanvas({
     const parser = new SegmentParser((seg) => {
       // L2 — start preparing the voice for the next two sentences right away,
       // so each one is ready by the time the previous one finishes playing.
-      if (voiceRef.current && queueRef.current.length < 2) seg.audio = synth(seg.text);
+      if (voiceRef.current && queueRef.current.length < 3) seg.audio = synth(seg.text);
       queueRef.current.push(seg);
       void drain();
     });
