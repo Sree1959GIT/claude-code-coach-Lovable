@@ -110,7 +110,8 @@
 - [x] **L4:** Jev decision step (`src/lib/agents/decide.server.ts`, `typesafe/jev-latest` via `/v1/systemone`) in shadow mode — intent + needs-library logged as a `decide` trace step with `agrees`; routing still uses `planRoute`.
 - [x] **L5:** Mentor via local Ollama; cloud fallback. Isolation unchanged.
 - [x] **P1 (Jev Ph1):** Fast voice — instant spoken opener + focus highlight from the Jev decision; barge-in hard-stop. Isolation unchanged.
-- **Next (ACTIVE TASK):** Phase 2 t1 — Active Jev router (keyword fallback); then gating + prompt conditioning.
+- [x] **P2 (Jev Ph2):** Active Jev router (700 ms budget, keyword fallback, `planForIntent`), library gating (needs-library < 0.3 skips retrieval), prompt conditioning (intent, focus, chosen-option misconception, ambiguity) via the mentor system note; agreement + `routedBy`/`libraryGated` still traced. Isolation unchanged.
+- **Next (ACTIVE TASK):** No open build items — review Traces (Jev vs keyword, decide fallbacks, gated turns) and plan Phase 3.
 
 
 

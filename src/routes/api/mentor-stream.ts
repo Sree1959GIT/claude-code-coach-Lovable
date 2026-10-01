@@ -7,7 +7,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import { planRoute, startRun, logStep, finishRun } from "@/lib/orchestrator.server";
+import { planRoute, planForIntent, startRun, logStep, finishRun } from "@/lib/orchestrator.server";
 import { runMemoryAgent } from "@/lib/agents/memory.agent.server";
 import { runRetrievalAgent } from "@/lib/agents/retrieval.agent.server";
 import { streamExplainer, type QuestionContext } from "@/lib/agents/explainer.agent.server";
@@ -49,6 +49,10 @@ function withOpener(prefix: string, rest: ReadableStream<Uint8Array>): ReadableS
 /** L3 — context steps get a short budget; a slow one is skipped, not awaited. */
 const MEMORY_BUDGET_MS = 900;
 const RETRIEVAL_BUDGET_MS = 1500;
+/** P2.1 — how long the router waits for Jev before falling back to keywords. */
+const DECIDE_BUDGET_MS = 700;
+/** P2.2 — below this Jev "needs library" score, retrieval is skipped. */
+const NO_LIBRARY_THRESHOLD = 0.3;
 function withTimeout<T, F>(p: Promise<T>, ms: number, fallback: F, onSkip: () => void): Promise<T | F> {
   let timer: ReturnType<typeof setTimeout>;
   const late = new Promise<F>((resolve) => {
