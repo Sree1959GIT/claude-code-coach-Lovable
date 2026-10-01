@@ -76,3 +76,9 @@
 - [x] L4: Fast decision step (letter-scoring, Semlf/mini-Jev style)
 - [x] L5: Mentor answers through local Ollama
 - [x] L4b: Jev agreement review panel on Traces (review only; switching waits on 50+ decisions and your decision)
+
+### Phase 1 — Fast voice response and spoken briefs
+- [x] P1.1: Jev also returns a visual focus target (scenario / stem / option / none); a short spoken opener is built from intent + focus with no model call and streamed before the first model token.
+- [x] P1.2: Audio pipelining — two sentences of voice are prepared ahead of playback, and a barge-in silences and clears the current clip instantly.
+- [x] P1.3: Deterministic highlighting — the focus target travels in an `X-Mentor-Focus` header and highlights the question part as the reply begins, then per-sentence markers take over.
+- Verified: typecheck clean, live Jev call returns the focus answer. Not verified: audible playback in a real browser session.

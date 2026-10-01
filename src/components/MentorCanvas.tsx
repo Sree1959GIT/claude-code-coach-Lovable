@@ -378,7 +378,20 @@ export function MentorCanvas({
   const stopAll = useCallback(() => {
     stoppedRef.current = true;
     queueRef.current = [];
-    audioRef.current?.pause();
+    // Phase 1 — a barge-in must silence the current clip instantly, not just
+    // pause it and leave the buffered audio ready to resume.
+    const el = audioRef.current;
+    if (el) {
+      el.pause();
+      try {
+        el.currentTime = 0;
+        el.removeAttribute("src");
+        el.load();
+      } catch {
+        /* noop */
+      }
+    }
+    setSpeaking(false);
     try {
       recogRef.current?.abort();
     } catch {
@@ -506,9 +519,12 @@ export function MentorCanvas({
           continue;
         }
         const url = await (seg.audio ?? next ?? synth(seg.text));
-        const upcoming = queueRef.current[0];
         next = null;
-        if (upcoming && !upcoming.audio) upcoming.audio = synth(upcoming.text);
+        // Phase 1 — keep two sentences of voice prepared ahead of playback so
+        // there is no gap between one sentence ending and the next starting.
+        for (const upcoming of queueRef.current.slice(0, 2)) {
+          if (upcoming && !upcoming.audio) upcoming.audio = synth(upcoming.text);
+        }
         if (stoppedRef.current) break;
         if (url) {
           setSpeaking(true);
@@ -581,7 +597,7 @@ export function MentorCanvas({
     const parser = new SegmentParser((seg) => {
       // L2 — start preparing the voice for the next two sentences right away,
       // so each one is ready by the time the previous one finishes playing.
-      if (voiceRef.current && queueRef.current.length < 2) seg.audio = synth(seg.text);
+      if (voiceRef.current && queueRef.current.length < 3) seg.audio = synth(seg.text);
       queueRef.current.push(seg);
       void drain();
     });
@@ -672,6 +688,24 @@ export function MentorCanvas({
         }
       } catch {
         /* ignore malformed resource header */
+      }
+
+      // Phase 1 — point the learner's eye at the right part of the question
+      // before the first word arrives.
+      try {
+        const rawFocus = res.headers.get("X-Mentor-Focus");
+        if (rawFocus) {
+          const { focus, option } = JSON.parse(decodeURIComponent(rawFocus)) as {
+            focus: "scenario" | "stem" | "option" | "none";
+            option: string | null;
+          };
+          if (focus === "scenario") highlight({ type: "scenario" });
+          else if (focus === "stem") highlight({ type: "stem" });
+          else if (focus === "option" && option)
+            highlight({ type: "option", label: option.toUpperCase() });
+        }
+      } catch {
+        /* ignore malformed focus header */
       }
 
 
