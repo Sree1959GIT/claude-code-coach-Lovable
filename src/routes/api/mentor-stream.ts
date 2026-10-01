@@ -238,11 +238,14 @@ export const Route = createFileRoute("/api/mentor-stream")({
           output: plan,
         }).catch(() => {});
         // L4 — Jev decision step in shadow mode: logged beside the keyword route.
-        void decideTurn({
+        // Phase 1 — the same decision also supplies the instant spoken opener,
+        // so the promise is kept rather than fired and forgotten.
+        const decidePromise = decideTurn({
           turn,
           hasQuestion: Boolean(context?.stem),
           selectedOption: context?.selectedOption ?? null,
-        })
+        }).catch(() => null);
+        void decidePromise
           .then((d) =>
             d
               ? logStep(supabase, {
