@@ -58,7 +58,11 @@ export function planRoute(
   message: string,
   ctx?: { selectedOption?: string | null; hasQuestion?: boolean },
 ): RoutePlan {
-  const intent = classifyIntent(message, ctx);
+  return planForIntent(classifyIntent(message, ctx));
+}
+
+/** P2.1 — route plan for an intent chosen elsewhere (e.g. Jev). */
+export function planForIntent(intent: AgentIntent): RoutePlan {
   switch (intent) {
     case "evaluate_option":
       return {

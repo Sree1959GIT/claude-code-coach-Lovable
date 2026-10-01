@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/mistakes")({
   component: MistakesPage,
   errorComponent: ({ error }) => (
     <div className="p-8 font-mono text-sm text-destructive">
-      Mistake bank error: {error.message}
+      Mistake bank error: {(error as Error).message}
     </div>
   ),
   head: () => createSeo({
