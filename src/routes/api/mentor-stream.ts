@@ -429,7 +429,27 @@ export const Route = createFileRoute("/api/mentor-stream")({
           }),
         );
 
-        return new Response(tapped, {
+        // --- Phase 1: instant spoken opener ----------------------------------
+        // The decision usually lands while the model connection is opening; it
+        // gets a tiny extra grace, then the opener is skipped rather than waited on.
+        const decision = await Promise.race([
+          decidePromise,
+          new Promise<null>((r) => setTimeout(() => r(null), 250)),
+        ]);
+        let focus: FocusTarget = "none";
+        let opener = "";
+        if (decision?.ok && !degraded) {
+          focus = decision.focus;
+          opener = `[[brief]]${focusMarker(focus, context?.selectedOption ?? null)} ${openerFor({
+            intent: decision.intent,
+            focus,
+            selectedOption: context?.selectedOption ?? null,
+          })} `;
+        }
+        mark("opener", t0);
+        const body = opener ? withOpener(opener, tapped) : tapped;
+
+        return new Response(body, {
 
           headers: {
             "Content-Type": "text/event-stream",
