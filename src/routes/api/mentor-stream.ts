@@ -474,9 +474,15 @@ export const Route = createFileRoute("/api/mentor-stream")({
                 byok: quota.byok,
               }),
             ),
-            "Server-Timing": serverTiming,
+            // Phase 1 — where to point the learner's eye the instant the reply starts.
+            "X-Mentor-Focus": encodeURIComponent(
+              JSON.stringify({ focus, option: context?.selectedOption ?? null }),
+            ),
+            "Server-Timing": Object.entries(timings)
+              .map(([k, v]) => `${k};dur=${v}`)
+              .join(", ") || serverTiming,
             "Access-Control-Expose-Headers":
-              "X-Mentor-Citations, X-Mentor-Route, X-Mentor-Resources, X-Mentor-Quota, Server-Timing",
+              "X-Mentor-Citations, X-Mentor-Route, X-Mentor-Resources, X-Mentor-Quota, X-Mentor-Focus, Server-Timing",
           },
         });
       },
