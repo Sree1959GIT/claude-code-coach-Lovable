@@ -87,3 +87,15 @@
 - [x] P2.1: Active Jev router — Jev's intent drives `planRoute` with automatic fallback to keyword routing on Jev error or timeout; agreement still logged to Traces.
 - [x] P2.2: Dynamic library gating — skip retrieval when Jev indicates the answer needs no reference material; time-box still applies.
 - [x] P2.3: Prompt conditioning & scoping — pass Jev's intent and learner-misconception signals to the explainer/evaluator prompts; per-exam isolation must remain strictly maintained.
+
+### Phase 3 — Check, separate and unblock
+- [ ] P3.1: Fix or dismiss the 4 security findings, then publish
+- [ ] P3.2: Dashboard, Progress and Mock exam scoped to the active exam
+- [ ] P3.3: Seed CCAF areas + guided import of existing questions
+- [ ] P3.4: Browser check of voice, listening, Ollama, research import
+
+### Phase 4 — Measure and tune the mentor
+- [ ] P4.1: Speed panel on Traces (first words / first voice by path)
+- [ ] P4.2: Jev budget + library-skip tuning from real data
+- [ ] P4.3: Ollama mentor gets exam context + Jev focus
+- [ ] P4.4: One / Several answers column + filter in admin question list
