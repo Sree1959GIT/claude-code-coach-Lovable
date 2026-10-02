@@ -319,7 +319,7 @@ export function ContentPanel() {
                                 {bad && (
                                   <span className="text-destructive">
                                     {!q.hasCorrect
-                                      ? "no single correct option"
+                                      ? q.answerMode === "multiple" ? "needs 2+ correct options" : "no single correct option"
                                       : q.optionCount < 2
                                         ? "too few options"
                                         : "missing explanation"}
@@ -424,7 +424,7 @@ export function ReviewQueue() {
                   <span>{r.optionCount} options</span>
                   {bad && (
                     <span className="text-destructive">
-                      {!r.hasCorrect ? "no single correct option" : !r.hasExplanation ? "missing explanation" : "too few options"}
+                      {!r.hasCorrect ? q.answerMode === "multiple" ? "needs 2+ correct options" : "no single correct option" : !r.hasExplanation ? "missing explanation" : "too few options"}
                     </span>
                   )}
                 </div>
