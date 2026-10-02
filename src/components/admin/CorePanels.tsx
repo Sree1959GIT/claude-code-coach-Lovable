@@ -189,6 +189,7 @@ export function ContentPanel() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [editor, setEditor] = useState<{ domainId: string; questionId?: string } | null>(null);
   const [queuedIds, setQueuedIds] = useState<string[]>([]);
+  const [modeFilter, setModeFilter] = useState<"all" | "single" | "multiple">("all");
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-content"],
     queryFn: () => fetchContent(),
@@ -265,11 +266,23 @@ export function ContentPanel() {
                     >
                       New question
                     </button>
+                    <label className="mb-3 ml-3 inline-flex items-center gap-2 text-xs text-muted-foreground">
+                      Show
+                      <select
+                        value={modeFilter}
+                        onChange={(e) => setModeFilter(e.target.value as typeof modeFilter)}
+                        className="border border-border bg-background px-2 py-1 text-xs text-foreground"
+                      >
+                        <option value="all">All questions</option>
+                        <option value="single">One correct answer</option>
+                        <option value="multiple">Several correct answers</option>
+                      </select>
+                    </label>
                     {d.questions.length === 0 ? (
                       <p className="font-mono text-xs text-muted-foreground">No questions in this domain.</p>
                     ) : (
                       <ul className="space-y-2">
-                        {d.questions.map((q) => {
+                        {d.questions.filter((q) => modeFilter === "all" || q.answerMode === modeFilter).map((q) => {
                           const bad = !q.hasCorrect || q.optionCount < 2 || !q.hasExplanation;
                           return (
                             <li key={q.id} className="border border-border/60 p-3">
@@ -296,13 +309,17 @@ export function ContentPanel() {
 
                               <div className="mt-2 flex flex-wrap gap-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                                 <span>{q.difficulty}</span>
+                                <span className={q.answerMode === "multiple" ? "text-primary" : undefined}>
+                                  {q.answerMode === "multiple" ? "Several answers" : "One answer"}
+                                </span>
+                                {q.locked && <span>Locked</span>}
                                 <span>{q.optionCount} options</span>
                                 <span>{q.attempts} attempts</span>
                                 <span>{q.accuracy === null ? "no data" : `${q.accuracy}% acc`}</span>
                                 {bad && (
                                   <span className="text-destructive">
                                     {!q.hasCorrect
-                                      ? "no single correct option"
+                                      ? q.answerMode === "multiple" ? "needs 2+ correct options" : "no single correct option"
                                       : q.optionCount < 2
                                         ? "too few options"
                                         : "missing explanation"}
@@ -407,7 +424,7 @@ export function ReviewQueue() {
                   <span>{r.optionCount} options</span>
                   {bad && (
                     <span className="text-destructive">
-                      {!r.hasCorrect ? "no single correct option" : !r.hasExplanation ? "missing explanation" : "too few options"}
+                      {!r.hasCorrect ? "no correct option" : !r.hasExplanation ? "missing explanation" : "too few options"}
                     </span>
                   )}
                 </div>

@@ -50,6 +50,13 @@
       "when": 1790500429961,
       "tag": "0006_video_clip_windows_restore",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790918689999,
+      "tag": "0007_tighten_shared_read_policies",
+      "breakpoints": true
     }
   ]
 }

@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { fetchDomains } from "@/lib/study";
 import { startSession } from "@/lib/study.functions";
 import { useSession } from "@/hooks/useSession";
+import { useActiveExam } from "@/hooks/useActiveExam";
 import { logEvent } from "@/lib/analytics";
 import {
   blueprintTotals,
@@ -14,7 +15,7 @@ import {
   fetchQuestionCounts,
   formatMinutes,
 } from "@/lib/mock-exam";
-import { FALLBACK_EXAM, fetchActiveExam, passRatio } from "@/lib/exams";
+import { FALLBACK_EXAM, passRatio } from "@/lib/exams";
 import {
   InlineError,
   PageSkeleton,
@@ -52,12 +53,14 @@ function MockExamPage() {
   const [busy, setBusy] = useState(false);
   const [launchError, setLaunchError] = useState<string | null>(null);
 
-  const domainsQ = useQuery({ queryKey: ["domains"], queryFn: () => fetchDomains() });
+  const { active: activeExam } = useActiveExam();
+  const examId = activeExam.id || null;
+  const domainsQ = useQuery({ queryKey: ["domains", examId], queryFn: () => fetchDomains(examId) });
   const countsQ = useQuery({
     queryKey: ["question_counts"],
     queryFn: fetchQuestionCounts,
   });
-  const examQ = useQuery({ queryKey: ["active_exam"], queryFn: fetchActiveExam });
+  const examQ = { data: activeExam.id ? activeExam : undefined } as { data?: typeof activeExam };
 
   const exam = examQ.data ?? FALLBACK_EXAM;
   const targetCount = exam.questionCount;
@@ -80,7 +83,7 @@ function MockExamPage() {
     setBusy(true);
     try {
       const result = await start({
-        data: { mode: "exam", targetCount: targetCount, domainId: null },
+        data: { mode: "exam", targetCount: targetCount, domainId: null, examId },
       });
       logEvent("mock_exam_started", {
         requested: targetCount,

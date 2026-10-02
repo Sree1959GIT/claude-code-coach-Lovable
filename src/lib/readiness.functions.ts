@@ -60,13 +60,18 @@ export const getReadiness = createServerFn({ method: "GET" })
  */
 export const getReadinessTrend = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<ReadinessTrendPoint[]> => {
+  .inputValidator((d: { examId?: string | null } | undefined) => ({
+    examId: typeof d?.examId === "string" && d.examId ? d.examId : null,
+  }))
+  .handler(async ({ context, data }): Promise<ReadinessTrendPoint[]> => {
     const { supabase, userId } = context;
     const since = new Date();
     since.setDate(since.getDate() - 45);
 
+    let domainsQ = supabase.from("domains").select("id, slug, title, weight").order("sort_order");
+    if (data.examId) domainsQ = domainsQ.eq("exam_id", data.examId);
     const [domainsRes, questionsRes, attemptsRes] = await Promise.all([
-      supabase.from("domains").select("id, slug, title, weight").order("sort_order"),
+      domainsQ,
       supabase.from("questions").select("id, domain_id"),
       supabase
         .from("question_attempts")
@@ -80,10 +85,14 @@ export const getReadinessTrend = createServerFn({ method: "GET" })
     const err = domainsRes.error || questionsRes.error || attemptsRes.error;
     if (err) throw err;
 
+    const domains = domainsRes.data ?? [];
+    const domainIds = new Set(domains.map((d) => d.id));
+    const questions = (questionsRes.data ?? []).filter((q) => domainIds.has(q.domain_id));
+    const qIds = new Set(questions.map((q) => q.id));
     return computeReadinessTrend({
-      domains: domainsRes.data ?? [],
-      questions: questionsRes.data ?? [],
-      attempts: attemptsRes.data ?? [],
+      domains,
+      questions,
+      attempts: (attemptsRes.data ?? []).filter((a) => qIds.has(a.question_id)),
       days: 30,
     });
   });

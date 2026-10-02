@@ -111,6 +111,8 @@ export type ContentDomain = {
     hasExplanation: boolean;
     attempts: number;
     accuracy: number | null;
+    answerMode: "single" | "multiple";
+    locked: boolean;
   }[];
 };
 
@@ -122,7 +124,7 @@ export const listContent = createServerFn({ method: "GET" })
 
     const [domainsRes, questionsRes, optionsRes, attemptsRes] = await Promise.all([
       supabaseAdmin.from("domains").select("id, slug, title, weight, sort_order").order("sort_order"),
-      supabaseAdmin.from("questions").select("id, domain_id, stem, difficulty, sort_order").order("sort_order"),
+      supabaseAdmin.from("questions").select("id, domain_id, stem, difficulty, sort_order, answer_mode, baselined_at").order("sort_order"),
       supabaseAdmin.from("question_options").select("question_id, is_correct, explanation"),
       supabaseAdmin.from("question_attempts").select("question_id, is_correct"),
     ]);
@@ -158,10 +160,13 @@ export const listContent = createServerFn({ method: "GET" })
         const a = attBy.get(q.id) ?? { n: 0, ok: 0 };
         attemptCount += a.n;
         correctCount += a.ok;
-        const hasCorrect = o.correct === 1;
+        const multiple = q.answer_mode === "multiple";
+        const hasCorrect = multiple ? o.correct >= 2 : o.correct === 1;
         const hasExplanation = o.explained > 0;
         if (!hasCorrect || o.count < 2 || !hasExplanation) issues += 1;
         return {
+          answerMode: (multiple ? "multiple" : "single") as "single" | "multiple",
+          locked: Boolean(q.baselined_at),
           id: q.id,
           stem: q.stem,
           difficulty: q.difficulty,

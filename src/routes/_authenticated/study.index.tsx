@@ -54,7 +54,7 @@ function StudyHub() {
     setBusy(true);
     setActiveMode(`${mode}-${count}`);
     try {
-      const result = await start({ data: { mode, targetCount: count, domainId } });
+      const result = await start({ data: { mode, targetCount: count, domainId, examId: activeExam.id || null } });
       logEvent("session_started", { mode, count, domain_id: domainId });
       navigate({ to: "/study/session", search: { sessionId: result.sessionId } });
     } catch (err) {
