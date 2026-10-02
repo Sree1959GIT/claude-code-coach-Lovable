@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Brain, Clock, Dumbbell, LayoutGrid, Target, TrendingUp } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useSession } from "@/hooks/useSession";
+import { useActiveExam } from "@/hooks/useActiveExam";
 import { logEvent } from "@/lib/analytics";
 import { useServerFn } from "@tanstack/react-start";
 import { getMasteryOverview } from "@/lib/study.functions";
@@ -40,6 +41,8 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
+  const { active: activeExam } = useActiveExam();
+  const examId = activeExam.id || null;
   const { user } = useSession();
   useEffect(() => {
     logEvent("page_view", { page: "dashboard" });
@@ -47,8 +50,8 @@ function Dashboard() {
 
   const getMasteryFn = useServerFn(getMasteryOverview);
   const masteryQ = useQuery({
-    queryKey: ["mastery"],
-    queryFn: () => getMasteryFn(),
+    queryKey: ["mastery", examId],
+    queryFn: () => getMasteryFn({ data: { examId } }),
   });
 
   const name = user?.user_metadata?.full_name ?? user?.email ?? "Architect";
@@ -59,7 +62,7 @@ function Dashboard() {
   const total = mastery.length;
 
   const getReadinessFn = useServerFn(getReadiness);
-  const readinessQ = useQuery({ queryKey: ["readiness"], queryFn: () => getReadinessFn() });
+  const readinessQ = useQuery({ queryKey: ["readiness", examId], queryFn: () => getReadinessFn({ data: { examId } }) });
   const readiness = readinessQ.data;
 
   const [examDate, setExamDate] = useState<string>("");

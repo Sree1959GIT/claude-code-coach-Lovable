@@ -23,6 +23,7 @@ import {
   fetchMyDomainProgress,
 } from "@/lib/study";
 import { useServerFn } from "@tanstack/react-start";
+import { useActiveExam } from "@/hooks/useActiveExam";
 import { getMasteryOverview } from "@/lib/study.functions";
 import { getReadiness, getReadinessTrend } from "@/lib/readiness.functions";
 import { computePassEstimate, PASS_MARK, READINESS_BAND_LABEL } from "@/lib/readiness";
@@ -43,14 +44,16 @@ function AnalyticsPage() {
   useEffect(() => { logEvent("page_view", { page: "analytics" }); }, []);
 
   const getMasteryFn = useServerFn(getMasteryOverview);
-  const domainsQ = useQuery({ queryKey: ["domains"], queryFn: () => fetchDomains() });
-  const attemptsQ = useQuery({ queryKey: ["my_attempts"], queryFn: fetchMyAttempts });
+  const { active: activeExam } = useActiveExam();
+  const examId = activeExam.id || null;
+  const domainsQ = useQuery({ queryKey: ["domains", examId], queryFn: () => fetchDomains(examId) });
+  const attemptsQ = useQuery({ queryKey: ["my_attempts", examId], queryFn: () => fetchMyAttempts(examId) });
   const progressQ = useQuery({ queryKey: ["my_progress"], queryFn: fetchMyDomainProgress });
-  const masteryQ = useQuery({ queryKey: ["mastery"], queryFn: () => getMasteryFn() });
+  const masteryQ = useQuery({ queryKey: ["mastery", examId], queryFn: () => getMasteryFn({ data: { examId } }) });
   const getReadinessFn = useServerFn(getReadiness);
-  const readinessQ = useQuery({ queryKey: ["readiness"], queryFn: () => getReadinessFn() });
+  const readinessQ = useQuery({ queryKey: ["readiness", examId], queryFn: () => getReadinessFn({ data: { examId } }) });
   const getTrendFn = useServerFn(getReadinessTrend);
-  const trendQ = useQuery({ queryKey: ["readiness_trend"], queryFn: () => getTrendFn() });
+  const trendQ = useQuery({ queryKey: ["readiness_trend", examId], queryFn: () => getTrendFn({ data: { examId } }) });
   const trend = useMemo(
     () => (trendQ.data ?? []).map((p) => ({ ...p, day: p.date.slice(5) })),
     [trendQ.data],

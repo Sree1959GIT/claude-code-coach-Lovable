@@ -281,14 +281,18 @@ export const endSession = createServerFn({ method: "POST" })
 
 export const getMasteryOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((d: { examId?: string | null } | undefined) => ({
+    examId: typeof d?.examId === "string" && d.examId ? d.examId : null,
+  }))
+  .handler(async ({ context, data: input }) => {
     const { supabase, userId } = context;
-    const { data, error } = await supabase
-      .from("user_mastery")
-      .select("*")
-      .eq("user_id", userId);
+    const { examQuestionIds } = await import("./exam-scope.server");
+    const [{ data, error }, scope] = await Promise.all([
+      supabase.from("user_mastery").select("*").eq("user_id", userId),
+      examQuestionIds(supabase, input.examId),
+    ]);
     if (error) throw error;
-    return data ?? [];
+    return (data ?? []).filter((m) => !scope || scope.has(m.question_id));
   });
 
 export const getSession = createServerFn({ method: "GET" })

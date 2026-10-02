@@ -7,6 +7,7 @@ import { CheckCircle2, RotateCcw, XCircle } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getMistakeBank, startMistakeRetest } from "@/lib/mistakes.functions";
 import { logEvent } from "@/lib/analytics";
+import { useActiveExam } from "@/hooks/useActiveExam";
 import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/mistakes")({
@@ -27,10 +28,12 @@ export const Route = createFileRoute("/_authenticated/mistakes")({
 type Filter = "open" | "recovered" | "all";
 
 function MistakesPage() {
+  const { active: activeExam } = useActiveExam();
+  const examId = activeExam.id || null;
   const fetchBank = useServerFn(getMistakeBank);
   const bankQ = useQuery({
-    queryKey: ["mistake_bank"],
-    queryFn: () => fetchBank(),
+    queryKey: ["mistake_bank", examId],
+    queryFn: () => fetchBank({ data: { examId } }),
   });
 
   const [filter, setFilter] = useState<Filter>("open");
@@ -46,6 +49,7 @@ function MistakesPage() {
       const res = await startRetest({
         data: {
           targetCount: retestCount,
+          examId,
           ...(domain !== "all" ? { domainSlug: domain } : {}),
         },
       });
