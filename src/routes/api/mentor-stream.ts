@@ -47,10 +47,10 @@ function withOpener(prefix: string, rest: ReadableStream<Uint8Array>): ReadableS
 }
 
 /** L3 — context steps get a short budget; a slow one is skipped, not awaited. */
-const MEMORY_BUDGET_MS = 900;
-const RETRIEVAL_BUDGET_MS = 1500;
+const MEMORY_BUDGET_MS = 700;
+const RETRIEVAL_BUDGET_MS = 1100;
 /** P2.1 — how long the router waits for Jev before falling back to keywords. */
-const DECIDE_BUDGET_MS = 700;
+const DECIDE_BUDGET_MS = 500;
 /** P2.2 — below this Jev "needs library" score, retrieval is skipped. */
 const NO_LIBRARY_THRESHOLD = 0.3;
 function withTimeout<T, F>(p: Promise<T>, ms: number, fallback: F, onSkip: () => void): Promise<T | F> {
@@ -226,6 +226,35 @@ export const Route = createFileRoute("/api/mentor-stream")({
           selectedOption: context?.selectedOption ?? null,
         }).catch(() => null);
 
+        // Speed — memory and retrieval start now, in parallel with Jev and the
+        // quota check, instead of waiting for routing to finish first.
+        const memoryPromise = withTimeout(
+          runMemoryAgent({
+            db: supabase,
+            userId,
+            intent: keywordPlan.intent,
+            currentDomain: context?.domain ?? null,
+            includeThread: keywordPlan.intent !== "smalltalk",
+            trace: { runId: null, stepIndex: 1 },
+          }),
+          MEMORY_BUDGET_MS,
+          { note: "" } as { note: string },
+          () => (timings["memory_skipped"] = MEMORY_BUDGET_MS),
+        );
+        const retrievalPromise = keywordPlan.useRetrieval
+          ? withTimeout(
+              runRetrievalAgent({
+                message: turn,
+                context,
+                intent: keywordPlan.intent,
+                trace: { db: supabase, runId: null, userId, stepIndex: 2 },
+              }),
+              RETRIEVAL_BUDGET_MS,
+              null,
+              () => (timings["retrieval_skipped"] = RETRIEVAL_BUDGET_MS),
+            )
+          : Promise.resolve(null);
+
         // --- 0. Quota check and run start in parallel (A1) ---------------------
         const { getMembershipTier } = await import("@/lib/model-routing.server");
         const { checkQuota, recordRateEvent } = await import("@/lib/rate-limit.server");
@@ -349,36 +378,9 @@ export const Route = createFileRoute("/api/mentor-stream")({
           : "";
         const tCtx = Date.now();
 
-        // --- 2. Memory + retrieval (parallel, L3 time-boxed) -----------------
-        const [profile, retrieval] = await Promise.all([
-          withTimeout(
-            runMemoryAgent({
-              db: supabase,
-              userId,
-              intent: plan.intent,
-              currentDomain: context?.domain ?? null,
-              // Sub-task 15: recall earlier mentor turns, except on filler turns.
-              includeThread: plan.intent !== "smalltalk",
-              trace: { runId, stepIndex: 1 },
-            }),
-            MEMORY_BUDGET_MS,
-            { note: "" } as { note: string },
-            () => (timings["memory_skipped"] = MEMORY_BUDGET_MS),
-          ),
-          plan.useRetrieval
-            ? withTimeout(
-                runRetrievalAgent({
-                  message: turn,
-                  context,
-                  intent: plan.intent,
-                  trace: trace(2),
-                }),
-                RETRIEVAL_BUDGET_MS,
-                null,
-                () => (timings["retrieval_skipped"] = RETRIEVAL_BUDGET_MS),
-              )
-            : Promise.resolve(null),
-        ]);
+        // --- 2. Memory + retrieval — started speculatively alongside Jev ------
+        const [profile, retrievalRaw] = await Promise.all([memoryPromise, retrievalPromise]);
+        const retrieval = plan.useRetrieval ? retrievalRaw : null;
         mark("context", tCtx);
 
         // --- 3. Resource agent (cheap, deterministic) --------------------------
