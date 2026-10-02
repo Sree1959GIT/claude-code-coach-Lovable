@@ -101,14 +101,28 @@ export async function recordAttempt(input: {
   if (error) throw error;
 }
 
-export async function fetchMyAttempts(): Promise<Attempt[]> {
+export async function fetchMyAttempts(examId?: string | null): Promise<Attempt[]> {
+  const scope = await examQuestionIdSet(examId);
   const { data, error } = await supabase
     .from("question_attempts")
     .select("*")
     .order("created_at", { ascending: false })
     .limit(500);
   if (error) throw error;
-  return data as Attempt[];
+  return (data as Attempt[]).filter((a) => !scope || scope.has(a.question_id));
+}
+
+/** P3.2 — question ids for an exam (null = no filter). */
+export async function examQuestionIdSet(examId?: string | null): Promise<Set<string> | null> {
+  if (!examId) return null;
+  const domains = await fetchDomains(examId);
+  if (domains.length === 0) return new Set();
+  const { data, error } = await supabase
+    .from("questions")
+    .select("id")
+    .in("domain_id", domains.map((d) => d.id));
+  if (error) throw error;
+  return new Set((data ?? []).map((q) => q.id as string));
 }
 
 export async function fetchMyDomainProgress(): Promise<

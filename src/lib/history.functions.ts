@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchDomains } from "./study";
+import { examIdInput } from "./exam-scope.server";
 
 export type SessionHistoryItem = {
   id: string;
@@ -18,7 +19,8 @@ export type SessionHistoryItem = {
 
 export const getSessionHistory = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<SessionHistoryItem[]> => {
+  .inputValidator(examIdInput)
+  .handler(async ({ context, data }): Promise<SessionHistoryItem[]> => {
     const { supabase, userId } = context;
 
     const [sessionsRes, domains] = await Promise.all([
@@ -28,10 +30,22 @@ export const getSessionHistory = createServerFn({ method: "GET" })
         .eq("user_id", userId)
         .order("started_at", { ascending: false })
         .limit(60),
-      fetchDomains(),
+      fetchDomains(data.examId),
     ]);
     if (sessionsRes.error) throw sessionsRes.error;
-    const sessions = sessionsRes.data ?? [];
+    // P3.2 — keep sessions tied to this exam's domains; mixed sessions are
+    // kept only when their questions belong to this exam.
+    let sessions = sessionsRes.data ?? [];
+    if (data.examId) {
+      const { examQuestionIds } = await import("./exam-scope.server");
+      const scope = await examQuestionIds(supabase, data.examId);
+      const domainIds = new Set(domains.map((d) => d.id));
+      sessions = sessions.filter((s) => {
+        if (s.domain_id) return domainIds.has(s.domain_id);
+        const ids = ((s.metadata as { question_ids?: string[] } | null)?.question_ids ?? []) as string[];
+        return ids.length > 0 && ids.some((id) => scope?.has(id));
+      });
+    }
     if (sessions.length === 0) return [];
 
     const domainById = new Map(domains.map((d) => [d.id, d]));
