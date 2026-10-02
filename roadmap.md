@@ -89,7 +89,7 @@
 - [x] P2.3: Prompt conditioning & scoping — pass Jev's intent and learner-misconception signals to the explainer/evaluator prompts; per-exam isolation must remain strictly maintained.
 
 ### Phase 3 — Check, separate and unblock
-- [ ] P3.1: Fix or dismiss the 4 security findings, then publish
+- [x] P3.1: Security — open read rules replaced (exams: ready only; domains: ready exams or admin; library, code examples, clip times: signed-in check). No critical findings left.
 - [ ] P3.2: Dashboard, Progress and Mock exam scoped to the active exam
 - [ ] P3.3: Seed CCAF areas + guided import of existing questions
 - [ ] P3.4: Browser check of voice, listening, Ollama, research import

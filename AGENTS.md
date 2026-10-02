@@ -19,4 +19,4 @@
 - Mentor routing: Jev decides intent (700 ms budget) with keyword `planRoute` fallback; agreement traced on Traces.
 
 ## Current active task
-No open build items — review Traces (Jev vs keyword, fallbacks, gated turns) and plan Phase 3.
+P3.1 done (security rules tightened). Next: P3.2 — Dashboard, Progress and Mock exam scoped to the active exam. Phase 3–4 list in roadmap.md.
