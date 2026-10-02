@@ -100,7 +100,8 @@
 - [x] **L5:** Mentor via local Ollama; cloud fallback. Isolation unchanged.
 - [x] **P1 (Jev Ph1):** Fast voice — instant spoken opener + focus highlight from the Jev decision; barge-in hard-stop. Isolation unchanged.
 - [x] **P2 (Jev Ph2):** Active Jev router (700 ms budget, keyword fallback, `planForIntent`), library gating (needs-library < 0.3 skips retrieval), prompt conditioning (intent, focus, chosen-option misconception, ambiguity) via the mentor system note; agreement + `routedBy`/`libraryGated` still traced. Isolation unchanged.
-- **Next (ACTIVE TASK):** No open build items — review Traces (Jev vs keyword, decide fallbacks, gated turns) and plan Phase 3.
+- [x] **P3.1:** Shared-content read rules tightened (exams ready-only, domains of ready exams, signed-in checks elsewhere); no critical findings.
+- **Next (ACTIVE TASK):** P3.2 — Dashboard, Progress, Mock exam scoped to the active exam.
 
 
 
