@@ -12,6 +12,7 @@ import {
   routeErrorComponent,
 } from "@/components/Resilience";
 import { createSeo } from "@/lib/seo";
+import { useActiveExam } from "@/hooks/useActiveExam";
 
 export const Route = createFileRoute("/_authenticated/history")({
   component: HistoryPage,
@@ -37,7 +38,9 @@ function fmtDuration(ms: number | null) {
 
 function HistoryPage() {
   const fn = useServerFn(getSessionHistory);
-  const q = useQuery({ queryKey: ["session-history"], queryFn: () => fn() });
+  const { active: activeExam } = useActiveExam();
+  const examId = activeExam.id || null;
+  const q = useQuery({ queryKey: ["session-history", examId], queryFn: () => fn({ data: { examId } }) });
   const [mode, setMode] = useState<string>("all");
 
   const rows = useMemo(

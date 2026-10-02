@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchDomains } from "./study";
+import { examIdInput, examQuestionIds } from "./exam-scope.server";
 
 export type MissedItem = {
   questionId: string;
@@ -28,8 +29,10 @@ export type MistakeBank = {
 
 export const getMistakeBank = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<MistakeBank> => {
+  .inputValidator(examIdInput)
+  .handler(async ({ context, data }): Promise<MistakeBank> => {
     const { supabase, userId } = context;
+    const scope = await examQuestionIds(supabase, data.examId);
 
     const { data: attempts, error } = await supabase
       .from("question_attempts")
@@ -38,7 +41,7 @@ export const getMistakeBank = createServerFn({ method: "GET" })
       .order("created_at", { ascending: true });
     if (error) throw error;
 
-    const rows = attempts ?? [];
+    const rows = (attempts ?? []).filter((a) => !scope || scope.has(a.question_id));
     const missedIds = Array.from(
       new Set(rows.filter((a) => !a.is_correct).map((a) => a.question_id)),
     );
@@ -127,6 +130,7 @@ export const startMistakeRetest = createServerFn({ method: "POST" })
       .object({
         targetCount: z.number().int().min(1).max(60).default(10),
         domainSlug: z.string().optional(),
+        examId: z.string().uuid().nullable().optional(),
       })
       .parse(input),
   )
@@ -140,7 +144,8 @@ export const startMistakeRetest = createServerFn({ method: "POST" })
       .order("created_at", { ascending: true });
     if (error) throw error;
 
-    const rows = attempts ?? [];
+    const scope = await examQuestionIds(supabase, data.examId ?? null);
+    const rows = (attempts ?? []).filter((a) => !scope || scope.has(a.question_id));
     const lastByQuestion = new Map<string, boolean>();
     const missCount = new Map<string, number>();
     for (const a of rows) {

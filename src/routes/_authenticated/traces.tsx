@@ -6,6 +6,7 @@ import { logEvent } from "@/lib/analytics";
 import { fetchAgentRuns, fetchAgentSteps, type AgentRun, type AgentStep } from "@/lib/traces";
 import { createSeo } from "@/lib/seo";
 import { JevAgreementPanel } from "@/components/JevAgreementPanel";
+import { MentorSpeedPanel } from "@/components/MentorSpeedPanel";
 
 export const Route = createFileRoute("/_authenticated/traces")({
   component: TracesPage,
@@ -237,6 +238,7 @@ function TracesPage() {
           ))}
         </div>
 
+        <MentorSpeedPanel />
         <JevAgreementPanel />
 
         <button

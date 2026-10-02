@@ -90,12 +90,12 @@
 
 ### Phase 3 — Check, separate and unblock
 - [x] P3.1: Security — open read rules replaced (exams: ready only; domains: ready exams or admin; library, code examples, clip times: signed-in check). No critical findings left.
-- [ ] P3.2: Dashboard, Progress and Mock exam scoped to the active exam
-- [ ] P3.3: Seed CCAF areas + guided import of existing questions
-- [ ] P3.4: Browser check of voice, listening, Ollama, research import
+- [x] P3.2: Dashboard, Progress (analytics, mistakes, history), Mock exam and new sessions scoped to the active exam
+- [x] P3.3: Five CCAF areas seeded with weights; questions still to be brought in via Bulk import (old backend not reachable)
+- [x] P3.4: Signed-in browser check of all scoped pages + Traces (no errors). Voice/mic/Ollama/research need a real device and questions — left for the user
 
 ### Phase 4 — Measure and tune the mentor
-- [ ] P4.1: Speed panel on Traces (first words / first voice by path)
-- [ ] P4.2: Jev budget + library-skip tuning from real data
-- [ ] P4.3: Ollama mentor gets exam context + Jev focus
-- [ ] P4.4: One / Several answers column + filter in admin question list
+- [x] P4.1: Mentor speed panel on Traces (first words by Jev / keyword / Ollama)
+- [x] P4.2: Tuning suggestions computed from traces; settings unchanged until 50+ decisions
+- [x] P4.3: Ollama mentor gets exam name, Jev intent and focus (with on-screen highlight); first-word time logged
+- [x] P4.4: One / Several answers label, Locked tag and filter in admin question list

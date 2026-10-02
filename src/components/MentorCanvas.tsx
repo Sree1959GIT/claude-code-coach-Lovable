@@ -5,6 +5,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, Mic, MicOff, PlayCircle, Radio, Square, User, Volume2, X } from "lucide-react";
 import { synthesizeSpeech } from "@/lib/mentor.functions";
 import { getLocalMentorModel, streamLocalMentor } from "@/lib/local-mentor";
+import { decideLocalTurn } from "@/lib/mentor-speed.functions";
+import { useActiveExam } from "@/hooks/useActiveExam";
 import {
   getMicPref,
   getVoicePref,
@@ -346,6 +348,8 @@ export function MentorCanvas({
   const drainingRef = useRef(false);
   const stoppedRef = useRef(false);
   const contextRef = useRef(context);
+  const { active: activeExam } = useActiveExam();
+  const decideLocal = useServerFn(decideLocalTurn);
 
   const sttSupported = typeof window !== "undefined" && !!getSpeechRecognition();
   const highlight = useCallback((t: HighlightTarget) => onHighlight?.(t), [onHighlight]);
@@ -607,11 +611,27 @@ export function MentorCanvas({
       const localModel = getLocalMentorModel();
       if (localModel) {
         setStatus("Mentor speaking");
+        const ctx = contextRef.current;
+        const lastTurn = next[next.length - 1]?.content ?? "";
+        // P4.3 — same Jev intent/focus the cloud mentor gets; never waits past its budget.
+        const decision = await decideLocal({
+          data: { turn: lastTurn, hasQuestion: Boolean(ctx?.stem), selectedOption: ctx?.selectedOption ?? null },
+        }).catch(() => null);
+        if (decision?.focus === "stem") onHighlight?.({ type: "stem" });
+        else if (decision?.focus === "scenario") onHighlight?.({ type: "scenario" });
+        else if (decision?.focus === "option" && ctx?.selectedOption)
+          onHighlight?.({ type: "option", label: ctx.selectedOption });
+        const localStart = performance.now();
+        let firstAt: number | null = null;
         const ok = await streamLocalMentor({
           model: localModel,
           messages: next,
-          context: contextRef.current as never,
+          context: { ...(ctx ?? {}), examName: activeExam.name, intent: decision?.intent ?? null, focus: decision?.focus ?? null } as never,
           onDelta: (d) => {
+            if (firstAt == null) {
+              firstAt = performance.now();
+              logEvent("local_mentor_ttft", { ms: Math.round(firstAt - localStart), model: localModel });
+            }
             parser.push(d);
             setStreaming(parser.display);
           },

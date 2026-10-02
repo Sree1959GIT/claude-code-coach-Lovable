@@ -45,6 +45,7 @@ export const startSession = createServerFn({ method: "POST" })
         mode: z.enum(["adaptive", "weak", "exam"]),
         domainId: z.string().uuid().nullable().optional(),
         targetCount: z.number().int().min(1).max(200).default(10),
+        examId: z.string().uuid().nullable().optional(),
       })
       .parse(input),
   )
@@ -59,11 +60,15 @@ export const startSession = createServerFn({ method: "POST" })
           data: (Question & { options: QuestionOption[] })[] | null;
           error: Error | null;
         }>,
-      fetchDomains(),
+      fetchDomains(data.examId ?? null),
     ]);
     if (qErr) throw qErr;
 
-    const questions = (rawQuestions ?? []).map((q) => ({
+    // P3.2 — sessions only draw from the active exam's domains.
+    const examDomainIds = data.examId ? new Set(domains.map((d) => d.id)) : null;
+    const questions = (rawQuestions ?? [])
+      .filter((q) => !examDomainIds || examDomainIds.has(q.domain_id))
+      .map((q) => ({
       ...q,
       options: q.options.sort((a, b) => a.sort_order - b.sort_order),
     }));
@@ -276,14 +281,18 @@ export const endSession = createServerFn({ method: "POST" })
 
 export const getMasteryOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((d: { examId?: string | null } | undefined) => ({
+    examId: typeof d?.examId === "string" && d.examId ? d.examId : null,
+  }))
+  .handler(async ({ context, data: input }) => {
     const { supabase, userId } = context;
-    const { data, error } = await supabase
-      .from("user_mastery")
-      .select("*")
-      .eq("user_id", userId);
+    const { examQuestionIds } = await import("./exam-scope.server");
+    const [{ data, error }, scope] = await Promise.all([
+      supabase.from("user_mastery").select("*").eq("user_id", userId),
+      examQuestionIds(supabase, input.examId),
+    ]);
     if (error) throw error;
-    return data ?? [];
+    return (data ?? []).filter((m) => !scope || scope.has(m.question_id));
   });
 
 export const getSession = createServerFn({ method: "GET" })

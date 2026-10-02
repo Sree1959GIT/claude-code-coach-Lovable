@@ -30,13 +30,25 @@ type Ctx = {
   domain?: string;
   options?: { label: string; text: string }[];
   selectedOption?: string | null;
+  /** P4.3 — exam label and Jev decision, matching the cloud mentor. */
+  examName?: string | null;
+  intent?: string | null;
+  focus?: string | null;
 } | null;
 
 function systemPrompt(ctx: Ctx): string {
   const q = ctx?.stem
     ? `\n\nQuestion on screen (never reveal or hint which option is correct):\n${ctx.scenario ? `Scenario: ${ctx.scenario}\n` : ""}Stem: ${ctx.stem}\n${(ctx.options ?? []).map((o) => `${o.label}. ${o.text}`).join("\n")}${ctx.key_concept ? `\nKey concept: ${ctx.key_concept}` : ""}${ctx.selectedOption ? `\nLearner picked: ${ctx.selectedOption}` : ""}`
     : "";
-  return `You are a warm, concise exam tutor. Teach the concept so the learner can decide; never give away the answer.
+  const exam = ctx?.examName ? ` for the ${ctx.examName} exam` : "";
+  const focusHint =
+    ctx?.focus === "scenario" ? "\nStart from the scenario paragraph."
+    : ctx?.focus === "stem" ? "\nStart from what the question sentence is actually asking."
+    : ctx?.focus === "option" ? "\nStart from the answer option the learner picked or named."
+    : "";
+  const intentHint = ctx?.intent ? `\nThe learner's turn is: ${ctx.intent.replace(/_/g, " ")}.` : "";
+  return `You are a warm, concise exam tutor${exam}.${intentHint}${focusHint}
+Teach the concept so the learner can decide; never give away the answer.
 Format exactly: start with "[[brief]]" followed by one or two short spoken sentences, then "[[written]]" followed by the full written answer (plain prose, short paragraphs).${q}`;
 }
 
