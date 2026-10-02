@@ -48,7 +48,7 @@ function systemPrompt(ctx: Ctx): string {
     : "";
   const intentHint = ctx?.intent ? `\nThe learner's turn is: ${ctx.intent.replace(/_/g, " ")}.` : "";
   return `You are a warm, concise exam tutor${exam}.${intentHint}${focusHint}
- Teach the concept so the learner can decide; never give away the answer.
+Teach the concept so the learner can decide; never give away the answer.
 Format exactly: start with "[[brief]]" followed by one or two short spoken sentences, then "[[written]]" followed by the full written answer (plain prose, short paragraphs).${q}`;
 }
 
