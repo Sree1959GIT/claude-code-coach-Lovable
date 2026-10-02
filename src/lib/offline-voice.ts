@@ -75,11 +75,33 @@ const WASM_PATHS = {
 };
 
 /** Synthesises speech on the device; returns an object URL for a WAV clip. */
+// The voice model is loaded once and reused; reloading it per sentence used to
+// add seconds before every clip. Clips are produced one at a time, in order.
+let sessionPromise: Promise<{ predict: (t: string) => Promise<Blob> }> | null = null;
+let chain: Promise<unknown> = Promise.resolve();
+function getSession() {
+  if (!sessionPromise) {
+    sessionPromise = load()
+      .then((p) => p.TtsSession.create({ voiceId: OFFLINE_VOICE_ID, wasmPaths: WASM_PATHS }))
+      .catch((e) => {
+        sessionPromise = null;
+        throw e;
+      }) as never;
+  }
+  return sessionPromise!;
+}
+/** Loads the on-device voice ahead of time so the first sentence is instant. */
+export function warmOfflineVoice(): void {
+  void getSession().catch(() => {});
+}
 export async function speakOffline(text: string): Promise<string> {
-  const p = await load();
-  const session = await p.TtsSession.create({ voiceId: OFFLINE_VOICE_ID, wasmPaths: WASM_PATHS });
-  const wav = await session.predict(text);
-  return URL.createObjectURL(wav);
+  const run = chain.then(async () => {
+    const session = await getSession();
+    const wav = await session.predict(text);
+    return URL.createObjectURL(wav);
+  });
+  chain = run.catch(() => {});
+  return run;
 }
 
 /** True when the learner chose the on-device voice in Settings. */

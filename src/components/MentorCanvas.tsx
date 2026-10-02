@@ -14,6 +14,7 @@ import {
   setMicPref,
   setVoicePref,
   speakOffline,
+  warmOfflineVoice,
   type MicPref,
   type VoicePref,
 } from "@/lib/offline-voice";
@@ -410,6 +411,10 @@ export function MentorCanvas({
     if (open) {
       logEvent("mentor_opened", { key_concept: context.key_concept });
       setError(null);
+      // Load the on-device voice now so the first spoken sentence has no wait.
+      if (voicePrefRef.current === "instant") {
+        void isOfflineVoiceInstalled().then((ok) => ok && warmOfflineVoice());
+      }
     } else {
       setLive(false);
       liveRef.current = false;
@@ -852,15 +857,25 @@ export function MentorCanvas({
       }
       void send(transcript);
     };
-    recog.onerror = () => {
+    recog.onerror = (ev?: unknown) => {
+      if (recogRef.current !== recog) return;
       setListening(false);
+      const code = (ev as { error?: string } | undefined)?.error;
+      if (code === "not-allowed" || code === "service-not-allowed" || code === "audio-capture") {
+        liveRef.current = false;
+        setLive(false);
+        announce("mic", "The microphone is blocked or missing. Allow it in the browser's address bar, then turn Live talk on again.");
+      }
     };
     recog.onend = () => {
+      // An older, aborted recogniser ending must not cancel the new one.
+      if (recogRef.current !== recog) return;
       setListening(false);
       if (liveRef.current && !busyRef.current && !drainingRef.current && !stoppedRef.current) {
         setTimeout(() => {
-          if (liveRef.current && !busyRef.current && !drainingRef.current) startRecognition(true);
-        }, 500);
+          if (liveRef.current && !busyRef.current && !drainingRef.current && recogRef.current === recog)
+            startRecognition(true);
+        }, 300);
       }
     };
     recogRef.current = recog;
@@ -895,12 +910,30 @@ export function MentorCanvas({
     startRecognition(false);
   }
 
-  function toggleLive() {
+  async function toggleLive() {
     const nextLive = !live;
+    if (nextLive) {
+      unlockAudio();
+      // Ask for the microphone inside the click so the browser shows its prompt.
+      try {
+        const s = await navigator.mediaDevices?.getUserMedia({ audio: true });
+        s?.getTracks().forEach((t) => t.stop());
+      } catch {
+        announce("mic", "Microphone access was blocked. Allow it in the browser's address bar and try again.");
+        return;
+      }
+      if (!getSpeechRecognition() && !(micPrefRef.current === "device" && isSttInstalled())) {
+        announce("mic", "This browser can't listen continuously. Use Chrome or Edge, or download on-device listening in Settings.");
+        return;
+      }
+    }
     setLive(nextLive);
     liveRef.current = nextLive;
     if (nextLive) {
+      // Barge-in: going live stops the mentor talking and listens straight away.
+      if (drainingRef.current) stopAll();
       stoppedRef.current = false;
+      drainingRef.current = false;
       startRecognition(true);
     } else {
       try {
