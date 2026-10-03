@@ -142,6 +142,7 @@ class SegmentParser {
       this.consume(work.slice(0, m.index));
       this.flush();
       if (m[1] === "brief") {
+        this.sawBrief = true;
         this.speaking = true;
         this.target = null;
       } else if (m[1] === "written") {
@@ -154,6 +155,36 @@ class SegmentParser {
       work = work.slice(m.index + m[0].length);
     }
     this.drainSentences();
+    this.speakFallback(false);
+  }
+
+  /**
+   * Some replies (notably code-explaining mode) arrive without a [[brief]]
+   * marker, which left them silent. Speak the opening sentences of the written
+   * text instead, as soon as each one is complete.
+   */
+  private sawBrief = false;
+  private fallbackSpoken = 0;
+  private fallbackCursor = 0;
+  private speakFallback(final: boolean): void {
+    if (this.sawBrief || this.fallbackSpoken >= 3) return;
+    const text = this.display.slice(this.fallbackCursor);
+    const re = /[^.!?]*[.!?]+["')\]]*\s*/g;
+    let m: RegExpExecArray | null;
+    while (this.fallbackSpoken < 3 && (m = re.exec(text))) {
+      const sentence = m[0].replace(/\[\[[^\]]*\]\]/g, "").trim();
+      if (!m[0]) break;
+      this.fallbackCursor += m[0].length;
+      if (sentence.length > 1) {
+        this.emit({ text: sentence, target: null });
+        this.fallbackSpoken++;
+      }
+    }
+    if (final && this.fallbackSpoken === 0) {
+      const rest = text.trim();
+      if (rest.length > 1) this.emit({ text: rest.slice(0, 400), target: null });
+      this.fallbackSpoken = 3;
+    }
   }
 
   private consume(text: string) {
@@ -202,6 +233,7 @@ class SegmentParser {
     this.raw = "";
     this.drainSentences();
     this.flush();
+    this.speakFallback(true);
   }
 }
 
