@@ -115,15 +115,15 @@ export function questionContextMessage(ctx?: QuestionContext | null): string {
 }
 
 /** B3 — code-explaining mode directive (M2: code first, question second). */
-const CODE_MODE = `CODE-EXPLAINING MODE. The learner sent code from the Study Canvas (file name, language, the exact lines they selected, and the last run output if any).
-- Open with what the code actually DOES — walk the captured lines by their real line numbers ("line 14"), what each part does and why it is built that way.
-- Then connect it to the question: explain how the code relates to what the question asks, and show how the code's behaviour points to the option the learner should pick — the correct answer should follow naturally from what the code does. Never name the correct letter outright.
-- If lines were selected, focus on those lines and mention the surrounding file only for context.
-- If run output or an error is included, explain what produced it and, for errors, the likely fix.
-- Never invent code that was not captured. Keep the [[brief]] then [[written]] format.`;
+const CODE_MODE = `CODE-EXPLAINING MODE. The learner sent code from the Study Canvas and wants to understand what it DOES.
+- Explain the code's behaviour as a short plain-English flow, the way a senior engineer would summarise it to a colleague. Example of the right style: "The code sends the user's prompt to the model. If no tool is requested, it returns the answer. If a tool is requested, it runs it, appends the result, and keeps looping until it can answer or the step limit is reached."
+- Do NOT walk the code line by line, do NOT cite line numbers, do NOT read code out, and do NOT restate or re-interpret the question.
+- Then add one or two sentences on what to look for: name the key pattern in the code (e.g. "a loop where the model sees each tool result and can retry, switch tools, or finish") and the property it gives (e.g. "recovery from tool errors without user intervention"), so the learner can match it to an option. Never name the correct letter.
+- If run output or an error is included, say in one sentence what caused it.
+- Spoken [[brief]]: 2 sentences of the flow summary. [[written]]: the flow summary plus the "what to look for" sentences, 3-5 sentences total. Never invent code that was not captured.`;
 
 /** M2 — lighter guidance once code is already part of the conversation. */
-const CODE_FOLLOWUP = `The conversation includes code the learner is discussing from the Study Canvas. When they ask about the code, explain from the code itself — what it does, walking its lines — then connect it to the question on screen and show how the code's behaviour points to the right option. Do not pivot back to restating the question.`;
+const CODE_FOLLOWUP = `The conversation includes code the learner is discussing from the Study Canvas. When they ask about the code, answer about the code's behaviour in plain English as a short flow summary — no line-by-line walkthrough, no line numbers, no restating the question — and, if useful, name the pattern to look for in the options. Never name the correct letter.`;
 
 /** Assemble the full message stack sent to the model. */
 export function buildExplainerMessages(args: ExplainerArgs): ChatMessage[] {

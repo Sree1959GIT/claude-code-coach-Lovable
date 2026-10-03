@@ -405,7 +405,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
                   } — the learner's attention is there.`
                 : "",
               codeActive
-                ? "The conversation includes code from the Study Canvas. When the learner talks about the code, explain from the code itself — walk through what it does, connect it to the question on screen, and show how the code's behaviour points to the option that should be selected. Do not reveal the correct letter outright."
+                ? "The conversation includes code from the Study Canvas. When the learner talks about the code, summarise in plain English what the code does as a flow (e.g. 'it sends the prompt to the model; if no tool is requested it returns the answer; if a tool is requested it runs it, appends the result and loops until it can answer or hits the step limit'). Do NOT go line by line, do NOT quote line numbers, do NOT restate the question. Then, in one or two sentences, name the pattern the learner should look for in the options. Never reveal the correct letter."
                 : "",
               jevOk.intent === "evaluate_option" && context?.selectedOption
                 ? `The learner chose option ${context.selectedOption}; if it is wrong, name the specific misconception that makes it look right, then correct it without revealing the key unless asked.`
