@@ -19,4 +19,4 @@
 - Mentor routing: Jev decides intent (700 ms budget) with keyword `planRoute` fallback; agreement traced on Traces.
 
 ## Current active task
-Bulk import is exam-scoped (rows only match the active exam's study areas; runs carry exam_id; multi-answer via `correct` like A,C). Next: admin loads real questions, then apply Jev tuning from Traces once 50+ decisions exist. Progress pages take the active exam id; keep it that way for isolation.
+Live Talk wave T1 → T2 → T3 (see .lovable/plan.md). T1 done: echo-cancelled mic + AnalyserNode speech detector, bargeIn() aborts the mentor request and audio. Next: T2 (voice starts with the text). Still waiting: Bulk import of real questions, Jev tuning at 50+ decisions. Progress pages take the active exam id for isolation.
