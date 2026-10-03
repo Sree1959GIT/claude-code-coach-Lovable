@@ -166,22 +166,19 @@ class SegmentParser {
   private sawBrief = false;
   private fallbackSpoken = 0;
   private fallbackCursor = 0;
-  private speakFallback(final: boolean) {
+  private speakFallback(final: boolean): void {
     if (this.sawBrief || this.fallbackSpoken >= 3) return;
     const text = this.display.slice(this.fallbackCursor);
     const re = /[^.!?]*[.!?]+["')\]]*\s*/g;
     let m: RegExpExecArray | null;
     while (this.fallbackSpoken < 3 && (m = re.exec(text))) {
       const sentence = m[0].replace(/\[\[[^\]]*\]\]/g, "").trim();
+      if (!m[0]) break;
       this.fallbackCursor += m[0].length;
-      re.lastIndex = 0;
-      const restText = this.display.slice(this.fallbackCursor);
       if (sentence.length > 1) {
         this.emit({ text: sentence, target: null });
         this.fallbackSpoken++;
       }
-      if (!restText) break;
-      return this.speakFallback(final);
     }
     if (final && this.fallbackSpoken === 0) {
       const rest = text.trim();
