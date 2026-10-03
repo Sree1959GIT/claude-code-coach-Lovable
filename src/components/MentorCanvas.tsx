@@ -597,6 +597,9 @@ export function MentorCanvas({
     if (drainingRef.current) return;
     drainingRef.current = true;
     let next: Promise<string | null> | null = null;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
       while (!stoppedRef.current) {
         const seg = queueRef.current.shift();
@@ -717,6 +720,7 @@ export function MentorCanvas({
         const ok = await streamLocalMentor({
           model: localModel,
           messages: next,
+          signal: controller.signal,
           context: { ...(ctx ?? {}), examName: activeExam.name, intent: decision?.intent ?? null, focus: decision?.focus ?? null } as never,
           onDelta: (d) => {
             if (firstAt == null) {
@@ -752,6 +756,7 @@ export function MentorCanvas({
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ messages: next, context: contextRef.current }),
+        signal: controller.signal,
       });
       if (!res.ok || !res.body) {
         throw new Error((await res.text().catch(() => "")) || `Mentor failed (${res.status})`);
@@ -861,7 +866,19 @@ export function MentorCanvas({
       }
     } catch (e) {
       setStreaming("");
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      if (controller.signal.aborted) {
+        // T1 — interrupted: keep what was said so far, marked as cut off.
+        const partial = parser.display.trim();
+        if (partial) {
+          setMessages((m) => {
+            const updated: Msg[] = [...m, { role: "assistant", content: `${partial} — (interrupted)` }];
+            messagesRef.current = updated;
+            return updated;
+          });
+        }
+      } else {
+        setError(e instanceof Error ? e.message : "Something went wrong.");
+      }
     } finally {
       setBusy(false);
       busyRef.current = false;
@@ -908,6 +925,7 @@ export function MentorCanvas({
       });
   }
 
+  startRecognitionRef.current = (c: boolean) => startRecognition(c);
   function startRecognition(continuous: boolean) {
     if (busyRef.current || drainingRef.current) return;
     try {
@@ -1373,6 +1391,25 @@ export function MentorCanvas({
           </Button>
         )}
         {voiceDownloading && <progress className="mb-2 w-full accent-primary" max={voiceDownloadProgress.total || 1} value={voiceDownloadProgress.loaded} aria-label="Instant voice download progress" />}
+        {live && (
+          <p
+            className="mb-2 font-mono text-xs uppercase tracking-widest text-muted-foreground"
+            aria-live="polite"
+          >
+            Live ·{" "}
+            <span className="text-primary">
+              {interrupted
+                ? "Interrupted"
+                : speaking
+                  ? "Speaking — talk to interrupt"
+                  : busy
+                    ? "Thinking"
+                    : listening
+                      ? "Listening"
+                      : "Idle"}
+            </span>
+          </p>
+        )}
         {speaking && (
           <button
             onClick={stopAll}
