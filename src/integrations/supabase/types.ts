@@ -1060,6 +1060,7 @@ export type Database = {
           created_by: string | null
           dry_run: boolean
           error: string | null
+          exam_id: string | null
           format: string
           id: string
           imported: number
@@ -1072,6 +1073,7 @@ export type Database = {
           created_by?: string | null
           dry_run?: boolean
           error?: string | null
+          exam_id?: string | null
           format: string
           id?: string
           imported?: number
@@ -1084,6 +1086,7 @@ export type Database = {
           created_by?: string | null
           dry_run?: boolean
           error?: string | null
+          exam_id?: string | null
           format?: string
           id?: string
           imported?: number
@@ -1091,7 +1094,15 @@ export type Database = {
           skipped?: number
           valid?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "import_runs_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_runs: {
         Row: {
