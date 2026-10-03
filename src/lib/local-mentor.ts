@@ -49,9 +49,9 @@ function systemPrompt(ctx: Ctx, codeTurn: boolean, codeActive: boolean): string 
     : "";
   const intentHint = ctx?.intent ? `\nThe learner's turn is: ${ctx.intent.replace(/_/g, " ")}.` : "";
   const codeHint = codeTurn
-    ? "\n\nCODE WALKTHROUGH: the learner sent code from the Study Canvas. Explain the code itself — what it does, walking its lines — then connect it to the question on screen and show how the code's behaviour points to the option they should pick. Never state which letter is correct."
+    ? "\n\nCODE SUMMARY: the learner sent code from the Study Canvas. Summarise what the code does as a short plain-English flow (e.g. 'it sends the prompt to the model; if no tool is requested it returns the answer; otherwise it runs the tool, appends the result and loops until it can answer or hits the step limit'). No line-by-line walkthrough, no line numbers, no restating the question. Then name in one sentence the pattern to look for in the options. Never state which letter is correct."
     : codeActive
-      ? "\n\nThe conversation includes code from the Study Canvas. When the learner asks about the code, explain from the code itself and connect it to the question — do not pivot back to restating the question."
+      ? "\n\nThe conversation includes code from the Study Canvas. When the learner asks about the code, answer with a short plain-English summary of its behaviour — no line-by-line walkthrough and no restating the question."
       : "";
   return `You are a warm, concise exam tutor${exam}.${intentHint}${focusHint}${codeHint}
 Teach the concept so the learner can decide; never give away the answer.
