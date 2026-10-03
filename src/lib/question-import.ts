@@ -31,6 +31,7 @@ export type ImportRow = {
   stem: string;
   keyConcept: string | null;
   difficulty: string;
+  answerMode: "single" | "multiple";
   options: ImportOption[];
 };
 
@@ -111,7 +112,11 @@ function buildRow(
   if (!domainSlug) issues.push({ row: rowNumber, message: "Missing domain slug." });
   if (!stem) issues.push({ row: rowNumber, message: "Missing question stem." });
 
-  const correctLabel = clean(raw.correct).toUpperCase();
+  // Several correct answers: "A,C", "A|C" or "A;C".
+  const correctLabels = clean(raw.correct)
+    .toUpperCase()
+    .split(/[,|;\s]+/)
+    .filter(Boolean);
   const options: ImportOption[] = raw.options
     .map((o, i) => ({
       label: (clean(o.label) || IMPORT_OPTION_LABELS[i] || String(i + 1)).toUpperCase(),
@@ -121,20 +126,19 @@ function buildRow(
     }))
     .filter((o) => o.text);
 
-  if (correctLabel) {
-    for (const o of options) o.isCorrect = o.label === correctLabel;
+  if (correctLabels.length) {
+    for (const o of options) o.isCorrect = correctLabels.includes(o.label);
   }
 
   if (options.length < 2) issues.push({ row: rowNumber, message: "At least two answer options are required." });
   const correctCount = options.filter((o) => o.isCorrect).length;
-  if (options.length >= 2 && correctCount !== 1) {
+  if (options.length >= 2 && correctCount === 0) {
     issues.push({
       row: rowNumber,
-      message:
-        correctCount === 0
-          ? "No correct option marked (set the `correct` column to an option label)."
-          : `${correctCount} options marked correct — exactly one is required.`,
+      message: "No correct option marked (set the `correct` column to an option label, or several like A,C).",
     });
+  } else if (correctCount > 1 && correctCount >= options.length) {
+    issues.push({ row: rowNumber, message: "Every option is marked correct — at least one must be wrong." });
   }
 
   const difficulty = normalizeDifficulty(clean(raw.difficulty), rowNumber, issues);
@@ -150,6 +154,7 @@ function buildRow(
     stem,
     keyConcept: nullable(raw.keyConcept),
     difficulty,
+    answerMode: correctCount > 1 ? "multiple" : "single",
     options,
   };
 }

@@ -8,12 +8,15 @@ import { toast } from "sonner";
 import { importQuestions, type ImportResult } from "@/lib/import.functions";
 import { IMPORT_CSV_TEMPLATE } from "@/lib/question-import";
 import { ImportLogsPanel } from "@/components/admin/ImportLogsPanel";
+import { useActiveExam } from "@/hooks/useActiveExam";
 
 const btn =
   "border border-border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-muted disabled:opacity-40";
 
 export function BulkImportPanel() {
   const runImport = useServerFn(importQuestions);
+  const { active: activeExam } = useActiveExam();
+  const examId = activeExam.id || null;
   const queryClient = useQueryClient();
   const [format, setFormat] = useState<"csv" | "json">("csv");
   const [text, setText] = useState("");
@@ -21,7 +24,7 @@ export function BulkImportPanel() {
   const [result, setResult] = useState<ImportResult | null>(null);
 
   const mutation = useMutation({
-    mutationFn: (dryRun: boolean) => runImport({ data: { text, format, dryRun, skipDuplicates } }),
+    mutationFn: (dryRun: boolean) => runImport({ data: { text, format, dryRun, skipDuplicates, examId } }),
     onSuccess: (res) => {
       setResult(res);
       void queryClient.invalidateQueries({ queryKey: ["import-runs"] });
@@ -45,6 +48,11 @@ export function BulkImportPanel() {
 
   return (
     <div className="mt-4 border border-border bg-background p-5">
+      <p className="mb-3 text-sm text-muted-foreground">
+        Importing into <span className="font-semibold text-foreground">{activeExam.name || "no exam selected"}</span>.
+        Rows can only use this exam's study areas. Switch exams from the top bar to import elsewhere.
+        For several correct answers, write the labels together, e.g. <span className="font-mono">A,C</span>.
+      </p>
       <div className="flex flex-wrap items-center gap-3">
         {(["csv", "json"] as const).map((f) => (
           <button
@@ -102,7 +110,7 @@ export function BulkImportPanel() {
         <button
           type="button"
           className={btn}
-          disabled={!text.trim() || mutation.isPending}
+          disabled={!text.trim() || !examId || mutation.isPending}
           onClick={() => mutation.mutate(true)}
         >
           {mutation.isPending ? "Working…" : "Dry run"}
@@ -150,6 +158,7 @@ export function BulkImportPanel() {
                     <th className="px-3 py-2 text-left">Stem</th>
                     <th className="px-3 py-2 text-left">Diff</th>
                     <th className="px-3 py-2 text-right">Opts</th>
+                    <th className="px-3 py-2 text-left">Answers</th>
                     <th className="px-3 py-2 text-left">Status</th>
                   </tr>
                 </thead>
@@ -161,6 +170,7 @@ export function BulkImportPanel() {
                       <td className="max-w-md truncate px-3 py-2">{p.stem}</td>
                       <td className="px-3 py-2 uppercase text-muted-foreground">{p.difficulty}</td>
                       <td className="px-3 py-2 text-right">{p.optionCount}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{p.answerMode === "multiple" ? "several" : "one"}</td>
                       <td className="px-3 py-2 uppercase tracking-widest text-xs">
                         {p.duplicate ? (
                           <span className="text-destructive">duplicate</span>
@@ -177,7 +187,7 @@ export function BulkImportPanel() {
         </div>
       )}
 
-      <ImportLogsPanel />
+      <ImportLogsPanel examId={examId} />
     </div>
   );
 }

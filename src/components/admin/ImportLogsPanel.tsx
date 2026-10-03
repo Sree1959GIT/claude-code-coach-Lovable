@@ -14,13 +14,13 @@ const STATUS_CLASS: Record<string, string> = {
   error: "text-destructive",
 };
 
-export function ImportLogsPanel() {
+export function ImportLogsPanel({ examId }: { examId: string | null }) {
   const fetchRuns = useServerFn(listImportRuns);
   const fetchItems = useServerFn(getImportRunItems);
   const [openId, setOpenId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "problems">("problems");
 
-  const runs = useQuery({ queryKey: ["import-runs"], queryFn: () => fetchRuns({}) });
+  const runs = useQuery({ queryKey: ["import-runs", examId], queryFn: () => fetchRuns({ data: { examId } }) });
   const items = useQuery({
     queryKey: ["import-run-items", openId],
     queryFn: () => fetchItems({ data: { runId: openId! } }),

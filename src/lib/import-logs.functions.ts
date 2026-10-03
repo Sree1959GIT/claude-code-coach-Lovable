@@ -27,12 +27,17 @@ export type ImportRunItem = {
 
 export const listImportRuns = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<ImportRunSummary[]> => {
-    const { data, error } = await context.supabase
+  .inputValidator((d: { examId?: string | null } | undefined) => ({
+    examId: typeof d?.examId === "string" && d.examId ? d.examId : null,
+  }))
+  .handler(async ({ context, data: input }): Promise<ImportRunSummary[]> => {
+    let q = context.supabase
       .from("import_runs")
       .select("id, format, dry_run, parsed, valid, imported, skipped, error, created_at")
       .order("created_at", { ascending: false })
       .limit(25);
+    if (input.examId) q = q.eq("exam_id", input.examId);
+    const { data, error } = await q;
     if (error) throw error;
     return (data ?? []).map((r) => ({
       id: r.id,

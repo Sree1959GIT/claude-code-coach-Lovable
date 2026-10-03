@@ -99,3 +99,5 @@
 - [x] P4.2: Tuning suggestions computed from traces; settings unchanged until 50+ decisions
 - [x] P4.3: Ollama mentor gets exam name, Jev intent and focus (with on-screen highlight); first-word time logged
 - [x] P4.4: One / Several answers label, Locked tag and filter in admin question list
+
+- [x] Bulk import scoped to the active exam with per-row logs and multi-answer support

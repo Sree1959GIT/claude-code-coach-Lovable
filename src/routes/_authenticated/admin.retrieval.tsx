@@ -31,7 +31,7 @@ function RetrievalGroup() {
         title="Import logs"
         blurb="Every bulk submission with its per-row status and diagnostic message."
       >
-        <ImportLogsPanel />
+        <ImportLogsPanel examId={null} />
       </AdminSection>
     </div>
   );
