@@ -597,9 +597,6 @@ export function MentorCanvas({
     if (drainingRef.current) return;
     drainingRef.current = true;
     let next: Promise<string | null> | null = null;
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
     try {
       while (!stoppedRef.current) {
         const seg = queueRef.current.shift();
@@ -700,6 +697,9 @@ export function MentorCanvas({
       void drain();
     });
 
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
       // L5 — answer through the learner's own Ollama when chosen and reachable.
       const localModel = getLocalMentorModel();
