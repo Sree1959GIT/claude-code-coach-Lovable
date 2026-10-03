@@ -101,3 +101,8 @@
 - [x] P4.4: One / Several answers label, Locked tag and filter in admin question list
 
 - [x] Bulk import scoped to the active exam with per-row logs and multi-answer support
+
+## Live Talk wave
+- [x] T1 — turn-taking and barge-in (speech detector, abort on interrupt, turn states)
+- [ ] T2 — voice starts with the text (phrase-level speech, live short style)
+- [ ] T3 — own Gemini key as server secret
