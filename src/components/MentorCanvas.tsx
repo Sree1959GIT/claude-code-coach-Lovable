@@ -142,7 +142,6 @@ class SegmentParser {
       this.consume(work.slice(0, m.index));
       this.flush();
       if (m[1] === "brief") {
-        this.sawBrief = true;
         this.speaking = true;
         this.target = null;
       } else if (m[1] === "written") {
@@ -155,36 +154,6 @@ class SegmentParser {
       work = work.slice(m.index + m[0].length);
     }
     this.drainSentences();
-    this.speakFallback(false);
-  }
-
-  /**
-   * Some replies (notably code-explaining mode) arrive without a [[brief]]
-   * marker, which left them silent. Speak the opening sentences of the written
-   * text instead, as soon as each one is complete.
-   */
-  private sawBrief = false;
-  private fallbackSpoken = 0;
-  private fallbackCursor = 0;
-  private speakFallback(final: boolean): void {
-    if (this.sawBrief || this.fallbackSpoken >= 3) return;
-    const text = this.display.slice(this.fallbackCursor);
-    const re = /[^.!?]*[.!?]+["')\]]*\s*/g;
-    let m: RegExpExecArray | null;
-    while (this.fallbackSpoken < 3 && (m = re.exec(text))) {
-      const sentence = m[0].replace(/\[\[[^\]]*\]\]/g, "").trim();
-      if (!m[0]) break;
-      this.fallbackCursor += m[0].length;
-      if (sentence.length > 1) {
-        this.emit({ text: sentence, target: null });
-        this.fallbackSpoken++;
-      }
-    }
-    if (final && this.fallbackSpoken === 0) {
-      const rest = text.trim();
-      if (rest.length > 1) this.emit({ text: rest.slice(0, 400), target: null });
-      this.fallbackSpoken = 3;
-    }
   }
 
   private consume(text: string) {
@@ -233,7 +202,6 @@ class SegmentParser {
     this.raw = "";
     this.drainSentences();
     this.flush();
-    this.speakFallback(true);
   }
 }
 
@@ -381,10 +349,6 @@ export function MentorCanvas({
   const drainingRef = useRef(false);
   const stoppedRef = useRef(false);
   const contextRef = useRef(context);
-  // T1 — cancels the in-flight mentor request (cloud or Ollama) on barge-in.
-  const abortRef = useRef<AbortController | null>(null);
-  const startRecognitionRef = useRef<((continuous: boolean) => void) | null>(null);
-  const [interrupted, setInterrupted] = useState(false);
   const { active: activeExam } = useActiveExam();
   const decideLocal = useServerFn(decideLocalTurn);
 
@@ -416,7 +380,8 @@ export function MentorCanvas({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, streaming, busy]);
 
-  const silenceAudio = useCallback(() => {
+  const stopAll = useCallback(() => {
+    stoppedRef.current = true;
     queueRef.current = [];
     // Phase 1 — a barge-in must silence the current clip instantly, not just
     // pause it and leave the buffered audio ready to resume.
@@ -431,19 +396,7 @@ export function MentorCanvas({
         /* noop */
       }
     }
-    try {
-      window.speechSynthesis?.cancel();
-    } catch {
-      /* noop */
-    }
     setSpeaking(false);
-  }, []);
-
-  const stopAll = useCallback(() => {
-    stoppedRef.current = true;
-    abortRef.current?.abort();
-    abortRef.current = null;
-    silenceAudio();
     try {
       recogRef.current?.abort();
     } catch {
@@ -452,78 +405,7 @@ export function MentorCanvas({
     setListening(false);
     setStatus(null);
     highlight(null);
-  }, [highlight, silenceAudio]);
-
-  /**
-   * T1 — the learner started talking: stop the voice, cut off the half-written
-   * reply (aborts the cloud or Ollama request) and listen straight away.
-   */
-  const bargeIn = useCallback(() => {
-    stopAll();
-    setInterrupted(true);
-    logEvent("mentor_barge_in", {});
-    setTimeout(() => {
-      stoppedRef.current = false;
-      drainingRef.current = false;
-      busyRef.current = false;
-      setBusy(false);
-      setInterrupted(false);
-      if (liveRef.current) startRecognitionRef.current?.(true);
-    }, 120);
-  }, [stopAll]);
-
-  // T1 — one echo-cancelled mic stream + AnalyserNode speech detector while
-  // Live talk is on. ~80 ms of speech above an adaptive noise floor while the
-  // mentor is thinking or speaking triggers bargeIn().
-  useEffect(() => {
-    if (!live || typeof window === "undefined") return;
-    let stream: MediaStream | null = null;
-    let ctx: AudioContext | null = null;
-    let timer: number | null = null;
-    let cancelled = false;
-    void (async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 },
-        });
-        if (cancelled) return stream.getTracks().forEach((t) => t.stop());
-        ctx = new AudioContext();
-        const src = ctx.createMediaStreamSource(stream);
-        const analyser = ctx.createAnalyser();
-        analyser.fftSize = 512;
-        src.connect(analyser);
-        const buf = new Float32Array(analyser.fftSize);
-        let floor = 0.01;
-        let voicedMs = 0;
-        const STEP = 20;
-        timer = window.setInterval(() => {
-          analyser.getFloatTimeDomainData(buf);
-          let sum = 0;
-          for (let i = 0; i < buf.length; i++) sum += buf[i]! * buf[i]!;
-          const rms = Math.sqrt(sum / buf.length);
-          const threshold = Math.max(0.02, floor * 3);
-          if (rms > threshold) voicedMs += STEP;
-          else {
-            voicedMs = 0;
-            floor = floor * 0.95 + rms * 0.05; // adapt only on non-speech
-          }
-          const mentorActive = drainingRef.current || busyRef.current;
-          if (mentorActive && voicedMs >= 80 && !stoppedRef.current) {
-            voicedMs = 0;
-            bargeIn();
-          }
-        }, STEP);
-      } catch {
-        /* permission handled by toggleLive */
-      }
-    })();
-    return () => {
-      cancelled = true;
-      if (timer) clearInterval(timer);
-      stream?.getTracks().forEach((t) => t.stop());
-      void ctx?.close().catch(() => {});
-    };
-  }, [live, bargeIn]);
+  }, [highlight]);
 
   useEffect(() => {
     if (open) {
@@ -729,9 +611,6 @@ export function MentorCanvas({
       void drain();
     });
 
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
     try {
       // L5 — answer through the learner's own Ollama when chosen and reachable.
       const localModel = getLocalMentorModel();
@@ -752,7 +631,6 @@ export function MentorCanvas({
         const ok = await streamLocalMentor({
           model: localModel,
           messages: next,
-          signal: controller.signal,
           context: { ...(ctx ?? {}), examName: activeExam.name, intent: decision?.intent ?? null, focus: decision?.focus ?? null } as never,
           onDelta: (d) => {
             if (firstAt == null) {
@@ -788,7 +666,6 @@ export function MentorCanvas({
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ messages: next, context: contextRef.current }),
-        signal: controller.signal,
       });
       if (!res.ok || !res.body) {
         throw new Error((await res.text().catch(() => "")) || `Mentor failed (${res.status})`);
@@ -898,19 +775,7 @@ export function MentorCanvas({
       }
     } catch (e) {
       setStreaming("");
-      if (controller.signal.aborted) {
-        // T1 — interrupted: keep what was said so far, marked as cut off.
-        const partial = parser.display.trim();
-        if (partial) {
-          setMessages((m) => {
-            const updated: Msg[] = [...m, { role: "assistant", content: `${partial} — (interrupted)` }];
-            messagesRef.current = updated;
-            return updated;
-          });
-        }
-      } else {
-        setError(e instanceof Error ? e.message : "Something went wrong.");
-      }
+      setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setBusy(false);
       busyRef.current = false;
@@ -957,7 +822,6 @@ export function MentorCanvas({
       });
   }
 
-  startRecognitionRef.current = (c: boolean) => startRecognition(c);
   function startRecognition(continuous: boolean) {
     if (busyRef.current || drainingRef.current) return;
     try {
@@ -1423,25 +1287,6 @@ export function MentorCanvas({
           </Button>
         )}
         {voiceDownloading && <progress className="mb-2 w-full accent-primary" max={voiceDownloadProgress.total || 1} value={voiceDownloadProgress.loaded} aria-label="Instant voice download progress" />}
-        {live && (
-          <p
-            className="mb-2 font-mono text-xs uppercase tracking-widest text-muted-foreground"
-            aria-live="polite"
-          >
-            Live ·{" "}
-            <span className="text-primary">
-              {interrupted
-                ? "Interrupted"
-                : speaking
-                  ? "Speaking — talk to interrupt"
-                  : busy
-                    ? "Thinking"
-                    : listening
-                      ? "Listening"
-                      : "Idle"}
-            </span>
-          </p>
-        )}
         {speaking && (
           <button
             onClick={stopAll}

@@ -114,13 +114,16 @@ export function questionContextMessage(ctx?: QuestionContext | null): string {
     .join("\n");
 }
 
-/** B3 — code-explaining mode directive. */
+/** B3 — code-explaining mode directive (M2: code first, question second). */
 const CODE_MODE = `CODE-EXPLAINING MODE. The learner sent code from the Study Canvas (file name, language, the exact lines they selected, and the last run output if any).
-- Explain ONLY the captured code; refer to it by its real line numbers ("line 14").
+- Open with what the code actually DOES — walk the captured lines by their real line numbers ("line 14"), what each part does and why it is built that way.
+- Then connect it to the question: explain how the code relates to what the question asks, and show how the code's behaviour points to the option the learner should pick — the correct answer should follow naturally from what the code does. Never name the correct letter outright.
 - If lines were selected, focus on those lines and mention the surrounding file only for context.
 - If run output or an error is included, explain what produced it and, for errors, the likely fix.
-- Tie the code back to the current question's concept in one sentence.
 - Never invent code that was not captured. Keep the [[brief]] then [[written]] format.`;
+
+/** M2 — lighter guidance once code is already part of the conversation. */
+const CODE_FOLLOWUP = `The conversation includes code the learner is discussing from the Study Canvas. When they ask about the code, explain from the code itself — what it does, walking its lines — then connect it to the question on screen and show how the code's behaviour points to the right option. Do not pivot back to restating the question.`;
 
 /** Assemble the full message stack sent to the model. */
 export function buildExplainerMessages(args: ExplainerArgs): ChatMessage[] {
@@ -130,10 +133,15 @@ export function buildExplainerMessages(args: ExplainerArgs): ChatMessage[] {
   // B3 — code-explaining mode when the latest turn carries Study Canvas code.
   const last = args.messages[args.messages.length - 1];
   const codeMode = last?.role === "user" && last.content.startsWith("[[code-context:");
+  // M2 — keep code alive for follow-up questions in the same conversation.
+  const codeRecent =
+    codeMode ||
+    args.messages.slice(-8).some((m) => m.role === "user" && m.content.startsWith("[[code-context:"));
   return [
     { role: "system", content: withExam(PERSONA, examLabelSync()) },
     { role: "system", content: intentDirective(args.intent) },
     ...(codeMode ? [{ role: "system" as const, content: CODE_MODE }] : []),
+    ...(codeRecent && !codeMode ? [{ role: "system" as const, content: CODE_FOLLOWUP }] : []),
     { role: "system", content: questionContextMessage(args.context) },
     ...(advice ? [{ role: "system" as const, content: advice.content }] : []),
     ...(args.profileNote ? [{ role: "system" as const, content: args.profileNote }] : []),
