@@ -19,4 +19,4 @@
 - Mentor routing: Jev decides intent (700 ms budget) with keyword `planRoute` fallback; agreement traced on Traces.
 
 ## Current active task
-Phases 1–4 done (see roadmap.md): spoken briefs, audio pipelining, focus highlighting, Jev router with keyword fallback, dynamic library gating, prompt conditioning, security/RLS, exam scoping, Traces speed panel. Mentor latency fixed: parallel history/retrieval/routing, voice synthesis starts on first sentence, live-mic permission handling and mid-answer barge-in. Next: import questions via Bulk import, then apply Jev tuning from Traces once 50+ decisions exist. Progress pages take the active exam id; keep it that way for isolation.
+Bulk import is exam-scoped (rows only match the active exam's study areas; runs carry exam_id; multi-answer via `correct` like A,C). Next: admin loads real questions, then apply Jev tuning from Traces once 50+ decisions exist. Progress pages take the active exam id; keep it that way for isolation.
