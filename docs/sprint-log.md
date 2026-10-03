@@ -103,7 +103,8 @@
 - [x] **P3.1:** Shared-content read rules tightened (exams ready-only, domains of ready exams, signed-in checks elsewhere); no critical findings.
 - [x] **P3.2–P4.4:** exam-scoped progress pages and sessions, CCAF areas seeded, Traces speed panel + Jev tuning hints, Ollama mentor exam/Jev context, answer-mode column.
 - [x] **Bulk import:** exam-scoped domains/duplicates, import_runs.exam_id, per-exam logs, multi-answer rows (A,C).
-- **Next (ACTIVE TASK):** load real questions; apply Jev tuning once 50+ decisions.
+- [x] **M2 (code-first explainer):** turns carrying Study Canvas code (`[[code-context:`) skip Jev routing and library lookup; opener anchors on the code ("Alright, let's walk through this code together."); Jev focus gained `code` (`code_recently_shared` in state); explainer CODE_MODE rewritten to explain the code first, then connect it to the question and show how the answer follows from the code's behaviour; follow-up code talk keeps code mode (last 8 turns) in cloud and Ollama prompts. Verified live: Explain-code turn and a "what does max_steps do" follow-up both open on the code with line-level explanations.
+- **Next (ACTIVE TASK):** implement the approved Live Talk wave T1–T3 (`.lovable/plan.md`) — duplex turn-taking, phrase-level streaming voice, direct Gemini. Then: load real questions; apply Jev tuning once 50+ decisions.
 
 
 
