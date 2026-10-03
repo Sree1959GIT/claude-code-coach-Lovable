@@ -12,6 +12,7 @@ export type ImportPreviewRow = {
   stem: string;
   difficulty: string;
   optionCount: number;
+  answerMode: "single" | "multiple";
   duplicate: boolean;
 };
 
@@ -27,7 +28,7 @@ export type ImportResult = {
 
 export const importQuestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { text: string; format: "csv" | "json"; dryRun: boolean; skipDuplicates?: boolean }) => {
+  .inputValidator((input: { text: string; format: "csv" | "json"; dryRun: boolean; skipDuplicates?: boolean; examId?: string | null }) => {
     if (typeof input?.text !== "string" || !input.text.trim()) throw new Error("Paste CSV or JSON to import.");
     if (input.format !== "csv" && input.format !== "json") throw new Error("Format must be csv or json.");
     if (input.text.length > 500_000) throw new Error("Payload too large (500 KB limit).");
@@ -36,6 +37,7 @@ export const importQuestions = createServerFn({ method: "POST" })
       format: input.format,
       dryRun: input.dryRun !== false,
       skipDuplicates: input.skipDuplicates !== false,
+      examId: typeof input.examId === "string" && /^[0-9a-f-]{36}$/i.test(input.examId) ? input.examId : null,
     };
   })
   .handler(async ({ data, context }): Promise<ImportResult> => {
@@ -49,11 +51,20 @@ export const importQuestions = createServerFn({ method: "POST" })
     const { rows, issues } = parseQuestionImport(data.text, data.format);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const [{ data: domains, error: dErr }, { data: existing, error: eErr }] = await Promise.all([
-      supabaseAdmin.from("domains").select("id, slug, title"),
-      supabaseAdmin.from("questions").select("id, domain_id, stem, sort_order"),
-    ]);
+    // Exam isolation: rows may only land in the chosen exam's study areas,
+    // and duplicates are judged within that exam only.
+    if (!data.examId) throw new Error("Pick an exam before importing.");
+    const { data: domains, error: dErr } = await supabaseAdmin
+      .from("domains")
+      .select("id, slug, title")
+      .eq("exam_id", data.examId);
     if (dErr) throw dErr;
+    const examDomainIds = (domains ?? []).map((d) => d.id);
+    if (examDomainIds.length === 0) throw new Error("This exam has no study areas yet — add them first.");
+    const { data: existing, error: eErr } = await supabaseAdmin
+      .from("questions")
+      .select("id, domain_id, stem, sort_order")
+      .in("domain_id", examDomainIds);
     if (eErr) throw eErr;
 
     const domainBySlug = new Map((domains ?? []).map((d) => [d.slug.toLowerCase(), d]));
@@ -71,7 +82,10 @@ export const importQuestions = createServerFn({ method: "POST" })
     for (const r of rows) {
       const domain = domainBySlug.get(r.domainSlug);
       if (!domain) {
-        issues.push({ row: r.row, message: `Unknown domain slug "${r.domainSlug}".` });
+        issues.push({
+          row: r.row,
+          message: `Study area "${r.domainSlug}" isn't part of this exam. Use one of: ${(domains ?? []).map((d) => d.slug).join(", ")}.`,
+        });
         continue;
       }
       const key = norm(r.stem);
@@ -84,6 +98,7 @@ export const importQuestions = createServerFn({ method: "POST" })
         stem: r.stem,
         difficulty: r.difficulty,
         optionCount: r.options.length,
+        answerMode: r.answerMode,
         duplicate,
       });
       if (duplicate && data.skipDuplicates) {
@@ -107,6 +122,7 @@ export const importQuestions = createServerFn({ method: "POST" })
           .from("import_runs")
           .insert({
             created_by: context.userId,
+            exam_id: data.examId,
             format: data.format,
             dry_run: data.dryRun,
             parsed: summary.parsed,
@@ -190,6 +206,7 @@ export const importQuestions = createServerFn({ method: "POST" })
           stem: item.row.stem,
           key_concept: item.row.keyConcept,
           difficulty: item.row.difficulty,
+          answer_mode: item.row.answerMode,
           sort_order: next,
         })
         .select("id")
