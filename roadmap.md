@@ -102,7 +102,13 @@
 
 - [x] Bulk import scoped to the active exam with per-row logs and multi-answer support
 
-## Live Talk wave
-- [x] T1 — turn-taking and barge-in (speech detector, abort on interrupt, turn states)
-- [ ] T2 — voice starts with the text (phrase-level speech, live short style)
-- [ ] T3 — own Gemini key as server secret
+### M2 — Code-first explainer
+- [x] Turns carrying Study Canvas code skip Jev/routing and the library lookup; the spoken opener anchors on the code ("Alright, let's walk through this code together.") instead of "look at what the question is actually asking".
+- [x] Explainer code mode rewritten: explain what the code does first (by line number), then connect it to the question and show how the code's behaviour points to the option to select — without naming the letter.
+- [x] Follow-up code talk keeps code mode for the rest of the conversation (cloud + Ollama); Jev can now return focus `code` via the new `code_recently_shared` signal.
+- Verified live: Explain-code turn and a "what does max_steps do" follow-up both open on the code with line-level explanations.
+
+### Live Talk — turn-taking, interrupting and faster voice (approved plan, next)
+- [ ] T1: Duplex listening — mic stays hot while the mentor speaks (echo cancellation); ~80 ms of speech instantly stops audio, aborts the in-flight reply, and flips to Listening; interrupted speech goes to the chosen listener.
+- [ ] T2: Simultaneous voice and text — live mode uses a short spoken style; speech starts on the first short phrase (4–8 words or first punctuation) with the next phrase prepared while the current one plays; live talk skips library lookup unless clearly needed; Traces shows time to first sound.
+- [ ] T3: Direct Gemini — with a Gemini key saved as a server secret, the mentor talks to Google directly instead of the Lovable gateway; learner keys still win first.

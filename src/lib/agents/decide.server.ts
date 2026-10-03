@@ -11,7 +11,7 @@
 import type { AgentIntent } from "@/lib/orchestrator.server";
 
 /** Phase 1 — what the learner's eye should be on while the answer starts. */
-export type FocusTarget = "scenario" | "stem" | "option" | "none";
+export type FocusTarget = "scenario" | "stem" | "option" | "code" | "none";
 
 export type Decision = {
   intent: AgentIntent;
@@ -25,6 +25,7 @@ const FOCUS: Record<FocusTarget, string> = {
   scenario: "The background/scenario paragraph above the question.",
   stem: "The question sentence itself — what is actually being asked.",
   option: "A specific answer option (the one selected or named in the message).",
+  code: "The code file the learner is discussing from the Study Canvas.",
   none: "Nothing on screen in particular — general talk or study advice.",
 };
 
@@ -38,6 +39,7 @@ export function openerFor(d: {
   selectedOption?: string | null;
 }): string {
   if (d.intent === "smalltalk") return "Sure thing.";
+  if (d.focus === "code") return "Alright, let's walk through this code together.";
   if (d.focus === "option") {
     return d.selectedOption
       ? `Right, let's weigh up option ${d.selectedOption}.`
@@ -54,6 +56,7 @@ export function focusMarker(focus: FocusTarget, selectedOption?: string | null):
   if (focus === "option" && selectedOption) return `[[opt:${selectedOption.toUpperCase()}]]`;
   if (focus === "scenario") return "[[scenario]]";
   if (focus === "stem") return "[[stem]]";
+  // Code focus has no on-question highlight — the Study Canvas is already open.
   return "[[none]]";
 }
 
@@ -74,11 +77,26 @@ export async function decideTurn(args: {
   turn: string;
   hasQuestion: boolean;
   selectedOption: string | null;
+  /** M2 — true when the recent conversation includes Study Canvas code. */
+  codeActive?: boolean;
   timeoutMs?: number;
 }): Promise<DecideResult | null> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!args.turn.trim()) return null;
   const t0 = Date.now();
+  // M2 — a turn that carries Study Canvas code is answered from the code
+  // itself: skip Jev entirely, aim the opener at the code, and report that no
+  // library lookup is needed. Zero latency added on this path.
+  if (args.turn.trimStart().startsWith("[[code-context:")) {
+    return {
+      ok: true,
+      intent: "concept_lookup",
+      intentConfidence: null,
+      needsLibrary: 0,
+      focus: "code",
+      ms: 0,
+    };
+  }
   if (!key) return { ok: false, reason: "missing_api_key", status: null, ms: 0 };
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), args.timeoutMs ?? 2500);
@@ -97,6 +115,7 @@ export async function decideTurn(args: {
           message: args.turn.slice(0, 1500),
           question_on_screen: args.hasQuestion,
           option_selected: args.selectedOption,
+          code_recently_shared: args.codeActive ?? false,
         },
         questions: {
           intent: {

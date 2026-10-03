@@ -16,7 +16,14 @@ import { runResourceAgent } from "@/lib/agents/resource.agent.server";
 import { runCriticAgent } from "@/lib/agents/critic.agent.server";
 import { textToSseStream, buildFallbackAnswer } from "@/lib/agents/gateway.server";
 import type { Db, AgentIntent } from "@/lib/orchestrator.server";
-import { decideTurn, openerFor, focusMarker, type FocusTarget } from "@/lib/agents/decide.server";
+import {
+  decideTurn,
+  openerFor,
+  focusMarker,
+  type DecideResult,
+  type FocusTarget,
+} from "@/lib/agents/decide.server";
+import type { RoutePlan } from "@/lib/orchestrator.server";
 
 /** Phase 1 — encode a text fragment as one SSE delta the mentor panel parses. */
 function sseDelta(content: string): Uint8Array {
@@ -215,16 +222,40 @@ export const Route = createFileRoute("/api/mentor-stream")({
         // --- 1. Route the turn ------------------------------------------------
         // Keyword plan is the instant fallback; Jev starts now so it overlaps
         // the quota check and run start (P2.1).
-        const keywordPlan = planRoute(turn, {
-          selectedOption: context?.selectedOption ?? null,
-          hasQuestion: Boolean(context?.stem),
-        });
+        // M2 — Study Canvas code turns: the captured code IS the context, so
+        // route straight to the explainer with no library lookup and anchor the
+        // opener on the code itself.
+        const isCodeTurn = turn.trimStart().startsWith("[[code-context:");
+        const codeActive =
+          isCodeTurn ||
+          messages.some((m) => m.role === "user" && m.content.trimStart().startsWith("[[code-context:"));
+        const keywordPlan: RoutePlan = isCodeTurn
+          ? {
+              intent: "concept_lookup",
+              agents: ["orchestrator", "explainer"],
+              useRetrieval: false,
+              reason: "Study Canvas code — explain from the captured code, no library lookup.",
+            }
+          : planRoute(turn, {
+              selectedOption: context?.selectedOption ?? null,
+              hasQuestion: Boolean(context?.stem),
+            });
         let plan = keywordPlan;
-        const decidePromise = decideTurn({
-          turn,
-          hasQuestion: Boolean(context?.stem),
-          selectedOption: context?.selectedOption ?? null,
-        }).catch(() => null);
+        const decidePromise: Promise<DecideResult | null> = isCodeTurn
+          ? Promise.resolve({
+              ok: true,
+              intent: "concept_lookup",
+              intentConfidence: null,
+              needsLibrary: 0,
+              focus: "code",
+              ms: 0,
+            })
+          : decideTurn({
+              turn,
+              hasQuestion: Boolean(context?.stem),
+              selectedOption: context?.selectedOption ?? null,
+              codeActive,
+            }).catch(() => null);
 
         // Speed — memory and retrieval start now, in parallel with Jev and the
         // quota check, instead of waiting for routing to finish first.
@@ -241,8 +272,9 @@ export const Route = createFileRoute("/api/mentor-stream")({
           { note: "" } as { note: string },
           () => (timings["memory_skipped"] = MEMORY_BUDGET_MS),
         );
-        const retrievalPromise = keywordPlan.useRetrieval
-          ? withTimeout(
+        const retrievalPromise =
+          keywordPlan.useRetrieval && !isCodeTurn
+            ? withTimeout(
               runRetrievalAgent({
                 message: turn,
                 context,
@@ -364,7 +396,16 @@ export const Route = createFileRoute("/api/mentor-stream")({
                   ? ` (confidence ${Math.round(jevOk.intentConfidence * 100)}%).`
                   : "."),
               jevOk.focus !== "none"
-                ? `Anchor the opening on the ${jevOk.focus === "option" ? "selected answer option" : jevOk.focus} — the learner's attention is there.`
+                ? `Anchor the opening on ${
+                    jevOk.focus === "option"
+                      ? "the selected answer option"
+                      : jevOk.focus === "code"
+                        ? "the code itself"
+                        : `the ${jevOk.focus}`
+                  } — the learner's attention is there.`
+                : "",
+              codeActive
+                ? "The conversation includes code from the Study Canvas. When the learner talks about the code, explain from the code itself — walk through what it does, connect it to the question on screen, and show how the code's behaviour points to the option that should be selected. Do not reveal the correct letter outright."
                 : "",
               jevOk.intent === "evaluate_option" && context?.selectedOption
                 ? `The learner chose option ${context.selectedOption}; if it is wrong, name the specific misconception that makes it look right, then correct it without revealing the key unless asked.`
