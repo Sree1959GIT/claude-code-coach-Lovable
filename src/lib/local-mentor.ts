@@ -36,7 +36,7 @@ type Ctx = {
   focus?: string | null;
 } | null;
 
-function systemPrompt(ctx: Ctx): string {
+function systemPrompt(ctx: Ctx, codeTurn: boolean, codeActive: boolean): string {
   const q = ctx?.stem
     ? `\n\nQuestion on screen (never reveal or hint which option is correct):\n${ctx.scenario ? `Scenario: ${ctx.scenario}\n` : ""}Stem: ${ctx.stem}\n${(ctx.options ?? []).map((o) => `${o.label}. ${o.text}`).join("\n")}${ctx.key_concept ? `\nKey concept: ${ctx.key_concept}` : ""}${ctx.selectedOption ? `\nLearner picked: ${ctx.selectedOption}` : ""}`
     : "";
@@ -45,9 +45,15 @@ function systemPrompt(ctx: Ctx): string {
     ctx?.focus === "scenario" ? "\nStart from the scenario paragraph."
     : ctx?.focus === "stem" ? "\nStart from what the question sentence is actually asking."
     : ctx?.focus === "option" ? "\nStart from the answer option the learner picked or named."
+    : ctx?.focus === "code" ? "\nStart from the code itself."
     : "";
   const intentHint = ctx?.intent ? `\nThe learner's turn is: ${ctx.intent.replace(/_/g, " ")}.` : "";
-  return `You are a warm, concise exam tutor${exam}.${intentHint}${focusHint}
+  const codeHint = codeTurn
+    ? "\n\nCODE WALKTHROUGH: the learner sent code from the Study Canvas. Explain the code itself — what it does, walking its lines — then connect it to the question on screen and show how the code's behaviour points to the option they should pick. Never state which letter is correct."
+    : codeActive
+      ? "\n\nThe conversation includes code from the Study Canvas. When the learner asks about the code, explain from the code itself and connect it to the question — do not pivot back to restating the question."
+      : "";
+  return `You are a warm, concise exam tutor${exam}.${intentHint}${focusHint}${codeHint}
 Teach the concept so the learner can decide; never give away the answer.
 Format exactly: start with "[[brief]]" followed by one or two short spoken sentences, then "[[written]]" followed by the full written answer (plain prose, short paragraphs).${q}`;
 }
@@ -73,7 +79,18 @@ export async function streamLocalMentor(args: {
         model: args.model,
         stream: true,
         keep_alive: "30m",
-        messages: [{ role: "system", content: systemPrompt(args.context) }, ...args.messages.slice(-12)],
+        messages: [
+          {
+            role: "system",
+            content: systemPrompt(
+              args.context,
+              args.messages[args.messages.length - 1]?.role === "user" &&
+                (args.messages[args.messages.length - 1]?.content ?? "").startsWith("[[code-context:"),
+              args.messages.some((m) => m.role === "user" && m.content.startsWith("[[code-context:")),
+            ),
+          },
+          ...args.messages.slice(-12),
+        ],
       }),
     });
   } catch {
