@@ -114,7 +114,7 @@ export const importBankSources = createServerFn({ method: "POST" })
     const known: string[] = (bankQs ?? []).map((q: any) => q.stem);
 
     const { data: run, error: runErr } = await supabaseAdmin.from("import_runs")
-      .insert({ created_by: context.userId, format: "bank-finder", dry_run: false, parsed: 0, valid: 0, imported: 0, skipped: 0 })
+      .insert({ created_by: context.userId, exam_id: data.examId, format: "bank-finder", dry_run: false, parsed: 0, valid: 0, imported: 0, skipped: 0 })
       .select("id").single();
     if (runErr) throw runErr;
 
