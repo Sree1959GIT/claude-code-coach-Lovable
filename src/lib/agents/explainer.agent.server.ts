@@ -42,6 +42,10 @@ export type ExplainerArgs = {
   /** Phase F5 — learner whose BYOK vault may override the proxy allowance. */
   userId?: string | null;
   trace?: { db: Db; runId: string | null; userId: string; stepIndex: number };
+  /** T1 — aborts the model stream on barge-in. */
+  signal?: AbortSignal;
+  /** T2 — live voice conversation: short spoken style. */
+  live?: boolean;
 };
 
 /** Phase F5 — BYOK-aware endpoint/model for this learner, proxy otherwise. */
@@ -125,6 +129,9 @@ const CODE_MODE = `CODE-EXPLAINING MODE. The learner sent code from the Study Ca
 /** M2 — lighter guidance once code is already part of the conversation. */
 const CODE_FOLLOWUP = `The conversation includes code the learner is discussing from the Study Canvas. When they ask about the code, answer about the code's behaviour in plain English as a short flow summary — no line-by-line walkthrough, no line numbers, no restating the question — and, if useful, name the pattern to look for in the options. Never name the correct letter.`;
 
+/** T2 — live talk: answers are heard, so keep them short and conversational. */
+const LIVE_MODE = `LIVE VOICE CONVERSATION. The learner is talking to you out loud. Keep the [[brief]] part to 1-2 short, natural sentences and open with the key point in the first few words. Keep the [[written]] part to at most 3 sentences. No preamble.`;
+
 /** Assemble the full message stack sent to the model. */
 export function buildExplainerMessages(args: ExplainerArgs): ChatMessage[] {
   const sources = args.retrieval ? retrievalSystemMessage(args.retrieval) : null;
@@ -145,6 +152,7 @@ export function buildExplainerMessages(args: ExplainerArgs): ChatMessage[] {
     { role: "system", content: questionContextMessage(args.context) },
     ...(advice ? [{ role: "system" as const, content: advice.content }] : []),
     ...(args.profileNote ? [{ role: "system" as const, content: args.profileNote }] : []),
+    ...(args.live ? [{ role: "system" as const, content: LIVE_MODE }] : []),
     ...(sources ? [{ role: "system" as const, content: sources }] : []),
     ...args.messages.slice(-20),
   ];
@@ -171,6 +179,7 @@ export async function streamExplainer(args: ExplainerArgs): Promise<ReadableStre
     url: target.url,
     apiKey: target.apiKey,
     label: "Mentor",
+    signal: args.signal,
     body: {
       model: target.model,
       stream: true,
