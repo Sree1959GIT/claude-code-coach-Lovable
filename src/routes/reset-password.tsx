@@ -51,7 +51,8 @@ function ResetPassword() {
         } else if (tokenHash) {
           const { error: verifyError } = await supabase.auth.verifyOtp({
             token_hash: tokenHash,
-            type: "recovery",
+            // Invite links (new accounts) use the same set-password screen.
+            type: query.get("type") === "invite" ? "invite" : "recovery",
           });
           if (verifyError) throw verifyError;
           sessionEstablished = true;
