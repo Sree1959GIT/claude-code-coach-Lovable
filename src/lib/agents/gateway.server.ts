@@ -12,6 +12,8 @@ export type GatewayStreamArgs = {
   /** Total attempts, including the first. */
   attempts?: number;
   label?: string;
+  /** T1 — abort the model call when the learner interrupts. */
+  signal?: AbortSignal;
 };
 
 export function gatewayError(status: number, body: string, label = "Mentor"): Error {
@@ -39,8 +41,10 @@ export async function fetchGatewayStream(
         method: "POST",
         headers: { Authorization: `Bearer ${args.apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify(args.body),
+        signal: args.signal,
       });
     } catch (err) {
+      if (args.signal?.aborted) throw err;
       // Network-level failure: always retryable.
       lastError = err instanceof Error ? err : new Error(String(err));
     }

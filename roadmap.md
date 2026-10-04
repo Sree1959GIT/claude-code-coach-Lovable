@@ -109,6 +109,7 @@
 - Verified live: Explain-code turn and a "what does max_steps do" follow-up both open on the code with line-level explanations.
 
 ### Live Talk — turn-taking, interrupting and faster voice (approved plan, next)
-- [ ] T1: Duplex listening — mic stays hot while the mentor speaks (echo cancellation); ~80 ms of speech instantly stops audio, aborts the in-flight reply, and flips to Listening; interrupted speech goes to the chosen listener.
-- [ ] T2: Simultaneous voice and text — live mode uses a short spoken style; speech starts on the first short phrase (4–8 words or first punctuation) with the next phrase prepared while the current one plays; live talk skips library lookup unless clearly needed; Traces shows time to first sound.
-- [ ] T3: Direct Gemini — with a Gemini key saved as a server secret, the mentor talks to Google directly instead of the Lovable gateway; learner keys still win first.
+- [x] T1: Duplex listening — mic stays hot while the mentor speaks (echo cancellation); ~80 ms of speech instantly stops audio, aborts the in-flight reply, and flips to Listening; interrupted speech goes to the chosen listener.
+- [x] T2: Simultaneous voice and text — live mode uses a short spoken style; speech starts on the first short phrase (4–8 words or first punctuation) with the next phrase prepared while the current one plays; live talk skips library lookup unless clearly needed; Traces shows time to first sound.
+- [x] T3: Direct Gemini — with a Gemini key saved as a server secret, the mentor talks to Google directly instead of the Lovable gateway; learner keys still win first.
+- [ ] Wave 2: Vercel packaging (adapter, env vars, deploy check) — waits on your go-ahead.

@@ -120,6 +120,8 @@ class SegmentParser {
   private target: HighlightTarget = null;
   private speaking = false;
   display = "";
+  /** T2 — live talk: speak from the first short phrase, not the first sentence. */
+  clauseMode = false;
 
   constructor(private emit: (s: Segment) => void) {}
 
@@ -179,6 +181,7 @@ class SegmentParser {
       last = re.lastIndex;
     }
     if (last) this.pending = this.pending.slice(last);
+    if (this.clauseMode) this.drainClause();
     // L2 — a long first sentence is spoken from its first clause, not held back.
     if (this.emitted === 0 && this.pending.length > 70) {
       const cut = this.pending.search(/[,;:—]\s/);
@@ -186,6 +189,30 @@ class SegmentParser {
         this.emit({ text: this.pending.slice(0, cut + 1).trim(), target: this.target });
         this.emitted++;
         this.pending = this.pending.slice(cut + 1);
+      }
+    }
+  }
+
+  /** T2 — emit a 4–8 word phrase (or up to the first comma) as soon as it exists. */
+  private drainClause() {
+    const text = this.pending;
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    if (words.length < 4) return;
+    const cut = text.search(/[,;:—]\s/);
+    if (cut > 0 && text.slice(0, cut).trim().split(/\s+/).length >= 4) {
+      this.emit({ text: text.slice(0, cut + 1).trim(), target: this.target });
+      this.emitted++;
+      this.pending = text.slice(cut + 1);
+      return;
+    }
+    // Only cut mid-sentence for the opening phrase or a very long run.
+    if ((this.emitted === 0 && words.length >= 9) || words.length >= 18) {
+      const take = this.emitted === 0 ? 8 : 14;
+      const m = text.match(new RegExp(`^\\s*(?:\\S+\\s+){${take}}`));
+      if (m) {
+        this.emit({ text: m[0].trim(), target: this.target });
+        this.emitted++;
+        this.pending = text.slice(m[0].length);
       }
     }
   }
@@ -286,6 +313,12 @@ export function MentorCanvas({
   const [voiceDownloadProgress, setVoiceDownloadProgress] = useState({ loaded: 0, total: 0 });
   // A6 — true while a clip is playing, so Stop is prominent and the mic can barge in.
   const [speaking, setSpeaking] = useState(false);
+  // T1 — brief "Interrupted" state after a barge-in.
+  const [interrupted, setInterrupted] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
+  const turnStartRef = useRef<number | null>(null);
+  const turnLiveRef = useRef(false);
+  const vadRef = useRef<{ stop: () => void } | null>(null);
   const voicePrefRef = useRef<VoicePref>("studio");
   const micPrefRef = useRef<MicPref>("browser");
   const announcedRef = useRef<Set<string>>(new Set());
@@ -537,6 +570,15 @@ export function MentorCanvas({
         if (stoppedRef.current) break;
         if (url) {
           setSpeaking(true);
+          // T2 — time to first sound for this turn, shown on Traces.
+          if (turnStartRef.current != null) {
+            logEvent("mentor_ttfa", {
+              ms: Math.round(performance.now() - turnStartRef.current),
+              live: turnLiveRef.current,
+              local: Boolean(getLocalMentorModel()),
+            });
+            turnStartRef.current = null;
+          }
           await playUrl(url);
           URL.revokeObjectURL(url);
         }
@@ -603,6 +645,14 @@ export function MentorCanvas({
     }
     setListening(false);
 
+    // T1 — one controller per turn; a barge-in aborts it.
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    turnStartRef.current = performance.now();
+    turnLiveRef.current = liveRef.current;
+    setInterrupted(false);
+
     const parser = new SegmentParser((seg) => {
       // L2 — start preparing the voice for the next two sentences right away,
       // so each one is ready by the time the previous one finishes playing.
@@ -610,6 +660,7 @@ export function MentorCanvas({
       queueRef.current.push(seg);
       void drain();
     });
+    parser.clauseMode = liveRef.current;
 
     try {
       // L5 — answer through the learner's own Ollama when chosen and reachable.
@@ -631,6 +682,7 @@ export function MentorCanvas({
         const ok = await streamLocalMentor({
           model: localModel,
           messages: next,
+          signal: controller.signal,
           context: { ...(ctx ?? {}), examName: activeExam.name, intent: decision?.intent ?? null, focus: decision?.focus ?? null } as never,
           onDelta: (d) => {
             if (firstAt == null) {
@@ -665,7 +717,8 @@ export function MentorCanvas({
       const res = await fetch("/api/mentor-stream", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ messages: next, context: contextRef.current }),
+        body: JSON.stringify({ messages: next, context: contextRef.current, live: liveRef.current }),
+        signal: controller.signal,
       });
       if (!res.ok || !res.body) {
         throw new Error((await res.text().catch(() => "")) || `Mentor failed (${res.status})`);
@@ -775,8 +828,21 @@ export function MentorCanvas({
       }
     } catch (e) {
       setStreaming("");
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      if (controller.signal.aborted) {
+        // T1 — keep what was written before the interruption.
+        const partial = parser.display.trim();
+        if (partial) {
+          setMessages((m) => {
+            const updated: Msg[] = [...m, { role: "assistant", content: `${partial} …` }];
+            messagesRef.current = updated;
+            return updated;
+          });
+        }
+      } else {
+        setError(e instanceof Error ? e.message : "Something went wrong.");
+      }
     } finally {
+      if (abortRef.current === controller) abortRef.current = null;
       setBusy(false);
       busyRef.current = false;
       if (!drainingRef.current) {
@@ -885,6 +951,103 @@ export function MentorCanvas({
       setListening(false);
     }
   }
+
+  /** T1 — the learner started talking: silence the mentor and listen. */
+  function bargeIn() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    turnStartRef.current = null;
+    stopAll();
+    try {
+      window.speechSynthesis?.cancel();
+    } catch {
+      /* noop */
+    }
+    busyRef.current = false;
+    drainingRef.current = false;
+    setBusy(false);
+    setInterrupted(true);
+    logEvent("mentor_barge_in", {});
+    stoppedRef.current = false;
+    if (liveRef.current) startRecognition(true);
+    setTimeout(() => setInterrupted(false), 1200);
+  }
+
+  /**
+   * T1 — voice activity detector. One echo-cancelled mic stream stays open in
+   * live talk; ~80 ms above an adaptive noise floor while the mentor is
+   * thinking or speaking counts as an interruption.
+   */
+  async function startVad() {
+    if (vadRef.current || typeof window === "undefined") return;
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
+    } catch {
+      return;
+    }
+    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const ctx = new Ctx();
+    const src = ctx.createMediaStreamSource(stream);
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 512;
+    src.connect(analyser);
+    const buf = new Float32Array(analyser.fftSize);
+    let floor = 0.01;
+    let voicedMs = 0;
+    let last = performance.now();
+    const tick = setInterval(() => {
+      const now = performance.now();
+      const dt = now - last;
+      last = now;
+      analyser.getFloatTimeDomainData(buf);
+      let sum = 0;
+      for (let i = 0; i < buf.length; i++) sum += buf[i]! * buf[i]!;
+      const rms = Math.sqrt(sum / buf.length);
+      const active = busyRef.current || drainingRef.current;
+      const voiced = rms > Math.max(0.02, floor * 3);
+      if (!voiced) floor = floor * 0.95 + rms * 0.05; // adapt to the room
+      if (active && voiced) {
+        voicedMs += dt;
+        if (voicedMs >= 80) {
+          voicedMs = 0;
+          bargeIn();
+        }
+      } else {
+        voicedMs = Math.max(0, voicedMs - dt);
+      }
+    }, 20);
+    vadRef.current = {
+      stop: () => {
+        clearInterval(tick);
+        stream.getTracks().forEach((t) => t.stop());
+        void ctx.close().catch(() => {});
+      },
+    };
+  }
+  function stopVad() {
+    vadRef.current?.stop();
+    vadRef.current = null;
+  }
+  useEffect(() => {
+    if (live) void startVad();
+    else stopVad();
+    return () => stopVad();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live]);
+
+  // T1 — visible turn state: Idle → Listening → Thinking → Speaking → Interrupted.
+  const turnState = interrupted
+    ? "Interrupted"
+    : speaking
+      ? "Speaking"
+      : busy
+        ? "Thinking"
+        : listening
+          ? "Listening"
+          : "Idle";
 
   function toggleListen() {
     if (listening) {
@@ -1350,7 +1513,7 @@ export function MentorCanvas({
                 }`}
                 aria-pressed={live}
               >
-                <Radio className="h-3 w-3" /> {live ? (listening ? "Listening" : "Live on") : "Live talk"}
+                <Radio className="h-3 w-3" /> {live ? (turnState === "Idle" ? "Live on" : turnState) : "Live talk"}
               </button>
             ) : (
               <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">

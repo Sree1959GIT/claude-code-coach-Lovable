@@ -49,8 +49,8 @@ export const getMentorSpeed = createServerFn({ method: "GET" })
         .limit(4000),
       supabaseAdmin
         .from("analytics_events")
-        .select("payload")
-        .eq("event_name", "local_mentor_ttft")
+        .select("event_name, payload")
+        .in("event_name", ["local_mentor_ttft", "mentor_ttfa"])
         .gte("created_at", since)
         .limit(2000),
     ]);
@@ -69,7 +69,10 @@ export const getMentorSpeed = createServerFn({ method: "GET" })
       }
     }
 
-    const by: Record<string, number[]> = { "Cloud · Jev-routed": [], "Cloud · keyword fallback": [], "Ollama (this computer)": [] };
+    const by: Record<string, number[]> = { "Cloud · Jev-routed": [], "Cloud · keyword fallback": [], "Ollama (this computer)": [],
+      "First sound · live talk": [],
+      "First sound · typed": [],
+    };
     let gatedTurns = 0;
     for (const r of runsRes.data ?? []) {
       const ttft = (r.metadata as { ttft_ms?: number } | null)?.ttft_ms;
@@ -79,8 +82,11 @@ export const getMentorSpeed = createServerFn({ method: "GET" })
       by[rt?.routedBy === "jev" ? "Cloud · Jev-routed" : "Cloud · keyword fallback"]!.push(ttft);
     }
     for (const e of localRes.data ?? []) {
-      const ms = (e.payload as { ms?: number } | null)?.ms;
-      if (typeof ms === "number") by["Ollama (this computer)"]!.push(ms);
+      const p = e.payload as { ms?: number; live?: boolean } | null;
+      if (typeof p?.ms !== "number") continue;
+      // T2 — time to first sound sits next to time to first words.
+      if (e.event_name === "mentor_ttfa") by[p.live ? "First sound · live talk" : "First sound · typed"]!.push(p.ms);
+      else by["Ollama (this computer)"]!.push(p.ms);
     }
 
     const decideP90 = pct(decideMs, 90);
