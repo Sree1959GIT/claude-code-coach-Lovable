@@ -60,6 +60,9 @@ const RETRIEVAL_BUDGET_MS = 1100;
 const DECIDE_BUDGET_MS = 500;
 /** P2.2 — below this Jev "needs library" score, retrieval is skipped. */
 const NO_LIBRARY_THRESHOLD = 0.3;
+/** T2 — live talk: tighter Jev budget, library only when clearly needed. */
+const LIVE_DECIDE_BUDGET_MS = 350;
+const LIVE_LIBRARY_THRESHOLD = 0.6;
 function withTimeout<T, F>(p: Promise<T>, ms: number, fallback: F, onSkip: () => void): Promise<T | F> {
   let timer: ReturnType<typeof setTimeout>;
   const late = new Promise<F>((resolve) => {
@@ -197,14 +200,17 @@ export const Route = createFileRoute("/api/mentor-stream")({
         const userId = data?.claims?.sub as string | undefined;
         if (error || !userId) return new Response("Unauthorized", { status: 401 });
 
-        if (!process.env["LOVABLE_API_KEY"]) {
+        if (!process.env["LOVABLE_API_KEY"] && !process.env["GEMINI_API_KEY"] && !process.env["GOOGLE_API_KEY"]) {
           return new Response("Missing LOVABLE_API_KEY", { status: 500 });
         }
 
         const body = (await request.json()) as {
           messages?: { role: "user" | "assistant"; content: string }[];
           context?: QuestionContext | null;
+          /** T2 — live voice conversation. */
+          live?: boolean;
         };
+        const live = body.live === true;
         const messages = (body.messages ?? []).slice(-20);
         if (!messages.length) return new Response("No messages", { status: 400 });
 
@@ -273,7 +279,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
           () => (timings["memory_skipped"] = MEMORY_BUDGET_MS),
         );
         const retrievalPromise =
-          keywordPlan.useRetrieval && !isCodeTurn
+          keywordPlan.useRetrieval && !isCodeTurn && !live
             ? withTimeout(
               runRetrievalAgent({
                 message: turn,
@@ -332,7 +338,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
         const tDecide = Date.now();
         const decision = await Promise.race([
           decidePromise,
-          new Promise<null>((r) => setTimeout(() => r(null), DECIDE_BUDGET_MS)),
+          new Promise<null>((r) => setTimeout(() => r(null), live ? LIVE_DECIDE_BUDGET_MS : DECIDE_BUDGET_MS)),
         ]);
         mark("decide", tDecide);
         const jevOk = decision?.ok ? decision : null;
@@ -348,6 +354,21 @@ export const Route = createFileRoute("/api/mentor-stream")({
         ) {
           plan = { ...plan, useRetrieval: false, agents: plan.agents.filter((a) => a !== "retrieval") };
           libraryGated = true;
+        }
+        // T2 — live talk skips the library unless Jev says it is clearly needed.
+        let liveRetrieval: Awaited<ReturnType<typeof runRetrievalAgent>> | null = null;
+        if (live && plan.useRetrieval) {
+          if ((jevOk?.needsLibrary ?? 0) >= LIVE_LIBRARY_THRESHOLD) {
+            liveRetrieval = await withTimeout(
+              runRetrievalAgent({ message: turn, context, intent: plan.intent, trace: { db: supabase, runId: null, userId, stepIndex: 2 } }),
+              RETRIEVAL_BUDGET_MS,
+              null,
+              () => (timings["retrieval_skipped"] = RETRIEVAL_BUDGET_MS),
+            );
+          } else {
+            plan = { ...plan, useRetrieval: false, agents: plan.agents.filter((a) => a !== "retrieval") };
+            libraryGated = true;
+          }
         }
         if (!jevOk) timings["decide_fallback"] = 1;
 
@@ -421,7 +442,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
 
         // --- 2. Memory + retrieval — started speculatively alongside Jev ------
         const [profile, retrievalRaw] = await Promise.all([memoryPromise, retrievalPromise]);
-        const retrieval = plan.useRetrieval ? retrievalRaw : null;
+        const retrieval = plan.useRetrieval ? (liveRetrieval ?? retrievalRaw) : null;
         mark("context", tCtx);
 
         // --- 3. Resource agent (cheap, deterministic) --------------------------
@@ -445,6 +466,9 @@ export const Route = createFileRoute("/api/mentor-stream")({
           // Phase F5 — lets the agents route through this learner's own key.
           userId,
           trace: trace(4),
+          // T1 — the model call stops as soon as the learner interrupts.
+          signal: request.signal,
+          live,
         };
 
         const startedAt = Date.now();
@@ -502,7 +526,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
             stepIndex: 6,
             agent: "orchestrator",
             role: "timings",
-            input: { intent: plan.intent },
+            input: { intent: plan.intent, live },
             output: timings,
           }).catch(() => {});
         }

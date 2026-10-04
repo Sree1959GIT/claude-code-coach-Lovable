@@ -48,6 +48,8 @@ export type EvaluatorArgs = {
   /** Phase F5 — learner whose BYOK vault may override the proxy allowance. */
   userId?: string | null;
   trace?: { db: Db; runId: string | null; userId: string; stepIndex: number };
+  signal?: AbortSignal;
+  live?: boolean;
 };
 
 /** Phase F5 — BYOK-aware endpoint/model for this learner, proxy otherwise. */
@@ -81,6 +83,9 @@ export function buildEvaluatorMessages(args: EvaluatorArgs): ChatMessage[] {
     { role: "system", content: evaluatorFocusMessage(args.context) },
     ...(advice ? [{ role: "system" as const, content: advice.content }] : []),
     ...(args.profileNote ? [{ role: "system" as const, content: args.profileNote }] : []),
+    ...(args.live
+      ? [{ role: "system" as const, content: "LIVE VOICE CONVERSATION: keep [[brief]] to 1-2 short sentences with the verdict first, and [[written]] to at most 3 sentences." }]
+      : []),
     ...(sources ? [{ role: "system" as const, content: sources }] : []),
     ...args.messages.slice(-20),
   ];
@@ -105,6 +110,7 @@ export async function streamEvaluator(args: EvaluatorArgs): Promise<ReadableStre
     url: target.url,
     apiKey: target.apiKey,
     label: "Mentor",
+    signal: args.signal,
     body: {
       model: target.model,
       stream: true,
