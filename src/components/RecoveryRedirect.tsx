@@ -22,6 +22,8 @@ function urlLooksLikeRecovery() {
   return (
     hashParams.get("type") === "recovery" ||
     searchParams.get("type") === "recovery" ||
+    hashParams.get("type") === "invite" ||
+    searchParams.get("type") === "invite" ||
     searchParams.has("code") ||
     searchParams.has("token_hash")
   );
