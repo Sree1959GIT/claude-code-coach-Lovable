@@ -174,7 +174,7 @@ export async function streamExplainer(args: ExplainerArgs): Promise<ReadableStre
     body: {
       model: target.model,
       stream: true,
-      ...(target.byok ? { max_tokens: 2048 } : { stream_options: { include_usage: true } }),
+      ...(target.provider ? { max_tokens: 2048 } : { stream_options: { include_usage: true } }),
       messages: buildExplainerMessages(args),
     },
   });
@@ -228,7 +228,7 @@ export async function runExplainerAgent(args: ExplainerArgs): Promise<ExplainerR
       body: JSON.stringify({
         model: target.model,
         messages: buildExplainerMessages(args),
-        ...(target.byok ? { max_tokens: 2048 } : {}),
+        ...(target.provider ? { max_tokens: 2048 } : {}),
       }),
     });
     if (!res.ok) throw gatewayError(res.status, await res.text().catch(() => ""));

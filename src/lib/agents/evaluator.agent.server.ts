@@ -108,7 +108,7 @@ export async function streamEvaluator(args: EvaluatorArgs): Promise<ReadableStre
     body: {
       model: target.model,
       stream: true,
-      ...(target.byok ? { max_tokens: 2048 } : { stream_options: { include_usage: true } }),
+      ...(target.provider ? { max_tokens: 2048 } : { stream_options: { include_usage: true } }),
       messages: buildEvaluatorMessages(args),
     },
   });
@@ -143,7 +143,7 @@ export async function runEvaluatorAgent(args: EvaluatorArgs): Promise<EvaluatorR
       body: JSON.stringify({
         model: target.model,
         messages: buildEvaluatorMessages(args),
-        ...(target.byok ? { max_tokens: 2048 } : {}),
+        ...(target.provider ? { max_tokens: 2048 } : {}),
       }),
     });
     if (!res.ok) throw gatewayError(res.status, await res.text().catch(() => ""));

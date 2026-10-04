@@ -106,11 +106,24 @@ export async function resolveInferenceTarget(args: {
     label: "Lovable AI",
   };
 
-  if (!args.userId) return proxy;
+  // T3 — a project-level Gemini key (server secret) replaces the Lovable proxy.
+  const geminiKey = process.env["GEMINI_API_KEY"] || process.env["GOOGLE_API_KEY"];
+  const fallback: InferenceTarget = geminiKey
+    ? {
+        url: PROVIDERS.google.url,
+        apiKey: geminiKey,
+        model: PROVIDERS.google.models[args.rung ?? "standard"],
+        byok: false,
+        provider: "google",
+        label: "Google Gemini (server key)",
+      }
+    : proxy;
+
+  if (!args.userId) return fallback;
 
   try {
     const active = await activeVaultKey(args.userId);
-    if (!active) return proxy;
+    if (!active) return fallback;
     return {
       url: PROVIDERS[active.provider].url,
       apiKey: active.key,
@@ -120,6 +133,11 @@ export async function resolveInferenceTarget(args: {
       label: PROVIDERS[active.provider].label,
     };
   } catch {
-    return proxy;
+    return fallback;
   }
+}
+
+/** T3 — true when the server can answer without the Lovable gateway. */
+export function hasDirectGemini(): boolean {
+  return Boolean(process.env["GEMINI_API_KEY"] || process.env["GOOGLE_API_KEY"]);
 }
