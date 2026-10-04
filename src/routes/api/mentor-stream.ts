@@ -480,6 +480,11 @@ export const Route = createFileRoute("/api/mentor-stream")({
               ? await streamEvaluator(agentArgs)
               : await streamExplainer(agentArgs);
         } catch (err) {
+          // T1 — the learner interrupted; nothing left to send.
+          if (request.signal.aborted) {
+            void finishRun({ runId, status: "error", error: "interrupted", durationMs: Date.now() - startedAt }).catch(() => {});
+            return new Response(null, { status: 499 });
+          }
           const message = err instanceof Error ? err.message : "Mentor unavailable";
           // Sub-task 16: credits exhausted is unrecoverable — everything else
           // degrades to a deterministic, model-free answer instead of an error.
