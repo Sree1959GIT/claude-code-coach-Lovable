@@ -12,7 +12,7 @@ import { useSession } from "@/hooks/useSession";
 import { supabase } from "@/integrations/supabase/client";
 import { getQuotaStatus } from "@/lib/quotas.functions";
 import { getProviderPref, setProviderPref } from "@/lib/provider-pref.functions";
-import { listMyProviderKeys, testProviderKey, type StoredKeyMeta } from "@/lib/byok.functions";
+import { listMyProviderKeys, saveProviderKey, testProviderKey, type StoredKeyMeta } from "@/lib/byok.functions";
 import { LocalModelAdvisor } from "@/components/LocalModelAdvisor";
 
 /** F4 — per-provider health badge (colour + word). */
