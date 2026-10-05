@@ -552,19 +552,12 @@ export const Route = createFileRoute("/api/mentor-stream")({
           }),
         );
 
-        // --- Phase 1: instant spoken opener (decision already resolved) -------
-        let focus: FocusTarget = "none";
-        let opener = "";
-        if (jevOk && !degraded) {
-          focus = jevOk.focus;
-          opener = `[[brief]]${focusMarker(focus, context?.selectedOption ?? null)} ${openerFor({
-            intent: jevOk.intent,
-            focus,
-            selectedOption: context?.selectedOption ?? null,
-          })} `;
-        }
-        mark("opener", t0);
-        const responseBody = opener ? withOpener(opener, tapped) : tapped;
+        // Phase 1 — focus still travels in a header for highlighting. The canned
+        // spoken opener was removed: it only arrived once the model stream had
+        // opened (no time saved), was repeated by the model's own brief, and
+        // suppressed the spoken fallback for replies without a brief.
+        const focus: FocusTarget = jevOk && !degraded ? jevOk.focus : "none";
+        const responseBody = tapped;
 
         return new Response(responseBody, {
 

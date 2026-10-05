@@ -18,7 +18,7 @@ import {
   type MicPref,
   type VoicePref,
 } from "@/lib/offline-voice";
-import { isSttInstalled, listenOnce } from "@/lib/offline-stt";
+import { isSttInstalled, listenOnce, warmStt } from "@/lib/offline-stt";
 import { supabase } from "@/integrations/supabase/client";
 import { logEvent } from "@/lib/analytics";
 import { matchResources, thumbnailFor, type LearnResource } from "@/lib/resources";
@@ -119,6 +119,12 @@ class SegmentParser {
   private pending = "";
   private target: HighlightTarget = null;
   private speaking = false;
+  /** True once the reply contains a [[brief]] spoken summary. */
+  private sawBrief = false;
+  /** Fallback: no brief → speak the first sentences of the written text. */
+  private fallbackSpoken = 0;
+  private fallbackPending = "";
+  private static FALLBACK_SENTENCES = 3;
   display = "";
   /** T2 — live talk: speak from the first short phrase, not the first sentence. */
   clauseMode = false;
@@ -145,6 +151,7 @@ class SegmentParser {
       this.flush();
       if (m[1] === "brief") {
         this.speaking = true;
+        this.sawBrief = true;
         this.target = null;
       } else if (m[1] === "written") {
         // A2 — spoken summary comes first; the written answer follows.
@@ -156,12 +163,56 @@ class SegmentParser {
       work = work.slice(m.index + m[0].length);
     }
     this.drainSentences();
+    this.drainFallback(false);
   }
 
   private consume(text: string) {
     if (!text) return;
     if (this.speaking) this.pending += text;
-    else this.display += text;
+    else {
+      this.display += text;
+      if (!this.sawBrief && this.fallbackSpoken < SegmentParser.FALLBACK_SENTENCES) {
+        this.fallbackPending += text;
+      }
+    }
+  }
+
+  /**
+   * Replies without a [[brief]] (code explanations, fallbacks, local models)
+   * used to stay silent. Speak their first sentences as they stream instead.
+   */
+  private drainFallback(final: boolean) {
+    if (this.sawBrief) return;
+    const max = SegmentParser.FALLBACK_SENTENCES;
+    const clean = (s: string) =>
+      s.replace(/```[\s\S]*?```/g, " ").replace(/[#*_`>|]/g, " ").replace(/\s+/g, " ").trim();
+    const re = /[^.!?]*[.!?]+["')\]]*\s+/g;
+    let last = 0;
+    let m: RegExpExecArray | null;
+    while (this.fallbackSpoken < max && (m = re.exec(this.fallbackPending))) {
+      const s = clean(m[0]);
+      if (s.length > 1) {
+        this.emit({ text: s, target: this.target });
+        this.fallbackSpoken++;
+      }
+      last = re.lastIndex;
+    }
+    if (last) this.fallbackPending = this.fallbackPending.slice(last);
+    // First phrase early so the first sound isn't held back by a long sentence.
+    if (this.fallbackSpoken === 0 && this.fallbackPending.length > 60) {
+      const cut = this.fallbackPending.search(/[,;:—]\s/);
+      if (cut > 20) {
+        this.emit({ text: clean(this.fallbackPending.slice(0, cut + 1)), target: this.target });
+        this.fallbackSpoken++;
+        this.fallbackPending = this.fallbackPending.slice(cut + 1);
+      }
+    }
+    if (final && this.fallbackSpoken < max) {
+      const rest = clean(this.fallbackPending);
+      if (rest.length > 1) this.emit({ text: rest, target: this.target });
+      this.fallbackSpoken = max;
+    }
+    if (this.fallbackSpoken >= max) this.fallbackPending = "";
   }
 
   private emitted = 0;
@@ -181,11 +232,12 @@ class SegmentParser {
       last = re.lastIndex;
     }
     if (last) this.pending = this.pending.slice(last);
-    if (this.clauseMode) this.drainClause();
+    // The first phrase is always spoken early (short clips synthesize fastest).
+    if (this.clauseMode || this.emitted === 0) this.drainClause();
     // L2 — a long first sentence is spoken from its first clause, not held back.
-    if (this.emitted === 0 && this.pending.length > 70) {
+    if (this.emitted === 0 && this.pending.length > 50) {
       const cut = this.pending.search(/[,;:—]\s/);
-      if (cut > 25) {
+      if (cut > 20) {
         this.emit({ text: this.pending.slice(0, cut + 1).trim(), target: this.target });
         this.emitted++;
         this.pending = this.pending.slice(cut + 1);
@@ -229,6 +281,7 @@ class SegmentParser {
     this.raw = "";
     this.drainSentences();
     this.flush();
+    this.drainFallback(true);
   }
 }
 
@@ -448,6 +501,8 @@ export function MentorCanvas({
       if (voicePrefRef.current === "instant") {
         void isOfflineVoiceInstalled().then((ok) => ok && warmOfflineVoice());
       }
+      // Load the on-device listener too, so the first transcription doesn't pay for it.
+      if (micPrefRef.current === "device" && isSttInstalled()) warmStt();
     } else {
       setLive(false);
       liveRef.current = false;
@@ -1007,11 +1062,14 @@ export function MentorCanvas({
       for (let i = 0; i < buf.length; i++) sum += buf[i]! * buf[i]!;
       const rms = Math.sqrt(sum / buf.length);
       const active = busyRef.current || drainingRef.current;
-      const voiced = rms > Math.max(0.02, floor * 3);
+      // While the mentor's own voice plays, speaker echo leaks into the mic and
+      // used to cut the mentor off mid-sentence. Require louder, longer speech then.
+      const playing = drainingRef.current && !!audioRef.current && !audioRef.current.paused;
+      const voiced = rms > Math.max(playing ? 0.06 : 0.02, floor * (playing ? 4 : 3));
       if (!voiced) floor = floor * 0.95 + rms * 0.05; // adapt to the room
       if (active && voiced) {
         voicedMs += dt;
-        if (voicedMs >= 80) {
+        if (voicedMs >= (playing ? 250 : 80)) {
           voicedMs = 0;
           bargeIn();
         }

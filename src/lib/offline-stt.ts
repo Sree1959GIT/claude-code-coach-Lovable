@@ -50,6 +50,11 @@ function load(onProgress?: (p: SttProgress) => void): Promise<Asr> {
   return pipe;
 }
 
+/** Load the on-device transcriber ahead of the first utterance. */
+export function warmStt(): void {
+  void load().catch(() => {});
+}
+
 export function isSttInstalled(): boolean {
   try {
     return localStorage.getItem(INSTALLED_KEY) === "1";
@@ -134,7 +139,8 @@ export async function listenOnce(opts: {
       quietSince = 0;
     } else if (heard) {
       quietSince ||= now;
-      if (now - quietSince > 1200) stop();
+      // End of utterance after ~0.7 s of quiet (was 1.2 s) — faster turn-taking.
+      if (now - quietSince > 700) stop();
     }
     if (now - started > 30000 || (!heard && now - started > 8000)) stop();
   }, 100);
