@@ -462,7 +462,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
           retrievalTitles: (retrieval?.matches ?? []).map((m) => m.title),
           trace: trace(3),
         })
-          .catch(() => ({ resources: [] as unknown[] }))
+          .catch(() => ({ resources: [] }) as unknown as Awaited<ReturnType<typeof runResourceAgent>>)
           .finally(() => mark("resources", tRes));
 
         // --- 4. Answering agent ------------------------------------------------

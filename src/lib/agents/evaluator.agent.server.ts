@@ -115,6 +115,8 @@ export async function streamEvaluator(args: EvaluatorArgs): Promise<ReadableStre
       model: target.model,
       stream: true,
       ...(target.provider ? { max_tokens: 2048 } : { stream_options: { include_usage: true } }),
+      // S1 — no hidden thinking before the first word on Gemini 2.5 Flash.
+      ...(target.provider === "google" && !target.model.includes("pro") ? { reasoning_effort: "none" } : {}),
       messages: buildEvaluatorMessages(args),
     },
   });
