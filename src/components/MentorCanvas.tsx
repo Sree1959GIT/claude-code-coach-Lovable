@@ -1062,11 +1062,14 @@ export function MentorCanvas({
       for (let i = 0; i < buf.length; i++) sum += buf[i]! * buf[i]!;
       const rms = Math.sqrt(sum / buf.length);
       const active = busyRef.current || drainingRef.current;
-      const voiced = rms > Math.max(0.02, floor * 3);
+      // While the mentor's own voice plays, speaker echo leaks into the mic and
+      // used to cut the mentor off mid-sentence. Require louder, longer speech then.
+      const playing = drainingRef.current && !!audioRef.current && !audioRef.current.paused;
+      const voiced = rms > Math.max(playing ? 0.06 : 0.02, floor * (playing ? 4 : 3));
       if (!voiced) floor = floor * 0.95 + rms * 0.05; // adapt to the room
       if (active && voiced) {
         voicedMs += dt;
-        if (voicedMs >= 80) {
+        if (voicedMs >= (playing ? 250 : 80)) {
           voicedMs = 0;
           bargeIn();
         }
