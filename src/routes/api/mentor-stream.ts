@@ -61,7 +61,6 @@ const DECIDE_BUDGET_MS = 500;
 /** P2.2 — below this Jev "needs library" score, retrieval is skipped. */
 const NO_LIBRARY_THRESHOLD = 0.3;
 /** T2 — live talk: tighter Jev budget, library only when clearly needed. */
-const LIVE_DECIDE_BUDGET_MS = 350;
 const LIVE_LIBRARY_THRESHOLD = 0.6;
 function withTimeout<T, F>(p: Promise<T>, ms: number, fallback: F, onSkip: () => void): Promise<T | F> {
   let timer: ReturnType<typeof setTimeout>;
