@@ -343,13 +343,8 @@ export const Route = createFileRoute("/api/mentor-stream")({
 
         const trace = (stepIndex: number) => ({ db: supabase, runId, userId, stepIndex });
 
-        // P2.1 — active Jev router: wait a short budget, else keyword fallback.
-        const tDecide = Date.now();
-        const decision = await Promise.race([
-          decidePromise,
-          new Promise<null>((r) => setTimeout(() => r(null), live ? LIVE_DECIDE_BUDGET_MS : DECIDE_BUDGET_MS)),
-        ]);
-        mark("decide", tDecide);
+        // P2.1 — Jev decision was awaited together with the quota check (S2).
+        timings["decide"] = timings["pre"] ?? 0;
         const jevOk = decision?.ok ? decision : null;
         const routedBy: "jev" | "keyword" = jevOk ? "jev" : "keyword";
         if (jevOk) plan = planForIntent(jevOk.intent);
