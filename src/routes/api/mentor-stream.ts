@@ -566,6 +566,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
         // opened (no time saved), was repeated by the model's own brief, and
         // suppressed the spoken fallback for replies without a brief.
         const focus: FocusTarget = jevOk && !degraded ? jevOk.focus : "none";
+        const resourcePick = await resourcePromise;
         const responseBody = tapped;
 
         return new Response(responseBody, {
