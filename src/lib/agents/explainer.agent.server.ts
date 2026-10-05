@@ -130,7 +130,7 @@ const CODE_MODE = `CODE-EXPLAINING MODE. The learner sent code from the Study Ca
 const CODE_FOLLOWUP = `The conversation includes code the learner is discussing from the Study Canvas. When they ask about the code, answer about the code's behaviour in plain English as a short flow summary — no line-by-line walkthrough, no line numbers, no restating the question — and, if useful, name the pattern to look for in the options. Never name the correct letter.`;
 
 /** T2 — live talk: answers are heard, so keep them short and conversational. */
-const LIVE_MODE = `LIVE VOICE CONVERSATION. The learner is talking to you out loud. Keep the [[brief]] part to 1-2 short, natural sentences and open with the key point in the first few words. Keep the [[written]] part to at most 3 sentences. No preamble.`;
+const LIVE_MODE = `LIVE VOICE CONVERSATION. The learner is talking to you out loud. Keep the [[brief]] part to 1-2 short, natural sentences and open with the key point in the first few words. Keep the [[written]] part to at most 3 sentences. No preamble and no filler openers such as 'look at what the question is actually asking' — say the substance first, in a warm, professional tone.`;
 
 /** Assemble the full message stack sent to the model. */
 export function buildExplainerMessages(args: ExplainerArgs): ChatMessage[] {
@@ -184,6 +184,8 @@ export async function streamExplainer(args: ExplainerArgs): Promise<ReadableStre
       model: target.model,
       stream: true,
       ...(target.provider ? { max_tokens: 2048 } : { stream_options: { include_usage: true } }),
+      // S1 — no hidden thinking before the first word on Gemini 2.5 Flash.
+      ...(target.provider === "google" && !target.model.includes("pro") ? { reasoning_effort: "none" } : {}),
       messages: buildExplainerMessages(args),
     },
   });

@@ -61,7 +61,6 @@ const DECIDE_BUDGET_MS = 500;
 /** P2.2 — below this Jev "needs library" score, retrieval is skipped. */
 const NO_LIBRARY_THRESHOLD = 0.3;
 /** T2 — live talk: tighter Jev budget, library only when clearly needed. */
-const LIVE_DECIDE_BUDGET_MS = 350;
 const LIVE_LIBRARY_THRESHOLD = 0.6;
 function withTimeout<T, F>(p: Promise<T>, ms: number, fallback: F, onSkip: () => void): Promise<T | F> {
   let timer: ReturnType<typeof setTimeout>;
@@ -297,7 +296,15 @@ export const Route = createFileRoute("/api/mentor-stream")({
         const { getMembershipTier } = await import("@/lib/model-routing.server");
         const { checkQuota, recordRateEvent } = await import("@/lib/rate-limit.server");
         const tPre = Date.now();
-        const [quota, runId] = await Promise.all([
+        // S2 — Jev's wait overlaps the quota check. Live talk never waits on
+        // Jev (keyword plan routes at once; Jev is still traced).
+        const decideRace: Promise<DecideResult | null> = live && !isCodeTurn
+          ? Promise.resolve(null)
+          : Promise.race([
+              decidePromise,
+              new Promise<null>((r) => setTimeout(() => r(null), DECIDE_BUDGET_MS)),
+            ]);
+        const [quota, runId, decision] = await Promise.all([
           getMembershipTier(supabase as never, userId).then((tier) =>
             checkQuota({ userId, action: "mentor", tier }),
           ),
@@ -307,6 +314,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
             question: turn.slice(0, 2000),
             metadata: { intent: plan.intent, agents: plan.agents, reason: plan.reason },
           }).catch(() => null),
+          decideRace,
         ]);
         mark("pre", tPre);
         if (!quota.allowed) {
@@ -334,13 +342,8 @@ export const Route = createFileRoute("/api/mentor-stream")({
 
         const trace = (stepIndex: number) => ({ db: supabase, runId, userId, stepIndex });
 
-        // P2.1 — active Jev router: wait a short budget, else keyword fallback.
-        const tDecide = Date.now();
-        const decision = await Promise.race([
-          decidePromise,
-          new Promise<null>((r) => setTimeout(() => r(null), live ? LIVE_DECIDE_BUDGET_MS : DECIDE_BUDGET_MS)),
-        ]);
-        mark("decide", tDecide);
+        // P2.1 — Jev decision was awaited together with the quota check (S2).
+        timings["decide"] = timings["pre"] ?? 0;
         const jevOk = decision?.ok ? decision : null;
         const routedBy: "jev" | "keyword" = jevOk ? "jev" : "keyword";
         if (jevOk) plan = planForIntent(jevOk.intent);
@@ -441,20 +444,25 @@ export const Route = createFileRoute("/api/mentor-stream")({
         const tCtx = Date.now();
 
         // --- 2. Memory + retrieval — started speculatively alongside Jev ------
-        const [profile, retrievalRaw] = await Promise.all([memoryPromise, retrievalPromise]);
+        // S2 — live talk only uses memory if it is already ready (≤60 ms).
+        const liveMemory = live
+          ? Promise.race([memoryPromise, new Promise<{ note: string }>((r) => setTimeout(() => r({ note: "" }), 60))])
+          : memoryPromise;
+        const [profile, retrievalRaw] = await Promise.all([liveMemory, retrievalPromise]);
         const retrieval = plan.useRetrieval ? (liveRetrieval ?? retrievalRaw) : null;
         mark("context", tCtx);
 
-        // --- 3. Resource agent (cheap, deterministic) --------------------------
+        // --- 3. Resource agent — runs alongside the model call (S2) -----------
         const tRes = Date.now();
-        const resourcePick = await runResourceAgent({
+        const resourcePromise = runResourceAgent({
           message: turn,
           context,
           intent: plan.intent,
           retrievalTitles: (retrieval?.matches ?? []).map((m) => m.title),
           trace: trace(3),
-        });
-        mark("resources", tRes);
+        })
+          .catch(() => ({ resources: [] }) as unknown as Awaited<ReturnType<typeof runResourceAgent>>)
+          .finally(() => mark("resources", tRes));
 
         // --- 4. Answering agent ------------------------------------------------
         const agentArgs = {
@@ -557,6 +565,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
         // opened (no time saved), was repeated by the model's own brief, and
         // suppressed the spoken fallback for replies without a brief.
         const focus: FocusTarget = jevOk && !degraded ? jevOk.focus : "none";
+        const resourcePick = await resourcePromise;
         const responseBody = tapped;
 
         return new Response(responseBody, {
