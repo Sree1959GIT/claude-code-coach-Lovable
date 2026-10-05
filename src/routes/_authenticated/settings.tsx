@@ -522,6 +522,28 @@ function ProviderPicker() {
               </span>
               <span className="block text-xs text-muted-foreground">{o.description}</span>
             </span>
+            {(o.id === "anthropic" || o.id === "google") && !activeKeys.has(o.id) && (
+              <span className="flex w-full max-w-xs flex-col gap-1" onClick={(e) => e.preventDefault()}>
+                <input
+                  type="password"
+                  autoComplete="off"
+                  placeholder={o.id === "google" ? "Paste your Gemini key (AIza…)" : "Paste your Claude key (sk-ant-…)"}
+                  value={keyDrafts[o.id as "anthropic" | "google"] ?? ""}
+                  onChange={(e) =>
+                    setKeyDrafts((d) => ({ ...d, [o.id]: e.target.value }))
+                  }
+                  className="rounded-md border border-border bg-background px-2 py-1 text-xs outline-none focus:border-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => void addKey(o.id as "anthropic" | "google")}
+                  disabled={savingKey === o.id || !(keyDrafts[o.id as "anthropic" | "google"] ?? "").trim()}
+                  className="rounded-md border border-border px-2 py-1 text-xs hover:bg-secondary disabled:opacity-50"
+                >
+                  {savingKey === o.id ? "Saving…" : "Save key"}
+                </button>
+              </span>
+            )}
             {(o.id === "anthropic" || o.id === "google") && activeKeys.has(o.id) && (
               <button
                 type="button"
