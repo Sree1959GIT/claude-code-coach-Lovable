@@ -445,7 +445,27 @@ function ProviderPicker() {
   }
 
   const testKey = useServerFn(testProviderKey);
+  const saveKey = useServerFn(saveProviderKey);
   const [checking, setChecking] = useState<string | null>(null);
+  const [keyDrafts, setKeyDrafts] = useState<Partial<Record<"anthropic" | "google", string>>>({});
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+
+  async function addKey(provider: "anthropic" | "google") {
+    const key = (keyDrafts[provider] ?? "").trim();
+    if (!key) return;
+    setSavingKey(provider);
+    setMsg(null);
+    try {
+      await saveKey({ data: { provider, key } });
+      setKeyDrafts((d) => ({ ...d, [provider]: "" }));
+      await keysQ.refetch();
+      setMsg(`${PROVIDERS[provider].label} key saved — you can pick it above now.`);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Couldn't save that key.");
+    } finally {
+      setSavingKey(null);
+    }
+  }
   async function check(provider: "anthropic" | "google") {
     setChecking(provider);
     try {
