@@ -297,7 +297,15 @@ export const Route = createFileRoute("/api/mentor-stream")({
         const { getMembershipTier } = await import("@/lib/model-routing.server");
         const { checkQuota, recordRateEvent } = await import("@/lib/rate-limit.server");
         const tPre = Date.now();
-        const [quota, runId] = await Promise.all([
+        // S2 — Jev's wait overlaps the quota check. Live talk never waits on
+        // Jev (keyword plan routes at once; Jev is still traced).
+        const decideRace: Promise<DecideResult | null> = live && !isCodeTurn
+          ? Promise.resolve(null)
+          : Promise.race([
+              decidePromise,
+              new Promise<null>((r) => setTimeout(() => r(null), DECIDE_BUDGET_MS)),
+            ]);
+        const [quota, runId, decision] = await Promise.all([
           getMembershipTier(supabase as never, userId).then((tier) =>
             checkQuota({ userId, action: "mentor", tier }),
           ),
@@ -307,6 +315,7 @@ export const Route = createFileRoute("/api/mentor-stream")({
             question: turn.slice(0, 2000),
             metadata: { intent: plan.intent, agents: plan.agents, reason: plan.reason },
           }).catch(() => null),
+          decideRace,
         ]);
         mark("pre", tPre);
         if (!quota.allowed) {
