@@ -12,7 +12,7 @@ import { useSession } from "@/hooks/useSession";
 import { supabase } from "@/integrations/supabase/client";
 import { getQuotaStatus } from "@/lib/quotas.functions";
 import { getProviderPref, setProviderPref } from "@/lib/provider-pref.functions";
-import { listMyProviderKeys, testProviderKey, type StoredKeyMeta } from "@/lib/byok.functions";
+import { listMyProviderKeys, saveProviderKey, testProviderKey, type StoredKeyMeta } from "@/lib/byok.functions";
 import { LocalModelAdvisor } from "@/components/LocalModelAdvisor";
 
 /** F4 — per-provider health badge (colour + word). */
@@ -445,7 +445,27 @@ function ProviderPicker() {
   }
 
   const testKey = useServerFn(testProviderKey);
+  const saveKey = useServerFn(saveProviderKey);
   const [checking, setChecking] = useState<string | null>(null);
+  const [keyDrafts, setKeyDrafts] = useState<Partial<Record<"anthropic" | "google", string>>>({});
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+
+  async function addKey(provider: "anthropic" | "google") {
+    const key = (keyDrafts[provider] ?? "").trim();
+    if (!key) return;
+    setSavingKey(provider);
+    setMsg(null);
+    try {
+      await saveKey({ data: { provider, key } });
+      setKeyDrafts((d) => ({ ...d, [provider]: "" }));
+      await keysQ.refetch();
+      setMsg(`${PROVIDERS[provider].label} key saved — you can pick it above now.`);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Couldn't save that key.");
+    } finally {
+      setSavingKey(null);
+    }
+  }
   async function check(provider: "anthropic" | "google") {
     setChecking(provider);
     try {
@@ -502,6 +522,28 @@ function ProviderPicker() {
               </span>
               <span className="block text-xs text-muted-foreground">{o.description}</span>
             </span>
+            {(o.id === "anthropic" || o.id === "google") && !activeKeys.has(o.id) && (
+              <span className="flex w-full max-w-xs flex-col gap-1" onClick={(e) => e.preventDefault()}>
+                <input
+                  type="password"
+                  autoComplete="off"
+                  placeholder={o.id === "google" ? "Paste your Gemini key (AIza…)" : "Paste your Claude key (sk-ant-…)"}
+                  value={keyDrafts[o.id as "anthropic" | "google"] ?? ""}
+                  onChange={(e) =>
+                    setKeyDrafts((d) => ({ ...d, [o.id]: e.target.value }))
+                  }
+                  className="rounded-md border border-border bg-background px-2 py-1 text-xs outline-none focus:border-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => void addKey(o.id as "anthropic" | "google")}
+                  disabled={savingKey === o.id || !(keyDrafts[o.id as "anthropic" | "google"] ?? "").trim()}
+                  className="rounded-md border border-border px-2 py-1 text-xs hover:bg-secondary disabled:opacity-50"
+                >
+                  {savingKey === o.id ? "Saving…" : "Save key"}
+                </button>
+              </span>
+            )}
             {(o.id === "anthropic" || o.id === "google") && activeKeys.has(o.id) && (
               <button
                 type="button"
