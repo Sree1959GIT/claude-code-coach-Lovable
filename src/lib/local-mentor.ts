@@ -79,6 +79,8 @@ export async function streamLocalMentor(args: {
         model: args.model,
         stream: true,
         keep_alive: "30m",
+        // S1 — Qwen3 and other thinking models answer straight away.
+        think: false,
         messages: [
           {
             role: "system",

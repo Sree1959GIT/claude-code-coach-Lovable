@@ -445,20 +445,25 @@ export const Route = createFileRoute("/api/mentor-stream")({
         const tCtx = Date.now();
 
         // --- 2. Memory + retrieval — started speculatively alongside Jev ------
-        const [profile, retrievalRaw] = await Promise.all([memoryPromise, retrievalPromise]);
+        // S2 — live talk only uses memory if it is already ready (≤60 ms).
+        const liveMemory = live
+          ? Promise.race([memoryPromise, new Promise<{ note: string }>((r) => setTimeout(() => r({ note: "" }), 60))])
+          : memoryPromise;
+        const [profile, retrievalRaw] = await Promise.all([liveMemory, retrievalPromise]);
         const retrieval = plan.useRetrieval ? (liveRetrieval ?? retrievalRaw) : null;
         mark("context", tCtx);
 
-        // --- 3. Resource agent (cheap, deterministic) --------------------------
+        // --- 3. Resource agent — runs alongside the model call (S2) -----------
         const tRes = Date.now();
-        const resourcePick = await runResourceAgent({
+        const resourcePromise = runResourceAgent({
           message: turn,
           context,
           intent: plan.intent,
           retrievalTitles: (retrieval?.matches ?? []).map((m) => m.title),
           trace: trace(3),
-        });
-        mark("resources", tRes);
+        })
+          .catch(() => ({ resources: [] as unknown[] }))
+          .finally(() => mark("resources", tRes));
 
         // --- 4. Answering agent ------------------------------------------------
         const agentArgs = {

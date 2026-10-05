@@ -46,7 +46,7 @@ export function openerFor(d: {
       : "Right, let's weigh up that option.";
   }
   if (d.focus === "scenario") return "Okay, let's start with the scenario.";
-  if (d.focus === "stem") return "Okay, look at what the question is actually asking.";
+  if (d.focus === "stem") return "Here's the heart of it.";
   if (d.intent === "study_strategy") return "Good question — here's how I'd approach it.";
   return "Good question, let me take you through it.";
 }
