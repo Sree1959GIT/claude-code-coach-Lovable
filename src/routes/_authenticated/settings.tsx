@@ -177,6 +177,12 @@ function StudyTab() {
 function VoiceTab() {
   const [voice, setVoice] = useStored(VOICE_KEY, "studio");
   const [mic, setMic] = useStored(MIC_KEY, "browser");
+  const [engineTick, setEngineTick] = useState(0);
+  const [localVoice, setLocalVoice] = useState("piper");
+  useEffect(() => {
+    setLocalVoice(localStorage.getItem("ccaf.local_voice_model") ?? "piper");
+  }, [engineTick]);
+
 
   return (
     <section>
@@ -203,7 +209,22 @@ function VoiceTab() {
           <option value="device">On-device transcription</option>
         </select>
       </Field>
-      <OfflineSttCard />
+      <EngineSelect
+        label="On-device listener"
+        hint="Whisper is the default. Moonshine is about 3–5× faster on short spoken phrases (~30 MB). Download after switching."
+        storageKey="ccaf.stt_engine"
+        options={[["whisper", "Whisper tiny"], ["moonshine", "Moonshine tiny (faster)"]]}
+        onChange={(v) => void import("@/lib/offline-stt").then((m) => { m.setSttEngine(v as "whisper" | "moonshine"); setEngineTick((t) => t + 1); })}
+      />
+      <OfflineSttCard key={`stt-${engineTick}`} />
+      <EngineSelect
+        label="Instant voice model"
+        hint="Piper is small and quick. Kokoro sounds closer to a studio voice (~90 MB) at similar speed. Piper stays as backup."
+        storageKey="ccaf.local_voice_model"
+        options={[["piper", "Piper"], ["kokoro", "Kokoro (better quality)"]]}
+        onChange={() => setEngineTick((t) => t + 1)}
+      />
+      {localVoice === "kokoro" ? <KokoroCard /> : null}
       <OfflineVoiceCard />
     </section>
   );
@@ -266,6 +287,103 @@ function OfflineSttCard() {
             disabled={state === "downloading"}
             className="touch-target rounded-md border border-border px-3 text-sm disabled:opacity-50"
           >
+            {state === "downloading" ? "Downloading…" : "Download"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** S4 — small engine picker stored in this browser. */
+function EngineSelect(props: {
+  label: string;
+  hint: string;
+  storageKey: string;
+  options: Array<[string, string]>;
+  onChange: (v: string) => void;
+}) {
+  const [v, setV] = useState(props.options[0]![0]);
+  useEffect(() => {
+    setV(localStorage.getItem(props.storageKey) ?? props.options[0]![0]);
+  }, [props.storageKey]);
+  return (
+    <Field label={props.label} hint={props.hint}>
+      <select
+        value={v}
+        onChange={(e) => {
+          localStorage.setItem(props.storageKey, e.target.value);
+          setV(e.target.value);
+          props.onChange(e.target.value);
+        }}
+        className="touch-target rounded-md border border-border bg-background px-3 text-sm"
+      >
+        {props.options.map(([id, label]) => (
+          <option key={id} value={id}>{label}</option>
+        ))}
+      </select>
+    </Field>
+  );
+}
+
+/** S4 — one-time download of the Kokoro voice, with test playback. */
+function KokoroCard() {
+  const [state, setState] = useState<"missing" | "downloading" | "ready" | "error">("missing");
+  const [prog, setProg] = useState({ loaded: 0, total: 0 });
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    void import("@/lib/offline-kokoro").then((m) => setState(m.isKokoroInstalled() ? "ready" : "missing"));
+  }, []);
+  async function start() {
+    setErr(null);
+    setState("downloading");
+    try {
+      const m = await import("@/lib/offline-kokoro");
+      await m.downloadKokoro(setProg);
+      setState("ready");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Download failed");
+      setState("error");
+    }
+  }
+  async function test() {
+    try {
+      const m = await import("@/lib/offline-kokoro");
+      await new Audio(await m.speakKokoro("Hi, I'm your mentor. Let's work through this together.")).play();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Playback failed");
+    }
+  }
+  async function remove() {
+    const m = await import("@/lib/offline-kokoro");
+    await m.removeKokoro();
+    setState("missing");
+  }
+  const pct = prog.total ? Math.min(100, Math.round((prog.loaded / prog.total) * 100)) : 0;
+  return (
+    <div className="mb-4 rounded-md border border-border bg-card p-4 text-sm">
+      <p className="font-medium">Kokoro voice</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        About 90 MB, downloaded once and kept in this browser. Fastest with a recent graphics chip; Piper is used if Kokoro isn't ready.
+      </p>
+      {state === "downloading" && (
+        <div className="mt-3" aria-live="polite">
+          <div className="h-2 overflow-hidden rounded bg-muted">
+            <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">{pct}%</p>
+        </div>
+      )}
+      {err && <p className="mt-2 text-xs text-destructive">{err}</p>}
+      <div className="mt-3 flex items-center gap-3">
+        {state === "ready" ? (
+          <>
+            <span className="text-xs text-success">Installed</span>
+            <button type="button" onClick={test} className="touch-target rounded-md border border-border px-3 text-sm">Test</button>
+            <button type="button" onClick={remove} className="text-xs underline">Remove</button>
+          </>
+        ) : (
+          <button type="button" onClick={start} disabled={state === "downloading"} className="touch-target rounded-md border border-border px-3 text-sm disabled:opacity-50">
             {state === "downloading" ? "Downloading…" : "Download"}
           </button>
         )}

@@ -5,8 +5,32 @@
  * transcribed locally on WebGPU (or WASM). Browser-only and lazily imported.
  */
 
-export const STT_MODEL = "onnx-community/whisper-tiny.en";
-const INSTALLED_KEY = "ccaf.stt_installed";
+/** S4 — Whisper (default) or Moonshine (faster on short live phrases). */
+export type SttEngine = "whisper" | "moonshine";
+export const STT_MODELS: Record<SttEngine, string> = {
+  whisper: "onnx-community/whisper-tiny.en",
+  moonshine: "onnx-community/moonshine-tiny-ONNX",
+};
+export const STT_ENGINE_KEY = "ccaf.stt_engine";
+export function getSttEngine(): SttEngine {
+  try {
+    return localStorage.getItem(STT_ENGINE_KEY) === "moonshine" ? "moonshine" : "whisper";
+  } catch {
+    return "whisper";
+  }
+}
+export function setSttEngine(e: SttEngine) {
+  try {
+    localStorage.setItem(STT_ENGINE_KEY, e);
+  } catch {
+    /* noop */
+  }
+  pipe = null;
+  loadedEngine = null;
+}
+export const STT_MODEL = STT_MODELS.whisper;
+const installedKey = (e: SttEngine) => (e === "whisper" ? "ccaf.stt_installed" : "ccaf.stt_installed_moonshine");
+let loadedEngine: SttEngine | null = null;
 
 type Asr = (audio: Float32Array) => Promise<{ text: string } | { text: string }[]>;
 let pipe: Promise<Asr> | null = null;
@@ -15,6 +39,10 @@ export type SttProgress = { loaded: number; total: number };
 
 function load(onProgress?: (p: SttProgress) => void): Promise<Asr> {
   if (typeof window === "undefined") return Promise.reject(new Error("Browser only"));
+  const engine = getSttEngine();
+  if (loadedEngine !== engine) pipe = null;
+  loadedEngine = engine;
+  const model = STT_MODELS[engine];
   pipe ??= (async () => {
     const { pipeline } = await import("@huggingface/transformers");
     const files = new Map<string, SttProgress>();
@@ -31,13 +59,13 @@ function load(onProgress?: (p: SttProgress) => void): Promise<Asr> {
     };
     const device = "gpu" in navigator ? "webgpu" : "wasm";
     try {
-      return (await pipeline("automatic-speech-recognition", STT_MODEL, {
+      return (await pipeline("automatic-speech-recognition", model, {
         device,
         dtype: "q8",
         progress_callback: cb,
       } as never)) as unknown as Asr;
     } catch {
-      return (await pipeline("automatic-speech-recognition", STT_MODEL, {
+      return (await pipeline("automatic-speech-recognition", model, {
         device: "wasm",
         dtype: "q8",
         progress_callback: cb,
@@ -57,7 +85,7 @@ export function warmStt(): void {
 
 export function isSttInstalled(): boolean {
   try {
-    return localStorage.getItem(INSTALLED_KEY) === "1";
+    return localStorage.getItem(installedKey(getSttEngine())) === "1";
   } catch {
     return false;
   }
@@ -66,7 +94,7 @@ export function isSttInstalled(): boolean {
 export async function downloadStt(onProgress: (p: SttProgress) => void): Promise<void> {
   await load(onProgress);
   try {
-    localStorage.setItem(INSTALLED_KEY, "1");
+    localStorage.setItem(installedKey(getSttEngine()), "1");
   } catch {
     /* noop */
   }
@@ -75,7 +103,7 @@ export async function downloadStt(onProgress: (p: SttProgress) => void): Promise
 export async function removeStt(): Promise<void> {
   pipe = null;
   try {
-    localStorage.removeItem(INSTALLED_KEY);
+    localStorage.removeItem(installedKey(getSttEngine()));
     for (const name of await caches.keys()) {
       if (name.includes("transformers")) await caches.delete(name);
     }
