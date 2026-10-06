@@ -165,3 +165,5 @@
 ## 5. Conversational Decisions & Intent History Log
 - **Audio Delivery Pivot:** Spoken modules deliver a short `[[brief]]` spoken overview dynamically matched to the text stream, while the full explanation displays asynchronously inside the chat drawer to conserve generation tokens.
 - **Code Execution Architecture:** Sandbox compilation runs inside localized client side workers first via interface layers before deploying remote containers later.
+
+- 2026-10-06: S4 + S5 shipped; ksm@aaplweb.com account verified (confirmed, admin, has signed in).

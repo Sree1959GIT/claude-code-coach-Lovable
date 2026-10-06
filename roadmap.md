@@ -113,3 +113,13 @@
 - [x] T2: Simultaneous voice and text — live mode uses a short spoken style; speech starts on the first short phrase (4–8 words or first punctuation) with the next phrase prepared while the current one plays; live talk skips library lookup unless clearly needed; Traces shows time to first sound.
 - [x] T3: Direct Gemini — with a Gemini key saved as a server secret, the mentor talks to Google directly instead of the Lovable gateway; learner keys still win first.
 - [ ] Wave 2: Vercel packaging (adapter, env vars, deploy check) — waits on your go-ahead.
+
+## Speed pass
+- [x] S1 no hidden thinking
+- [x] S2 parallel start
+- [x] S3 no filler opener
+- [ ] S4 Kokoro voice + Moonshine listener
+- [ ] S5 per-step speed on Traces
+
+- [x] S4 Kokoro voice + Moonshine listener (Settings › Mentor & voice)
+- [x] S5 per-step speed table on Traces

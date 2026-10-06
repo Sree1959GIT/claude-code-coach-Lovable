@@ -20,7 +20,33 @@ function load(): Promise<Piper> {
   return lib;
 }
 
+/** S4 — which on-device voice "Instant" uses: Piper (default) or Kokoro. */
+export type LocalVoiceModel = "piper" | "kokoro";
+export const LOCAL_VOICE_MODEL_KEY = "ccaf.local_voice_model";
+export function getLocalVoiceModel(): LocalVoiceModel {
+  try {
+    return localStorage.getItem(LOCAL_VOICE_MODEL_KEY) === "kokoro" ? "kokoro" : "piper";
+  } catch {
+    return "piper";
+  }
+}
+export function setLocalVoiceModel(v: LocalVoiceModel) {
+  try {
+    localStorage.setItem(LOCAL_VOICE_MODEL_KEY, v);
+  } catch {
+    /* storage blocked */
+  }
+}
+
 export async function isOfflineVoiceInstalled(): Promise<boolean> {
+  if (typeof window !== "undefined" && getLocalVoiceModel() === "kokoro") {
+    const k = await import("./offline-kokoro");
+    if (k.isKokoroInstalled()) return true;
+  }
+  return isPiperInstalled();
+}
+
+export async function isPiperInstalled(): Promise<boolean> {
   try {
     const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle("piper");
     const model = await (await dir.getFileHandle(`${OFFLINE_VOICE_ID}.onnx`)).getFile();
@@ -50,7 +76,7 @@ export async function downloadOfflineVoice(
   // Piper starts its private-storage write without awaiting it. Do not show
   // "Installed" until the model can actually be found by the Mentor.
   for (let attempt = 0; attempt < 40; attempt++) {
-    if (await isOfflineVoiceInstalled()) return;
+    if (await isPiperInstalled()) return;
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
   throw new Error("The voice download finished but could not be saved in this browser. Check available storage and try again.");
@@ -92,9 +118,23 @@ function getSession() {
 }
 /** Loads the on-device voice ahead of time so the first sentence is instant. */
 export function warmOfflineVoice(): void {
+  if (getLocalVoiceModel() === "kokoro") {
+    void import("./offline-kokoro").then((k) => (k.isKokoroInstalled() ? k.warmKokoro() : getSession().catch(() => {})));
+    return;
+  }
   void getSession().catch(() => {});
 }
 export async function speakOffline(text: string): Promise<string> {
+  if (getLocalVoiceModel() === "kokoro") {
+    const k = await import("./offline-kokoro");
+    if (k.isKokoroInstalled()) {
+      try {
+        return await k.speakKokoro(text);
+      } catch (e) {
+        console.warn("[voice] Kokoro failed, trying Piper", e);
+      }
+    }
+  }
   const run = chain.then(async () => {
     const session = await getSession();
     const wav = await session.predict(text);
