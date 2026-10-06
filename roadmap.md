@@ -120,3 +120,6 @@
 - [x] S3 no filler opener
 - [ ] S4 Kokoro voice + Moonshine listener
 - [ ] S5 per-step speed on Traces
+
+- [x] S4 Kokoro voice + Moonshine listener (Settings › Mentor & voice)
+- [x] S5 per-step speed table on Traces
