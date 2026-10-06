@@ -43,8 +43,15 @@ export type Attempt = {
 };
 
 /** G5 — pass an exam id to keep study areas isolated to that exam. */
-export async function fetchDomains(examId?: string | null): Promise<Domain[]> {
-  let q = supabase.from("domains").select("*").order("sort_order");
+/**
+ * Server functions MUST pass their signed-in client: the browser client has no
+ * session on the server, and domains are readable by authenticated users only.
+ */
+export async function fetchDomains(
+  examId?: string | null,
+  client: typeof supabase = supabase,
+): Promise<Domain[]> {
+  let q = client.from("domains").select("*").order("sort_order");
   if (examId) q = q.eq("exam_id", examId);
   const { data, error } = await q;
   if (error) throw error;

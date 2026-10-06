@@ -132,6 +132,9 @@ const CODE_FOLLOWUP = `The conversation includes code the learner is discussing 
 /** T2 — live talk: answers are heard, so keep them short and conversational. */
 const LIVE_MODE = `LIVE VOICE CONVERSATION. The learner is talking to you out loud. Keep the [[brief]] part to 1-2 short, natural sentences and open with the key point in the first few words. Keep the [[written]] part to at most 3 sentences. No preamble and no filler openers such as 'look at what the question is actually asking' — say the substance first, in a warm, professional tone.`;
 
+/** Spoken guide brief — restated at the end of every prompt. */
+const FORMAT_REMINDER = `REPLY FORMAT — mandatory. Your reply MUST begin with the exact characters [[brief]]. After it, speak like a friendly guide sitting beside the learner: in 2-3 short conversational sentences, give the GIST of what you are about to write — what it is about and the one thing to focus on. Do not read out or copy the written answer; summarise it as a tutor would say it aloud. Then write [[written]] followed by the full written explanation. Never skip the [[brief]] part.`;
+
 /** Assemble the full message stack sent to the model. */
 export function buildExplainerMessages(args: ExplainerArgs): ChatMessage[] {
   const sources = args.retrieval ? retrievalSystemMessage(args.retrieval) : null;
@@ -155,6 +158,8 @@ export function buildExplainerMessages(args: ExplainerArgs): ChatMessage[] {
     ...(args.live ? [{ role: "system" as const, content: LIVE_MODE }] : []),
     ...(sources ? [{ role: "system" as const, content: sources }] : []),
     ...args.messages.slice(-20),
+    // The format contract sits last so long context never pushes it out of view.
+    { role: "system", content: FORMAT_REMINDER },
   ];
 }
 
