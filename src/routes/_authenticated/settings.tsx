@@ -177,6 +177,12 @@ function StudyTab() {
 function VoiceTab() {
   const [voice, setVoice] = useStored(VOICE_KEY, "studio");
   const [mic, setMic] = useStored(MIC_KEY, "browser");
+  const [engineTick, setEngineTick] = useState(0);
+  const [localVoice, setLocalVoice] = useState("piper");
+  useEffect(() => {
+    setLocalVoice(localStorage.getItem("ccaf.local_voice_model") ?? "piper");
+  }, [engineTick]);
+
 
   return (
     <section>
@@ -203,7 +209,22 @@ function VoiceTab() {
           <option value="device">On-device transcription</option>
         </select>
       </Field>
-      <OfflineSttCard />
+      <EngineSelect
+        label="On-device listener"
+        hint="Whisper is the default. Moonshine is about 3–5× faster on short spoken phrases (~30 MB). Download after switching."
+        storageKey="ccaf.stt_engine"
+        options={[["whisper", "Whisper tiny"], ["moonshine", "Moonshine tiny (faster)"]]}
+        onChange={(v) => void import("@/lib/offline-stt").then((m) => m.setSttEngine(v as "whisper" | "moonshine"))}
+      />
+      <OfflineSttCard key={`stt-${engineTick}`} />
+      <EngineSelect
+        label="Instant voice model"
+        hint="Piper is small and quick. Kokoro sounds closer to a studio voice (~90 MB) at similar speed. Piper stays as backup."
+        storageKey="ccaf.local_voice_model"
+        options={[["piper", "Piper"], ["kokoro", "Kokoro (better quality)"]]}
+        onChange={() => setEngineTick((t) => t + 1)}
+      />
+      {localVoice === "kokoro" ? <KokoroCard /> : null}
       <OfflineVoiceCard />
     </section>
   );
