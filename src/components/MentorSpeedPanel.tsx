@@ -42,6 +42,33 @@ export function MentorSpeedPanel() {
           ))}
         </tbody>
       </table>
+      <div className="border-t border-border px-4 py-3">
+        <h3 className="text-xs font-bold uppercase tracking-widest">Where the time goes (server, per step)</h3>
+        {d.steps.length === 0 ? (
+          <p className="mt-1 text-xs text-muted-foreground">No step timings recorded yet — ask the mentor a question.</p>
+        ) : (
+          <table className="mt-2 w-full text-sm">
+            <thead className="text-left text-xs text-muted-foreground">
+              <tr>
+                <th className="py-1 font-normal">Step</th>
+                <th className="py-1 font-normal">Turns</th>
+                <th className="py-1 font-normal">Typical</th>
+                <th className="py-1 font-normal">Slowest 10%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.steps.map((s) => (
+                <tr key={s.step} className="border-t border-border">
+                  <td className="py-1">{s.step}</td>
+                  <td className="py-1 font-mono">{s.turns}</td>
+                  <td className="py-1 font-mono">{ms(s.p50)}</td>
+                  <td className="py-1 font-mono">{ms(s.p90)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
       <div className="border-t border-border px-4 py-3 text-sm">
         <p className="text-xs text-muted-foreground">
           Library skipped on {d.gatedTurns} turns · Jev slowest 10%: {ms(d.decideP90)} · Jev failures:{" "}

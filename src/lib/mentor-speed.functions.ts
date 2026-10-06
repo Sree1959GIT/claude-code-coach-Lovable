@@ -12,6 +12,17 @@ export type MentorSpeed = {
   decideP90: number | null;
   decideFailRate: number | null;
   suggestions: string[];
+  /** S5 — per-step server time before the reply streams. */
+  steps: Array<{ step: string; turns: number; p50: number | null; p90: number | null }>;
+};
+
+const STEP_LABELS: Record<string, string> = {
+  pre: "Usage check + run record + Jev (parallel)",
+  memory: "Learner memory",
+  retrieval: "Library search",
+  resources: "Clip pick",
+  model_open: "Model wait (to stream open)",
+  total_to_stream: "Total before first byte",
 };
 
 const CURRENT_BUDGET_MS = 700;
@@ -44,7 +55,7 @@ export const getMentorSpeed = createServerFn({ method: "GET" })
       supabaseAdmin
         .from("agent_steps")
         .select("run_id, role, status, duration_ms, output")
-        .in("role", ["router", "decide"])
+        .in("role", ["router", "decide", "timings"])
         .gte("created_at", since)
         .limit(4000),
       supabaseAdmin
@@ -57,10 +68,17 @@ export const getMentorSpeed = createServerFn({ method: "GET" })
 
     const router = new Map<string, { routedBy?: string; libraryGated?: boolean }>();
     const decideMs: number[] = [];
+    const stepMs: Record<string, number[]> = {};
     let decideTotal = 0;
     let decideFailed = 0;
     for (const s of stepsRes.data ?? []) {
       const out = (s.output ?? {}) as { routedBy?: string; libraryGated?: boolean };
+      if (s.role === "timings") {
+        for (const [k, v] of Object.entries((s.output ?? {}) as Record<string, unknown>)) {
+          if (typeof v === "number" && !k.endsWith("_skipped") && k !== "decide_fallback") (stepMs[k] ??= []).push(v);
+        }
+        continue;
+      }
       if (s.role === "router") router.set(s.run_id, out);
       else {
         decideTotal++;
@@ -113,6 +131,10 @@ export const getMentorSpeed = createServerFn({ method: "GET" })
       decideP90,
       decideFailRate,
       suggestions,
+      steps: Object.entries(stepMs)
+        .filter(([k]) => k !== "decide")
+        .map(([k, v]) => ({ step: STEP_LABELS[k] ?? k, turns: v.length, p50: pct(v, 50), p90: pct(v, 90) }))
+        .sort((a, b) => (b.p50 ?? 0) - (a.p50 ?? 0)),
     };
   });
 
