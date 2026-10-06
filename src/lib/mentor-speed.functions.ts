@@ -20,6 +20,7 @@ const STEP_LABELS: Record<string, string> = {
   pre: "Usage check + run record + Jev (parallel)",
   memory: "Learner memory",
   retrieval: "Library search",
+  context: "Memory + library context",
   resources: "Clip pick",
   model_open: "Model wait (to stream open)",
   total_to_stream: "Total before first byte",
