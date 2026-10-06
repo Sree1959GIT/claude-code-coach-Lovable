@@ -30,7 +30,7 @@ export const getSessionHistory = createServerFn({ method: "GET" })
         .eq("user_id", userId)
         .order("started_at", { ascending: false })
         .limit(60),
-      fetchDomains(data.examId),
+      fetchDomains(data.examId, supabase),
     ]);
     if (sessionsRes.error) throw sessionsRes.error;
     // P3.2 — keep sessions tied to this exam's domains; mixed sessions are
