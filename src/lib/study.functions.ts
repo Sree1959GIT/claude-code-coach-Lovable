@@ -60,7 +60,7 @@ export const startSession = createServerFn({ method: "POST" })
           data: (Question & { options: QuestionOption[] })[] | null;
           error: Error | null;
         }>,
-      fetchDomains(data.examId ?? null),
+      fetchDomains(data.examId ?? null, supabase),
     ]);
     if (qErr) throw qErr;
 
@@ -446,7 +446,7 @@ export const getSessionReport = createServerFn({ method: "GET" })
         .in("question_id", ids)
         .gte("created_at", session.started_at)
         .order("created_at"),
-      fetchDomains(),
+      fetchDomains(null, supabase),
     ]);
     if (questionsRes.error) throw questionsRes.error;
     if (attemptsRes.error) throw attemptsRes.error;

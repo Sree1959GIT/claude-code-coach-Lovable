@@ -56,7 +56,7 @@ export const getMistakeBank = createServerFn({ method: "GET" })
           "id, domain_id, stem, difficulty, options:question_options(id, label, is_correct, explanation)",
         )
         .in("id", missedIds),
-      fetchDomains(),
+      fetchDomains(null, supabase),
     ]);
     if (questionsRes.error) throw questionsRes.error;
 
@@ -159,7 +159,7 @@ export const startMistakeRetest = createServerFn({ method: "POST" })
     );
 
     if (data.domainSlug) {
-      const domains = await fetchDomains();
+      const domains = await fetchDomains(null, supabase);
       const domain = domains.find((d) => d.slug === data.domainSlug);
       if (domain) {
         const { data: scoped, error: sErr } = await supabase

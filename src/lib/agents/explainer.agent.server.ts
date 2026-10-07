@@ -69,8 +69,8 @@ Role:
 - Plain prose only — no markdown, lists, headings or code fences.
 
 OUTPUT FORMAT (required, two parts, in this order):
-1) Start with the literal marker [[brief]] followed by a SPOKEN summary: 2-3 short sentences, conversational and warm, giving the key point. This part is spoken aloud the moment it arrives, so keep it tight and natural.
-2) Then emit the literal marker [[written]] followed by the WRITTEN ANSWER: a clear, well-structured explanation the learner will READ (3-6 sentences), consistent with the spoken summary but more complete. Never repeat the spoken summary verbatim.
+1) Start with the literal marker [[brief]] followed by the SPOKEN NARRATION: like a researcher presenting a slide, walk the learner through the written answer point by point, in the same order, giving the gist of each point in plain conversational words so they can read along while listening. 3-5 short sentences (about 40-70 words). Never read the written text out word for word.
+2) Then emit the literal marker [[written]] followed by the WRITTEN ANSWER the learner reads: precise and specific to this question, at most 4 short sentences (about 80 words). No padding, no generic study advice unless asked, no restating the question.
 
 HIGHLIGHT MARKERS (required inside the SPOKEN part):
 Immediately before each spoken sentence, emit exactly one marker naming what that sentence is about:
@@ -124,13 +124,16 @@ const CODE_MODE = `CODE-EXPLAINING MODE. The learner sent code from the Study Ca
 - Do NOT walk the code line by line, do NOT cite line numbers, do NOT read code out, and do NOT restate or re-interpret the question.
 - Then add one or two sentences on what to look for: name the key pattern in the code (e.g. "a loop where the model sees each tool result and can retry, switch tools, or finish") and the property it gives (e.g. "recovery from tool errors without user intervention"), so the learner can match it to an option. Never name the correct letter.
 - If run output or an error is included, say in one sentence what caused it.
-- Spoken [[brief]]: 2 sentences of the flow summary. [[written]]: the flow summary plus the "what to look for" sentences, 3-5 sentences total. Never invent code that was not captured.`;
+- Spoken [[brief]]: 3-4 short sentences narrating the flow and what to look for, like a presenter. [[written]]: the flow summary plus the "what to look for" sentences, at most 4 sentences. Never invent code that was not captured.`;
 
 /** M2 — lighter guidance once code is already part of the conversation. */
 const CODE_FOLLOWUP = `The conversation includes code the learner is discussing from the Study Canvas. When they ask about the code, answer about the code's behaviour in plain English as a short flow summary — no line-by-line walkthrough, no line numbers, no restating the question — and, if useful, name the pattern to look for in the options. Never name the correct letter.`;
 
 /** T2 — live talk: answers are heard, so keep them short and conversational. */
 const LIVE_MODE = `LIVE VOICE CONVERSATION. The learner is talking to you out loud. Keep the [[brief]] part to 1-2 short, natural sentences and open with the key point in the first few words. Keep the [[written]] part to at most 3 sentences. No preamble and no filler openers such as 'look at what the question is actually asking' — say the substance first, in a warm, professional tone.`;
+
+/** Spoken guide brief — restated at the end of every prompt. */
+const FORMAT_REMINDER = `REPLY FORMAT — mandatory. Your reply MUST begin with the exact characters [[brief]]. After it, narrate like a presenter guiding an audience through a content-rich slide: in 3-5 short conversational sentences, cover the gist of EVERY point you are about to write, in the same order, so the learner can read along while you talk. Do not read out or copy the written answer. Then write [[written]] followed by a precise written answer of at most 4 short sentences (about 80 words), specific to this question. Never skip the [[brief]] part.`;
 
 /** Assemble the full message stack sent to the model. */
 export function buildExplainerMessages(args: ExplainerArgs): ChatMessage[] {
@@ -155,6 +158,8 @@ export function buildExplainerMessages(args: ExplainerArgs): ChatMessage[] {
     ...(args.live ? [{ role: "system" as const, content: LIVE_MODE }] : []),
     ...(sources ? [{ role: "system" as const, content: sources }] : []),
     ...args.messages.slice(-20),
+    // The format contract sits last so long context never pushes it out of view.
+    { role: "system", content: FORMAT_REMINDER },
   ];
 }
 
