@@ -588,7 +588,11 @@ export function MentorCanvas({
       el.muted = false;
       el.onended = () => resolve();
       el.onerror = () => resolve();
-      el.onpause = () => resolve();
+      // Only a real stop/barge-in ends a sentence early — stray pause events
+      // (src swaps, audio unlock) used to cut speech off mid-reply.
+      el.onpause = () => {
+        if (stoppedRef.current || el.ended) resolve();
+      };
       el.src = url;
       void el.play().catch(() => resolve());
     });
@@ -617,9 +621,11 @@ export function MentorCanvas({
         }
         const url = await (seg.audio ?? next ?? synth(seg.text));
         next = null;
-        // Phase 1 — keep two sentences of voice prepared ahead of playback so
-        // there is no gap between one sentence ending and the next starting.
-        for (const upcoming of queueRef.current.slice(0, 2)) {
+        // Keep voice prepared ahead of playback. The on-device voice runs on
+        // this device, so it prepares only one sentence ahead — preparing more
+        // while audio plays starves playback and makes it crackle.
+        const ahead = voicePrefRef.current === "instant" ? 1 : 2;
+        for (const upcoming of queueRef.current.slice(0, ahead)) {
           if (upcoming && !upcoming.audio) upcoming.audio = synth(upcoming.text);
         }
         if (stoppedRef.current) break;

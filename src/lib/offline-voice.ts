@@ -124,7 +124,11 @@ export function warmOfflineVoice(): void {
   }
   void getSession().catch(() => {});
 }
-export async function speakOffline(text: string): Promise<string> {
+export async function speakOffline(raw: string): Promise<string> {
+  // Clean text and always end on punctuation: on-device voices clip or
+  // whisper the last word when a sentence has no closing mark.
+  let text = raw.replace(/\[\[[^\]]*\]\]/g, "").replace(/[*_`#>]/g, "").replace(/\s+/g, " ").trim();
+  if (text && !/[.!?]$/.test(text)) text += ".";
   if (getLocalVoiceModel() === "kokoro") {
     const k = await import("./offline-kokoro");
     if (k.isKokoroInstalled()) {
