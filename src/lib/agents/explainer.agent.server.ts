@@ -12,6 +12,7 @@ import { retrievalSystemMessage } from "./retrieval.agent.server";
 import { fetchGatewayStream } from "./gateway.server";
 import { adviceSystemMessage } from "./advice-prompt.server";
 import { examLabel, examLabelSync, withExam } from "@/lib/exam-context.server";
+import { mentorDeliveryGuidance } from "@/lib/mentor-delivery";
 
 
 
@@ -160,6 +161,7 @@ export function buildExplainerMessages(args: ExplainerArgs): ChatMessage[] {
     ...args.messages.slice(-20),
     // The format contract sits last so long context never pushes it out of view.
     { role: "system", content: FORMAT_REMINDER },
+    { role: "system", content: mentorDeliveryGuidance(last?.role === "user" ? last.content : "") },
   ];
 }
 

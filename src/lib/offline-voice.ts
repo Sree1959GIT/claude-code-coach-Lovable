@@ -114,7 +114,8 @@ function getSession() {
         throw e;
       }) as never;
   }
-  return sessionPromise!;
+  if (!sessionPromise) throw new Error("Local voice could not be initialized");
+  return sessionPromise;
 }
 /** Loads the on-device voice ahead of time so the first sentence is instant. */
 export function warmOfflineVoice(): void {
