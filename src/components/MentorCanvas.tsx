@@ -119,14 +119,8 @@ class SegmentParser {
   private pending = "";
   private target: HighlightTarget = null;
   private speaking = false;
-  /** True once the reply contains a [[brief]] spoken summary. */
-  private sawBrief = false;
-  /** Fallback: no brief → speak the first sentences of the written text. */
-  private fallbackSpoken = 0;
-  private fallbackPending = "";
-  private static FALLBACK_SENTENCES = 3;
   display = "";
-  /** T2 — live talk: speak from the first short phrase, not the first sentence. */
+  /** Kept for callers; speech is always whole sentences (smooth, no choking). */
   clauseMode = false;
 
   constructor(private emit: (s: Segment) => void) {}
@@ -151,10 +145,9 @@ class SegmentParser {
       this.flush();
       if (m[1] === "brief") {
         this.speaking = true;
-        this.sawBrief = true;
         this.target = null;
       } else if (m[1] === "written") {
-        // A2 — spoken summary comes first; the written answer follows.
+        // Legacy marker — written text is display-only.
         this.speaking = false;
         this.target = null;
       } else {
@@ -163,110 +156,27 @@ class SegmentParser {
       work = work.slice(m.index + m[0].length);
     }
     this.drainSentences();
-    this.drainFallback(false);
   }
 
+  /** Written text is shown only; it is never read aloud. */
   private consume(text: string) {
     if (!text) return;
     if (this.speaking) this.pending += text;
-    else {
-      this.display += text;
-      if (!this.sawBrief && this.fallbackSpoken < SegmentParser.FALLBACK_SENTENCES) {
-        this.fallbackPending += text;
-      }
-    }
+    else this.display += text;
   }
-
-  /**
-   * Replies without a [[brief]] (code explanations, fallbacks, local models)
-   * used to stay silent. Speak their first sentences as they stream instead.
-   */
-  private drainFallback(final: boolean) {
-    if (this.sawBrief) return;
-    const max = SegmentParser.FALLBACK_SENTENCES;
-    const clean = (s: string) =>
-      s.replace(/```[\s\S]*?```/g, " ").replace(/[#*_`>|]/g, " ").replace(/\s+/g, " ").trim();
-    const re = /[^.!?]*[.!?]+["')\]]*\s+/g;
-    let last = 0;
-    let m: RegExpExecArray | null;
-    while (this.fallbackSpoken < max && (m = re.exec(this.fallbackPending))) {
-      const s = clean(m[0]);
-      if (s.length > 1) {
-        this.emit({ text: s, target: this.target });
-        this.fallbackSpoken++;
-      }
-      last = re.lastIndex;
-    }
-    if (last) this.fallbackPending = this.fallbackPending.slice(last);
-    // First phrase early so the first sound isn't held back by a long sentence.
-    if (this.fallbackSpoken === 0 && this.fallbackPending.length > 60) {
-      const cut = this.fallbackPending.search(/[,;:—]\s/);
-      if (cut > 20) {
-        this.emit({ text: clean(this.fallbackPending.slice(0, cut + 1)), target: this.target });
-        this.fallbackSpoken++;
-        this.fallbackPending = this.fallbackPending.slice(cut + 1);
-      }
-    }
-    if (final && this.fallbackSpoken < max) {
-      const rest = clean(this.fallbackPending);
-      if (rest.length > 1) this.emit({ text: rest, target: this.target });
-      this.fallbackSpoken = max;
-    }
-    if (this.fallbackSpoken >= max) this.fallbackPending = "";
-  }
-
-  private emitted = 0;
 
   private drainSentences() {
     if (!this.speaking) return;
-    // Emit whole sentences as soon as they're complete so speech starts early.
+    // Whole sentences only, as soon as each completes, so speech flows naturally.
     const re = /[^.!?]*[.!?]+["')\]]*\s*/g;
     let last = 0;
     let m: RegExpExecArray | null;
     while ((m = re.exec(this.pending))) {
       const sentence = m[0].trim();
-      if (sentence.length > 1) {
-        this.emit({ text: sentence, target: this.target });
-        this.emitted++;
-      }
+      if (sentence.length > 1) this.emit({ text: sentence, target: this.target });
       last = re.lastIndex;
     }
     if (last) this.pending = this.pending.slice(last);
-    // The first phrase is always spoken early (short clips synthesize fastest).
-    if (this.clauseMode || this.emitted === 0) this.drainClause();
-    // L2 — a long first sentence is spoken from its first clause, not held back.
-    if (this.emitted === 0 && this.pending.length > 50) {
-      const cut = this.pending.search(/[,;:—]\s/);
-      if (cut > 20) {
-        this.emit({ text: this.pending.slice(0, cut + 1).trim(), target: this.target });
-        this.emitted++;
-        this.pending = this.pending.slice(cut + 1);
-      }
-    }
-  }
-
-  /** T2 — emit a 4–8 word phrase (or up to the first comma) as soon as it exists. */
-  private drainClause() {
-    const text = this.pending;
-    const words = text.trim().split(/\s+/).filter(Boolean);
-    if (words.length < 4) return;
-    const cut = text.search(/[,;:—]\s/);
-    if (cut > 0 && text.slice(0, cut).trim().split(/\s+/).length >= 4) {
-      this.emit({ text: text.slice(0, cut + 1).trim(), target: this.target });
-      this.emitted++;
-      this.pending = text.slice(cut + 1);
-      return;
-    }
-    // Only cut mid-sentence for the opening phrase or a very long run.
-    if ((this.emitted === 0 && words.length >= 9) || words.length >= 18) {
-      const take = this.emitted === 0 ? 8 : 14;
-      const m = text.match(new RegExp(`^\\s*(?:\\S+\\s+){${take}}`));
-      if (m) {
-        this.emit({ text: m[0].trim(), target: this.target });
-        this.emitted++;
-        this.pending = text.slice(m[0].length);
-      }
-    }
   }
 
   private flush() {
@@ -281,7 +191,6 @@ class SegmentParser {
     this.raw = "";
     this.drainSentences();
     this.flush();
-    this.drainFallback(true);
   }
 }
 
