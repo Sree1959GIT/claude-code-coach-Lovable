@@ -5,6 +5,7 @@
  */
 
 export const LOCAL_MENTOR_KEY = "ccaf.local_mentor_model";
+import { mentorDeliveryGuidance } from "./mentor-delivery";
 const OLLAMA = "http://localhost:11434";
 
 export function getLocalMentorModel(): string | null {
@@ -36,7 +37,7 @@ type Ctx = {
   focus?: string | null;
 } | null;
 
-function systemPrompt(ctx: Ctx, codeTurn: boolean, codeActive: boolean): string {
+function systemPrompt(ctx: Ctx, codeTurn: boolean, codeActive: boolean, turn: string): string {
   const q = ctx?.stem
     ? `\n\nQuestion on screen (never reveal or hint which option is correct):\n${ctx.scenario ? `Scenario: ${ctx.scenario}\n` : ""}Stem: ${ctx.stem}\n${(ctx.options ?? []).map((o) => `${o.label}. ${o.text}`).join("\n")}${ctx.key_concept ? `\nKey concept: ${ctx.key_concept}` : ""}${ctx.selectedOption ? `\nLearner picked: ${ctx.selectedOption}` : ""}`
     : "";
@@ -55,7 +56,8 @@ function systemPrompt(ctx: Ctx, codeTurn: boolean, codeActive: boolean): string 
       : "";
   return `You are a warm, concise exam tutor${exam}.${intentHint}${focusHint}${codeHint}
 Teach the concept so the learner can decide; never give away the answer.
-Format exactly: start with "[[brief]]" followed by one or two short spoken sentences, then "[[written]]" followed by the full written answer (plain prose, short paragraphs).${q}`;
+Format exactly: first the full written answer (plain prose, precise short paragraphs), then "[[brief]]" followed by two or three short conversational spoken sentences giving separate gist and guidance. Never read or repeat the written answer. Do not emit [[written]].${q}
+${mentorDeliveryGuidance(turn)}`;
 }
 
 /**
@@ -89,6 +91,7 @@ export async function streamLocalMentor(args: {
               args.messages[args.messages.length - 1]?.role === "user" &&
                 (args.messages[args.messages.length - 1]?.content ?? "").startsWith("[[code-context:"),
               args.messages.some((m) => m.role === "user" && m.content.startsWith("[[code-context:")),
+               [...args.messages].reverse().find((m) => m.role === "user")?.content ?? "",
             ),
           },
           ...args.messages.slice(-12),
