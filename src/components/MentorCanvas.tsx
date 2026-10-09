@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, Mic, MicOff, PlayCircle, Radio, Square, User, Volume2, X } from "lucide-react";
 import { synthesizeSpeech } from "@/lib/mentor.functions";
 import { getLocalMentorModel, streamLocalMentor } from "@/lib/local-mentor";
-import { contextualSpokenOpening } from "@/lib/mentor-delivery";
+import { contextualSpokenOpening, stripStockOpener } from "@/lib/mentor-delivery";
 import { decideLocalTurn } from "@/lib/mentor-speed.functions";
 import { useActiveExam } from "@/hooks/useActiveExam";
 import {
@@ -343,6 +343,7 @@ export function MentorCanvas({
   const messagesRef = useRef<Msg[]>([]);
   const queueRef = useRef<Segment[]>([]);
   const drainingRef = useRef(false);
+  const drainGenRef = useRef(0);
   const stoppedRef = useRef(false);
   const contextRef = useRef(context);
   const { active: activeExam } = useActiveExam();
@@ -495,19 +496,39 @@ export function MentorCanvas({
     return new Promise((resolve) => {
       const el = audioRef.current;
       if (!el) return resolve();
+      let done = false;
+      let watchdog: ReturnType<typeof setTimeout> | null = null;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        if (watchdog) clearTimeout(watchdog);
+        el.onended = el.onerror = el.onpause = el.onloadedmetadata = null;
+        resolve();
+      };
+      // Safety net: a clip that never reports "ended" must not freeze the
+      // voice queue (that left later replies silent while showing "speaking").
+      const arm = (ms: number) => {
+        if (watchdog) clearTimeout(watchdog);
+        watchdog = setTimeout(finish, ms);
+      };
+      arm(30000);
       el.muted = false;
       // Calm local delivery without shifting the selected voice's pitch.
       el.preservesPitch = true;
       el.playbackRate = voicePrefRef.current === "instant" ? 0.92 : 1;
-      el.onended = () => resolve();
-      el.onerror = () => resolve();
+      el.onended = finish;
+      el.onerror = finish;
+      el.onloadedmetadata = () => {
+        if (Number.isFinite(el.duration) && el.duration > 0)
+          arm((el.duration / (el.playbackRate || 1)) * 1000 + 2000);
+      };
       // Only a real stop/barge-in ends a sentence early — stray pause events
       // (src swaps, audio unlock) used to cut speech off mid-reply.
       el.onpause = () => {
-        if (stoppedRef.current || el.ended) resolve();
+        if (stoppedRef.current || el.ended) finish();
       };
       el.src = url;
-      void el.play().catch(() => resolve());
+      void el.play().catch(() => finish());
     });
   }
 
@@ -515,9 +536,10 @@ export function MentorCanvas({
   const drain = useCallback(async () => {
     if (drainingRef.current) return;
     drainingRef.current = true;
+    const gen = drainGenRef.current;
     let next: Promise<string | null> | null = null;
     try {
-      while (!stoppedRef.current) {
+      while (!stoppedRef.current && gen === drainGenRef.current) {
         const seg = queueRef.current.shift();
         if (!seg) {
           // wait a beat in case the stream is still producing
@@ -532,7 +554,10 @@ export function MentorCanvas({
           await sleep(Math.min(5000, 400 + seg.text.length * 38));
           continue;
         }
-        const url = await (seg.audio ?? next ?? synth(seg.text));
+        const url = await Promise.race([
+          seg.audio ?? next ?? synth(seg.text),
+          sleep(15000).then(() => null),
+        ]);
         next = null;
         // Keep voice prepared ahead of playback. The on-device voice runs on
         // this device, so it prepares only one sentence ahead — preparing more
@@ -560,6 +585,7 @@ export function MentorCanvas({
         }
       }
     } finally {
+      if (gen !== drainGenRef.current) return;
       drainingRef.current = false;
       setSpeaking(false);
       highlight(null);
@@ -602,6 +628,10 @@ export function MentorCanvas({
     if (!trimmed || busyRef.current) return;
     // Must run inside the originating click so the first clip can play.
     unlockAudio();
+    // A new turn always gets a fresh voice queue, even if an earlier one stalled.
+    drainGenRef.current += 1;
+    drainingRef.current = false;
+    queueRef.current = [];
     stoppedRef.current = false;
 
     setError(null);
@@ -634,6 +664,9 @@ export function MentorCanvas({
       if (firstSpoken) {
         seg.text = contextualSpokenOpening(seg.text, trimmed);
         firstSpoken = false;
+      } else {
+        seg.text = stripStockOpener(seg.text);
+        if (!seg.text) return;
       }
       // L2 — start preparing the voice for the next two sentences right away,
       // so each one is ready by the time the previous one finishes playing.
