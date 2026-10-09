@@ -65,6 +65,7 @@
 - [x] **Phase H7:** Domain bind smoke deployment — backend binding repaired (`.env` rebound to the live instance), authenticated smoke pass over landing, dashboard, study, Study Canvas, mentor, admin console and BYOK vault, FSRS write path verified, and the head-order hydration mismatch fixed.
 
 ### 🎯 CURRENT ACTIVE TASK (Immediate Next Action)
+- [ ] Mentor delivery: request-specific openings for Explain question / Read fast / Trap spotting, shared cloud and Ollama guidance, calmer local playback; verify before Vercel.
 - [x] Phase H2: Semantic accessible tags pass — completed (focus-management hook, dialog semantics on Study Canvas / Mentor / video modal, Ctrl+Shift+C canvas toggle and Escape precedence, full tab/tabpanel contract with arrow/Home/End keys, console live regions, reduced-motion support).
 - [x] Password recovery callback repair — recovery credentials now survive the hosted email handoff and are validated before password entry.
 - [x] **S1:** Colour and type tokens — success/warning/danger soft+foreground pairs in both themes, canvas→surface→raised ladder, `touch-target` (44px) + `surface-raised` utilities. Radius 6px.

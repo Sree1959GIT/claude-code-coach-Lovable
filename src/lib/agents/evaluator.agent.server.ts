@@ -13,6 +13,7 @@ import type { ChatMessage, QuestionContext } from "./explainer.agent.server";
 import { questionContextMessage, splitBrief } from "./explainer.agent.server";
 import { adviceSystemMessage } from "./advice-prompt.server";
 import { examLabel, examLabelSync, withExam } from "@/lib/exam-context.server";
+import { mentorDeliveryGuidance } from "@/lib/mentor-delivery";
 
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
@@ -88,6 +89,7 @@ export function buildEvaluatorMessages(args: EvaluatorArgs): ChatMessage[] {
       : []),
     ...(sources ? [{ role: "system" as const, content: sources }] : []),
     ...args.messages.slice(-20),
+    { role: "system", content: mentorDeliveryGuidance([...args.messages].reverse().find((m) => m.role === "user")?.content ?? "") },
   ];
 }
 

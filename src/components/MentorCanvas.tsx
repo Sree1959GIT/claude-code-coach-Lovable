@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, Mic, MicOff, PlayCircle, Radio, Square, User, Volume2, X } from "lucide-react";
 import { synthesizeSpeech } from "@/lib/mentor.functions";
 import { getLocalMentorModel, streamLocalMentor } from "@/lib/local-mentor";
+import { contextualSpokenOpening } from "@/lib/mentor-delivery";
 import { decideLocalTurn } from "@/lib/mentor-speed.functions";
 import { useActiveExam } from "@/hooks/useActiveExam";
 import {
@@ -495,6 +496,9 @@ export function MentorCanvas({
       const el = audioRef.current;
       if (!el) return resolve();
       el.muted = false;
+      // Calm local delivery without shifting the selected voice's pitch.
+      el.preservesPitch = true;
+      el.playbackRate = voicePrefRef.current === "instant" ? 0.92 : 1;
       el.onended = () => resolve();
       el.onerror = () => resolve();
       // Only a real stop/barge-in ends a sentence early — stray pause events
@@ -551,6 +555,8 @@ export function MentorCanvas({
           }
           await playUrl(url);
           URL.revokeObjectURL(url);
+          // A short breath between local sentences; never delays the first sound.
+          if (voicePrefRef.current === "instant" && !stoppedRef.current && queueRef.current.length) await sleep(160);
         }
       }
     } finally {
@@ -623,10 +629,17 @@ export function MentorCanvas({
     turnLiveRef.current = liveRef.current;
     setInterrupted(false);
 
+    let firstSpoken = true;
     const parser = new SegmentParser((seg) => {
+      if (firstSpoken) {
+        seg.text = contextualSpokenOpening(seg.text, trimmed);
+        firstSpoken = false;
+      }
       // L2 — start preparing the voice for the next two sentences right away,
       // so each one is ready by the time the previous one finishes playing.
-      if (voiceRef.current && queueRef.current.length < 3) seg.audio = synth(seg.text);
+      // Do not launch three local inference jobs while audio is playing.
+      const prepareLimit = voicePrefRef.current === "instant" ? 1 : 3;
+      if (voiceRef.current && queueRef.current.length < prepareLimit) seg.audio = synth(seg.text);
       queueRef.current.push(seg);
       void drain();
     });
