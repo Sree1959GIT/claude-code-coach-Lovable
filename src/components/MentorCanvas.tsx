@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, Mic, MicOff, PlayCircle, Radio, Square, User, Volume2, X } from "lucide-react";
 import { synthesizeSpeech } from "@/lib/mentor.functions";
 import { getLocalMentorModel, streamLocalMentor } from "@/lib/local-mentor";
-import { contextualSpokenOpening } from "@/lib/mentor-delivery";
+import { contextualSpokenOpening, stripStockOpener } from "@/lib/mentor-delivery";
 import { decideLocalTurn } from "@/lib/mentor-speed.functions";
 import { useActiveExam } from "@/hooks/useActiveExam";
 import {
@@ -664,6 +664,9 @@ export function MentorCanvas({
       if (firstSpoken) {
         seg.text = contextualSpokenOpening(seg.text, trimmed);
         firstSpoken = false;
+      } else {
+        seg.text = stripStockOpener(seg.text);
+        if (!seg.text) return;
       }
       // L2 — start preparing the voice for the next two sentences right away,
       // so each one is ready by the time the previous one finishes playing.

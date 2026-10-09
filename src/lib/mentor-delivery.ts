@@ -33,12 +33,20 @@ export function mentorDeliveryGuidance(turn: string): string {
 Never use the stock opener "OK, look at what the question is actually asking" or a variant. For free-form questions, open directly on what the learner asked. Keep this acknowledgement out of the written answer. The written answer comes first and remains precise; only the separate [[brief]] gist is spoken. Use friendly professional English, natural contractions and short complete sentences, with commas at meaningful pauses. Avoid rushed chains of clauses, unnecessary jargon, exaggerated cheerfulness and repeating the written explanation.`;
 }
 
-/** Remove a stale model-generated stock opener, without changing substantive guidance. */
+/** Any stock "look at what the question is (actually) asking (about)" opener. */
+const STOCK = /^(?:(?:ok(?:ay)?|so|alright|right)[,!.\s—–-]*)?(?:let'?s\s+)?look(?:ing)?\s+(?:at\s+)?what\s+(?:the\s+|this\s+)?question\s+is\s+(?:actually\s+|really\s+)?asking(?:\s+(?:about|for|you))?[^.!?]*[.!?,;:\s—–-]*/i;
+
+/** First spoken sentence always opens on the learner's actual request. */
 export function contextualSpokenOpening(text: string, turn: string): string {
-  const stock = /^(?:ok(?:ay)?[,!.\s—–-]*)?look at what (?:the|this) question is actually asking[.!?,;:\s—–-]*/i;
-  if (!stock.test(text.trim())) return text;
-  const rest = text.trim().replace(stock, "");
+  const rest = text.trim().replace(STOCK, "").trim();
   const request = mentorRequest(turn);
-  const opening = request === "other" ? "" : OPENINGS[request];
+  if (request === "other") return rest || text;
+  const opening = OPENINGS[request];
+  if (rest.toLowerCase().startsWith(opening.slice(0, 18).toLowerCase())) return rest;
   return [opening, rest].filter(Boolean).join(" ");
+}
+
+/** Drops a stock opener from any later spoken sentence. */
+export function stripStockOpener(text: string): string {
+  return text.trim().replace(STOCK, "").trim();
 }
