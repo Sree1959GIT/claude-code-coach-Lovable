@@ -343,6 +343,7 @@ export function MentorCanvas({
   const messagesRef = useRef<Msg[]>([]);
   const queueRef = useRef<Segment[]>([]);
   const drainingRef = useRef(false);
+  const drainGenRef = useRef(0);
   const stoppedRef = useRef(false);
   const contextRef = useRef(context);
   const { active: activeExam } = useActiveExam();
@@ -538,7 +539,7 @@ export function MentorCanvas({
     const gen = drainGenRef.current;
     let next: Promise<string | null> | null = null;
     try {
-      while (!stoppedRef.current) {
+      while (!stoppedRef.current && gen === drainGenRef.current) {
         const seg = queueRef.current.shift();
         if (!seg) {
           // wait a beat in case the stream is still producing
@@ -553,7 +554,10 @@ export function MentorCanvas({
           await sleep(Math.min(5000, 400 + seg.text.length * 38));
           continue;
         }
-        const url = await (seg.audio ?? next ?? synth(seg.text));
+        const url = await Promise.race([
+          seg.audio ?? next ?? synth(seg.text),
+          sleep(15000).then(() => null),
+        ]);
         next = null;
         // Keep voice prepared ahead of playback. The on-device voice runs on
         // this device, so it prepares only one sentence ahead — preparing more
@@ -581,6 +585,7 @@ export function MentorCanvas({
         }
       }
     } finally {
+      if (gen !== drainGenRef.current) return;
       drainingRef.current = false;
       setSpeaking(false);
       highlight(null);
@@ -623,6 +628,10 @@ export function MentorCanvas({
     if (!trimmed || busyRef.current) return;
     // Must run inside the originating click so the first clip can play.
     unlockAudio();
+    // A new turn always gets a fresh voice queue, even if an earlier one stalled.
+    drainGenRef.current += 1;
+    drainingRef.current = false;
+    queueRef.current = [];
     stoppedRef.current = false;
 
     setError(null);
