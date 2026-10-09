@@ -44,7 +44,7 @@ function systemPrompt(ctx: Ctx, codeTurn: boolean, codeActive: boolean, turn: st
   const exam = ctx?.examName ? ` for the ${ctx.examName} exam` : "";
   const focusHint =
     ctx?.focus === "scenario" ? "\nStart from the scenario paragraph."
-    : ctx?.focus === "stem" ? "\nStart from what the question sentence is actually asking."
+    : ctx?.focus === "stem" ? "\nStart from the task and qualifier in the question sentence."
     : ctx?.focus === "option" ? "\nStart from the answer option the learner picked or named."
     : ctx?.focus === "code" ? "\nStart from the code itself."
     : "";
