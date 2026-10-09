@@ -495,19 +495,39 @@ export function MentorCanvas({
     return new Promise((resolve) => {
       const el = audioRef.current;
       if (!el) return resolve();
+      let done = false;
+      let watchdog: ReturnType<typeof setTimeout> | null = null;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        if (watchdog) clearTimeout(watchdog);
+        el.onended = el.onerror = el.onpause = el.onloadedmetadata = null;
+        resolve();
+      };
+      // Safety net: a clip that never reports "ended" must not freeze the
+      // voice queue (that left later replies silent while showing "speaking").
+      const arm = (ms: number) => {
+        if (watchdog) clearTimeout(watchdog);
+        watchdog = setTimeout(finish, ms);
+      };
+      arm(30000);
       el.muted = false;
       // Calm local delivery without shifting the selected voice's pitch.
       el.preservesPitch = true;
       el.playbackRate = voicePrefRef.current === "instant" ? 0.92 : 1;
-      el.onended = () => resolve();
-      el.onerror = () => resolve();
+      el.onended = finish;
+      el.onerror = finish;
+      el.onloadedmetadata = () => {
+        if (Number.isFinite(el.duration) && el.duration > 0)
+          arm((el.duration / (el.playbackRate || 1)) * 1000 + 2000);
+      };
       // Only a real stop/barge-in ends a sentence early — stray pause events
       // (src swaps, audio unlock) used to cut speech off mid-reply.
       el.onpause = () => {
-        if (stoppedRef.current || el.ended) resolve();
+        if (stoppedRef.current || el.ended) finish();
       };
       el.src = url;
-      void el.play().catch(() => resolve());
+      void el.play().catch(() => finish());
     });
   }
 
@@ -515,6 +535,7 @@ export function MentorCanvas({
   const drain = useCallback(async () => {
     if (drainingRef.current) return;
     drainingRef.current = true;
+    const gen = drainGenRef.current;
     let next: Promise<string | null> | null = null;
     try {
       while (!stoppedRef.current) {
