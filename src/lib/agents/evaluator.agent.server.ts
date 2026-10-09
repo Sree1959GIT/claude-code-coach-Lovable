@@ -28,8 +28,8 @@ Role:
 - Plain prose only — no markdown, lists, headings or code fences.
 
 OUTPUT FORMAT (required, two parts, in this order):
-1) Start with the literal marker [[brief]] followed by a SPOKEN summary: 2-3 short conversational sentences carrying the verdict. It is spoken aloud as soon as it arrives.
-2) Then emit the literal marker [[written]] followed by the WRITTEN ANSWER: a clear critique the learner will READ (4-6 sentences), following the structure above. Never repeat the spoken summary verbatim.
+1) WRITTEN ANSWER: a clear critique the learner will READ (4-6 sentences), following the structure above.
+2) Then emit the literal marker [[brief]] followed by a SPOKEN summary: 2-3 short conversational sentences carrying the verdict and what to look for. Never read out or repeat the written sentences.
 
 HIGHLIGHT MARKERS (required inside the SPOKEN part):
 Immediately before each spoken sentence, emit exactly one marker naming what that sentence is about:
@@ -84,7 +84,7 @@ export function buildEvaluatorMessages(args: EvaluatorArgs): ChatMessage[] {
     ...(advice ? [{ role: "system" as const, content: advice.content }] : []),
     ...(args.profileNote ? [{ role: "system" as const, content: args.profileNote }] : []),
     ...(args.live
-      ? [{ role: "system" as const, content: "LIVE VOICE CONVERSATION: keep [[brief]] to 1-2 short sentences with the verdict first, and [[written]] to at most 3 sentences." }]
+      ? [{ role: "system" as const, content: "LIVE VOICE CONVERSATION: keep the written critique to at most 4 sentences and [[brief]] to 2 short spoken sentences." }]
       : []),
     ...(sources ? [{ role: "system" as const, content: sources }] : []),
     ...args.messages.slice(-20),
