@@ -129,5 +129,5 @@ export function buildFallbackAnswer(args: FallbackArgs): string {
     .join(" ");
 
   // A2 — spoken summary first so voice starts before the written answer.
-  return `[[brief]] ${spoken}\n\n[[written]] ${written.join(" ")}`;
+  return `${written.join(" ")}\n\n[[brief]] ${spoken}`;
 }
