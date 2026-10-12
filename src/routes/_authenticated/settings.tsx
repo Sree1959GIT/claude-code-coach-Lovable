@@ -11,7 +11,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { useSession } from "@/hooks/useSession";
 import { supabase } from "@/integrations/supabase/client";
 import { getQuotaStatus } from "@/lib/quotas.functions";
-import { getProviderPref, setProviderPref } from "@/lib/provider-pref.functions";
+import { getProviderPref, setProviderPref, getMentorTemperature, setMentorTemperature } from "@/lib/provider-pref.functions";
 import { listMyProviderKeys, saveProviderKey, testProviderKey, type StoredKeyMeta } from "@/lib/byok.functions";
 import { LocalModelAdvisor } from "@/components/LocalModelAdvisor";
 
@@ -488,6 +488,7 @@ function ModelsTab() {
         </select>
       </Field>
       <ProviderPicker />
+      <PrecisionPicker />
       <LocalModelAdvisor />
     </section>
   );
@@ -532,6 +533,58 @@ function AccountTab() {
         Sign out
       </button>
     </section>
+  );
+}
+
+/** Mentor answer precision (sampling temperature). */
+function PrecisionPicker() {
+  const fetchT = useServerFn(getMentorTemperature);
+  const saveT = useServerFn(setMentorTemperature);
+  const q = useQuery({ queryKey: ["mentor-temperature"], queryFn: () => fetchT() });
+  const [draft, setDraft] = useState<number | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  const saved = q.data?.temperature ?? null;
+  const value = draft ?? saved ?? 0.2;
+  const label = value <= 0.2 ? "Very precise" : value <= 0.5 ? "Balanced" : "Creative";
+  async function save(t: number | null) {
+    setMsg(null);
+    try {
+      await saveT({ data: { temperature: t } });
+      await q.refetch();
+      setDraft(null);
+      setMsg(t === null ? "Reset to the model default." : "Saved.");
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Couldn't save.");
+    }
+  }
+  return (
+    <Field
+      label="Answer precision"
+      hint="Lower = tighter, more consistent answers. Higher = more varied wording. Applies to Ask Mentor and option checks."
+    >
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.1}
+            value={value}
+            onChange={(e) => setDraft(Number(e.target.value))}
+            aria-label="Answer precision"
+            className="flex-1 accent-primary"
+          />
+          <span className="w-28 font-mono text-xs">{value.toFixed(1)} · {label}</span>
+        </div>
+        <div className="flex gap-2">
+          <button type="button" onClick={() => save(value)} className="touch-target rounded-md bg-primary px-3 text-sm text-primary-foreground">Save</button>
+          <button type="button" onClick={() => save(null)} className="touch-target rounded-md border border-border px-3 text-sm hover:bg-secondary">Use default</button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {saved === null ? "Currently: model default." : `Currently: ${saved.toFixed(1)}.`} {msg}
+        </p>
+      </div>
+    </Field>
   );
 }
 

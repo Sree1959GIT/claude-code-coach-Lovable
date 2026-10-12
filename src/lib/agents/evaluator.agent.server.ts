@@ -116,6 +116,7 @@ export async function streamEvaluator(args: EvaluatorArgs): Promise<ReadableStre
     body: {
       model: target.model,
       stream: true,
+      ...(target.temperature !== undefined ? { temperature: target.temperature } : {}),
       ...(target.provider ? { max_tokens: 2048 } : { stream_options: { include_usage: true } }),
       // S1 — no hidden thinking before the first word on Gemini 2.5 Flash.
       ...(target.provider === "google" && !target.model.includes("pro") ? { reasoning_effort: "none" } : {}),

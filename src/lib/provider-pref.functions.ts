@@ -29,3 +29,24 @@ export const setProviderPref = createServerFn({ method: "POST" })
     invalidateInferenceTarget(context.userId);
     return { pref: data.pref };
   });
+
+export const getMentorTemperature = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase.from("profiles").select("mentor_temperature" as never).eq("id", context.userId).maybeSingle();
+    const v = (data as { mentor_temperature?: unknown } | null)?.mentor_temperature;
+    return { temperature: v == null ? null : Number(v) };
+  });
+
+export const setMentorTemperature = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ temperature: z.number().min(0).max(1).nullable() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { error } = await context.supabase
+      .from("profiles")
+      .update({ mentor_temperature: data.temperature } as never)
+      .eq("id", context.userId);
+    if (error) throw new Error(error.message);
+    invalidateInferenceTarget(context.userId);
+    return data;
+  });
