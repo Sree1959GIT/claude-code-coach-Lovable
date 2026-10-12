@@ -102,7 +102,8 @@ function CitedText({ content, citations }: { content: string; citations: Citatio
   );
 }
 
-const MARKER_RE = /\[\[(scenario|stem|none|brief|written|opt:[A-Za-z0-9]+)\]\]/;
+// Tolerant of case and stray spaces ("[[ Brief ]]"), which models sometimes emit.
+const MARKER_RE = /\[\[\s*(scenario|stem|none|brief|written|opt\s*:\s*[A-Za-z0-9]+)\s*\]\]/i;
 
 function parseMarker(token: string): HighlightTarget {
   if (token === "scenario") return { type: "scenario" };
