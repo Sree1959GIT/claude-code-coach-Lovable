@@ -22,6 +22,23 @@ export function gatewayError(status: number, body: string, label = "Mentor"): Er
   return new Error(`${label} call failed: ${status} ${body.slice(0, 160)}`);
 }
 
+/**
+ * Some providers (e.g. Google's direct endpoint) honour only one system message
+ * and silently drop the rest — the model then never sees the question and
+ * invents one. Fold every system message into a single leading one.
+ */
+export function mergeSystemMessages(body: unknown): unknown {
+  const b = body as { messages?: { role: string; content: unknown }[] } | null;
+  if (!b?.messages?.length) return body;
+  const sys = b.messages.filter((m) => m.role === "system" && typeof m.content === "string");
+  if (sys.length < 2) return body;
+  const rest = b.messages.filter((m) => !(m.role === "system" && typeof m.content === "string"));
+  return {
+    ...b,
+    messages: [{ role: "system", content: sys.map((m) => m.content as string).join("\n\n") }, ...rest],
+  };
+}
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
@@ -40,7 +57,7 @@ export async function fetchGatewayStream(
       res = await fetch(args.url, {
         method: "POST",
         headers: { Authorization: `Bearer ${args.apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify(args.body),
+        body: JSON.stringify(mergeSystemMessages(args.body)),
         signal: args.signal,
       });
     } catch (err) {

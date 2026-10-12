@@ -124,3 +124,5 @@
 
 - [x] S4 Kokoro voice + Moonshine listener (Settings › Mentor & voice)
 - [x] S5 per-step speed table on Traces
+
+- [x] Fix: Mentor answered an unrelated question and voice read only the first paragraph (system messages were dropped by the direct Gemini endpoint; now merged into one)

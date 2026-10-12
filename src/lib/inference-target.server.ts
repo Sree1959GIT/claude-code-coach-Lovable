@@ -24,6 +24,8 @@ export type InferenceTarget = {
   provider: KeyProvider | null;
   /** Human label for error messages and traces. */
   label: string;
+  /** Learner-chosen sampling temperature (0–1); undefined = provider default. */
+  temperature?: number;
 };
 
 const PROXY_URL = PROVIDERS.lovable.url;
@@ -82,9 +84,26 @@ async function activeVaultKey(
   return null;
 }
 
+const tempCache = new Map<string, { at: number; t: number | undefined }>();
+/** Learner's saved mentor temperature, cached briefly. */
+export async function mentorTemperature(userId: string): Promise<number | undefined> {
+  const hit = tempCache.get(userId);
+  if (hit && Date.now() - hit.at < CACHE_MS) return hit.t;
+  let t: number | undefined;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin.from("profiles").select("mentor_temperature" as never).eq("id", userId).maybeSingle();
+    const v = Number((data as { mentor_temperature?: unknown } | null)?.mentor_temperature);
+    t = (data as { mentor_temperature?: unknown } | null)?.mentor_temperature == null || !Number.isFinite(v) ? undefined : Math.min(1, Math.max(0, v));
+  } catch { t = undefined; }
+  tempCache.set(userId, { at: Date.now(), t });
+  return t;
+}
+
 /** Drop the cached decision for a learner (called when their vault or choice changes). */
 export function invalidateInferenceTarget(userId: string): void {
   cache.delete(userId);
+  tempCache.delete(userId);
 }
 
 /**
@@ -120,11 +139,13 @@ export async function resolveInferenceTarget(args: {
     : proxy;
 
   if (!args.userId) return fallback;
+  const temperature = await mentorTemperature(args.userId);
 
   try {
     const active = await activeVaultKey(args.userId);
-    if (!active) return fallback;
+    if (!active) return { ...fallback, temperature };
     return {
+      temperature,
       url: PROVIDERS[active.provider].url,
       apiKey: active.key,
       model: PROVIDERS[active.provider].models[args.rung ?? "standard"],
@@ -133,7 +154,7 @@ export async function resolveInferenceTarget(args: {
       label: PROVIDERS[active.provider].label,
     };
   } catch {
-    return fallback;
+    return { ...fallback, temperature };
   }
 }
 
