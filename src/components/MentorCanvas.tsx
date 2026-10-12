@@ -102,7 +102,8 @@ function CitedText({ content, citations }: { content: string; citations: Citatio
   );
 }
 
-const MARKER_RE = /\[\[(scenario|stem|none|brief|written|opt:[A-Za-z0-9]+)\]\]/;
+// Tolerant of case and stray spaces ("[[ Brief ]]"), which models sometimes emit.
+const MARKER_RE = /\[\[\s*(scenario|stem|none|brief|written|opt\s*:\s*[A-Za-z0-9]+)\s*\]\]/i;
 
 function parseMarker(token: string): HighlightTarget {
   if (token === "scenario") return { type: "scenario" };
@@ -120,6 +121,7 @@ class SegmentParser {
   private pending = "";
   private target: HighlightTarget = null;
   private speaking = false;
+  private sawBrief = false;
   display = "";
   /** Kept for callers; speech is always whole sentences (smooth, no choking). */
   clauseMode = false;
@@ -144,15 +146,17 @@ class SegmentParser {
       }
       this.consume(work.slice(0, m.index));
       this.flush();
-      if (m[1] === "brief") {
+      const tok = m[1]!.toLowerCase().replace(/\s+/g, "");
+      if (tok === "brief") {
+        this.sawBrief = true;
         this.speaking = true;
         this.target = null;
-      } else if (m[1] === "written") {
+      } else if (tok === "written") {
         // Legacy marker — written text is display-only.
         this.speaking = false;
         this.target = null;
       } else {
-        this.target = parseMarker(m[1]!);
+        this.target = parseMarker(tok);
       }
       work = work.slice(m.index + m[0].length);
     }
@@ -192,6 +196,15 @@ class SegmentParser {
     this.raw = "";
     this.drainSentences();
     this.flush();
+    // Safety net: if the model skipped the spoken part, still speak a short
+    // gist (first sentences of the written answer) so the voice never goes silent.
+    if (!this.sawBrief) {
+      const sentences = (this.display.replace(/\[\[[^\]]*\]\]/g, "").match(/[^.!?]+[.!?]+/g) ?? [])
+        .map((x) => x.trim())
+        .filter((x) => x.length > 1)
+        .slice(0, 3);
+      for (const text of sentences) this.emit({ text, target: null });
+    }
   }
 }
 
