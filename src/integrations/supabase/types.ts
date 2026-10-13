@@ -1272,6 +1272,7 @@ export type Database = {
           exam_date: string | null
           id: string
           membership_tier: string
+          mentor_temperature: number | null
           onboarded_at: string | null
           preferred_provider: string
           target_score: number | null
@@ -1285,6 +1286,7 @@ export type Database = {
           exam_date?: string | null
           id: string
           membership_tier?: string
+          mentor_temperature?: number | null
           onboarded_at?: string | null
           preferred_provider?: string
           target_score?: number | null
@@ -1298,6 +1300,7 @@ export type Database = {
           exam_date?: string | null
           id?: string
           membership_tier?: string
+          mentor_temperature?: number | null
           onboarded_at?: string | null
           preferred_provider?: string
           target_score?: number | null
