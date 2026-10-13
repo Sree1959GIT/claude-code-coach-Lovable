@@ -105,6 +105,21 @@ function CitedText({ content, citations }: { content: string; citations: Citatio
 // Tolerant of case and stray spaces ("[[ Brief ]]"), which models sometimes emit.
 const MARKER_RE = /\[\[\s*(scenario|stem|none|brief|written|opt\s*:\s*[A-Za-z0-9]+)\s*\]\]/i;
 
+/** On-device voices crack on long sentences: break them at natural pauses (~110 chars). */
+function splitLong(s: string, max = 110): string[] {
+  if (s.length <= max) return [s];
+  const out: string[] = [];
+  let cur = "";
+  for (const piece of s.split(/(?<=[,;:—–])\s+/)) {
+    if (cur && (cur + " " + piece).length > max) {
+      out.push(cur.trim());
+      cur = piece;
+    } else cur = cur ? `${cur} ${piece}` : piece;
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+}
+
 function parseMarker(token: string): HighlightTarget {
   if (token === "scenario") return { type: "scenario" };
   if (token === "stem") return { type: "stem" };
@@ -178,7 +193,7 @@ class SegmentParser {
     let m: RegExpExecArray | null;
     while ((m = re.exec(this.pending))) {
       const sentence = m[0].trim();
-      if (sentence.length > 1) this.emit({ text: sentence, target: this.target });
+      if (sentence.length > 1) for (const part of splitLong(sentence)) this.emit({ text: part, target: this.target });
       last = re.lastIndex;
     }
     if (last) this.pending = this.pending.slice(last);
@@ -196,14 +211,11 @@ class SegmentParser {
     this.raw = "";
     this.drainSentences();
     this.flush();
-    // Safety net: if the model skipped the spoken part, still speak a short
-    // gist (first sentences of the written answer) so the voice never goes silent.
-    if (!this.sawBrief) {
-      const sentences = (this.display.replace(/\[\[[^\]]*\]\]/g, "").match(/[^.!?]+[.!?]+/g) ?? [])
-        .map((x) => x.trim())
-        .filter((x) => x.length > 1)
-        .slice(0, 3);
-      for (const text of sentences) this.emit({ text, target: null });
+    // Safety net: if the model skipped the spoken part, speak a short guide
+    // line instead — the written answer is for reading and is never read out.
+    if (!this.sawBrief && this.display.trim()) {
+      this.emit({ text: "I've put the key points on screen for you.", target: null });
+      this.emit({ text: "Read them through, and notice which words in the question decide the answer.", target: null });
     }
   }
 }
